@@ -1,14 +1,29 @@
 # Canonical settings metadata for ORNLSlicer.
 # Edit this file instead of resources/configs/master.conf.
 settings:
+  - name: "dlp_output_mode"
+    display: "Output Mode"
+    type: "enumeration"
+    tooltip: "Static output uses one 4096 x 2160 pixel projector frame per lane. Scrolling output uses 4096-pixel-wide, 1-bit images with height padded to a multiple of 2176 rows."
+    depends: {"slicing_mode":3}
+    visible_if: {"slicing_mode":3}
+    options:
+      - "Static"
+      - "Scrolling"
+    default: 0
+    minor: "DLP Slicer"
+    major: "Experimental"
+    namespace: "Experimental::DlpSlicer"
+    symbol: "kOutputMode"
+    local: false
   - name: "dlp_projection_width"
     display: "Projection Width"
     type: "distance"
-    tooltip: "Physical X width of each DLP projector lane. Lanes span the full printer Y dimension, and the last lane is padded with black pixels to this width."
+    tooltip: "Physical X width of each DLP projector lane. The default 204.8 mm at 4096 pixels gives 0.05 mm square pixels and a 108 mm static frame depth. A final partial lane shifts to end at maximum X and masks its overlap with the preceding lane."
     depends: {"slicing_mode":3}
     visible_if: {"slicing_mode":3}
     options: []
-    default: 25400
+    default: 204800
     minor: "DLP Slicer"
     major: "Experimental"
     namespace: "Experimental::DlpSlicer"
@@ -17,11 +32,11 @@ settings:
   - name: "dlp_pixel_width"
     display: "Projection Width in Pixels"
     type: "positive_int"
-    tooltip: "Number of pixels across each DLP projector lane. Projection Width divided by this value defines the physical size of each square image pixel."
+    tooltip: "Number of pixels across each DLP projector lane. Both Static and Scrolling output require 4096 pixels. Projection Width divided by this value defines the physical size of each square image pixel."
     depends: {"slicing_mode":3}
     visible_if: {"slicing_mode":3}
     options: []
-    default: 1024
+    default: 4096
     minor: "DLP Slicer"
     major: "Experimental"
     namespace: "Experimental::DlpSlicer"
@@ -30,9 +45,9 @@ settings:
   - name: "dlp_bit_depth"
     display: "BMP Bit Depth"
     type: "enumeration"
-    tooltip: "Selects 1-bit or 8-bit BMP output. Exposure masks use white geometry on a black background."
+    tooltip: "Selects 1-bit or 8-bit BMP output for Static mode. Scrolling mode always uses 1-bit output. Exposure masks use white geometry on a black background."
     depends: {"slicing_mode":3}
-    visible_if: {"slicing_mode":3}
+    visible_if: {"AND":[{"slicing_mode":3},{"dlp_output_mode":0}]}
     options:
       - "1-bit"
       - "8-bit"

@@ -71,16 +71,27 @@ class DlpSettingTests(unittest.TestCase):
 
     def test_dlp_settings_are_global_and_only_visible_in_dlp_mode(self):
         master, _ = generator.load_settings(ROOT / "resources/settings")
-        for name, default in (("dlp_projection_width", 25400), ("dlp_pixel_width", 1024), ("dlp_bit_depth", 0)):
+        for name, default in (
+            ("dlp_output_mode", 0),
+            ("dlp_projection_width", 204800),
+            ("dlp_pixel_width", 4096),
+            ("dlp_bit_depth", 0),
+        ):
             with self.subTest(setting=name):
                 setting = master[name]
                 self.assertEqual(setting["major"], "Experimental")
                 self.assertEqual(setting["minor"], "DLP Slicer")
                 self.assertEqual(setting["depends"], {"slicing_mode": 3})
-                self.assertEqual(setting["visible_if"], {"slicing_mode": 3})
+                visibility = (
+                    {"AND": [{"slicing_mode": 3}, {"dlp_output_mode": 0}]}
+                    if name == "dlp_bit_depth"
+                    else {"slicing_mode": 3}
+                )
+                self.assertEqual(setting["visible_if"], visibility)
                 self.assertFalse(setting["local"])
                 self.assertEqual(setting["default"], default)
         self.assertEqual(master["dlp_bit_depth"]["options"].split(", "), ["1-bit", "8-bit"])
+        self.assertEqual(master["dlp_output_mode"]["options"].split(", "), ["Static", "Scrolling"])
 
 
 if __name__ == "__main__":

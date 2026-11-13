@@ -20,11 +20,14 @@ bool fail(QString* error, const QString& message) {
     return false;
 }
 
+bool nearInteger(double value) {
+    // Distance unit constants originate as floats, including GUI-entered printer dimensions.
+    return std::abs(value - std::round(value)) <=
+           std::numeric_limits<float>::epsilon() * std::max(1.0, std::abs(value));
+}
+
 double roundedCeil(double value) {
-    const double nearest = std::round(value);
-    if (nearest >= 1.0 &&
-        std::abs(value - nearest) <= 16.0 * std::numeric_limits<double>::epsilon() * std::max(1.0, std::abs(value)))
-        return nearest;
+    if (std::round(value) >= 1.0 && nearInteger(value)) return std::round(value);
     return std::ceil(value);
 }
 
@@ -64,37 +67,62 @@ bool DlpRasterizer::initialize(DlpBuild& build, const DlpSettings& settings, QSt
         return fail(error, "DLP slicing requires positive rectangular printer dimensions.");
     if (settings.layer_height <= 0 || settings.projection_width <= 0 || settings.lane_pixel_width <= 0)
         return fail(error, "DLP layer height, projection width, and image pixel width must be greater than zero.");
+    if (settings.lane_pixel_width != 4096)
+        return fail(error, "DLP static and scrolling output require Projection Width in Pixels to be 4096.");
     if (settings.bit_depth != 1 && settings.bit_depth != 8) return fail(error, "DLP bitmap depth must be 1 or 8 bits.");
+    if (settings.output_mode != DlpOutputMode::kStatic && settings.output_mode != DlpOutputMode::kScrolling)
+        return fail(error, "DLP output mode must be Static or Scrolling.");
 
     const double pitch  = settings.projection_width / settings.lane_pixel_width;
     const double width  = roundedCeil((settings.x_max - settings.x_min) / pitch);
     const double height = roundedCeil((settings.y_max - settings.y_min) / pitch);
     const double lanes  = roundedCeil((settings.x_max - settings.x_min) / settings.projection_width);
+    const double lane_height =
+        settings.output_mode == DlpOutputMode::kStatic ? 2160 : roundedCeil(height / 2176) * 2176;
     if (!std::isfinite(pitch) || pitch <= 0 || width < 1 || height < 1 || lanes < 1 ||
         width > std::numeric_limits<int>::max() || height > std::numeric_limits<int>::max() ||
-        lanes > std::numeric_limits<int>::max())
+        lanes > std::numeric_limits<int>::max() || lane_height > std::numeric_limits<int>::max())
         return fail(error, "DLP image dimensions exceed the supported range.");
+
+    if (settings.output_mode == DlpOutputMode::kStatic && height > lane_height)
+        return fail(error, QString("DLP static output is restricted to one 4096 x 2160 frame (%1 x %2 mm). "
+                                   "Reduce the printer Y span or select Scrolling output.")
+                               .arg(Distance(settings.projection_width).to(mm), 0, 'g', 12)
+                               .arg(Distance(2160 * pitch).to(mm), 0, 'g', 12));
+    const double pixel_span = (settings.x_max - settings.x_min) / pitch;
+    if (lanes > 1 && !nearInteger(pixel_span))
+        return fail(error, QString("DLP shifted lanes require the printer X span to be a whole number of pixels "
+                                   "(%1 mm per pixel). Adjust the printer X bounds or Projection Width to align "
+                                   "the final footprint with maximum X without shifting exposure geometry.")
+                               .arg(Distance(pitch).to(mm), 0, 'g', 12));
 
     // The preview can expand BMP pixels to 32 bits; honor its image reader's allocation limit before slicing.
     const int allocation_limit = QImageReader::allocationLimit();
-    const double preview_bytes = std::max(width, double(settings.lane_pixel_width)) * height * 4.0;
+    const double preview_bytes = std::max(width * height, settings.lane_pixel_width * lane_height) * 4.0;
     if (allocation_limit > 0 && preview_bytes > allocation_limit * 1024.0 * 1024.0)
-        return fail(error,
-                    QString("DLP images exceed the %1 MiB image allocation limit. Full layer: %2 x %3 pixels; "
-                            "lane: %4 x %3 pixels. Reduce Projection Width in Pixels, increase Projection Width, "
-                            "or reduce the printer XY dimensions.")
-                        .arg(allocation_limit)
-                        .arg(width, 0, 'f', 0)
-                        .arg(height, 0, 'f', 0)
-                        .arg(settings.lane_pixel_width));
+        return fail(error, QString("DLP images exceed the %1 MiB image allocation limit. Full layer: %2 x %3 pixels; "
+                                   "lane: %4 x %5 pixels. Increase Projection Width "
+                                   "or reduce the printer XY dimensions.")
+                               .arg(allocation_limit)
+                               .arg(width, 0, 'f', 0)
+                               .arg(height, 0, 'f', 0)
+                               .arg(settings.lane_pixel_width)
+                               .arg(lane_height, 0, 'f', 0));
 
-    build              = DlpBuild();
-    build.settings     = settings;
-    build.pixel_pitch  = pitch;
-    build.image_width  = static_cast<int>(width);
-    build.image_height = static_cast<int>(height);
-    build.lane_count   = static_cast<int>(lanes);
-    build.storage      = QSharedPointer<QTemporaryDir>::create(QDir::tempPath() + "/ornlslicer-dlp-XXXXXX");
+    build          = DlpBuild();
+    build.settings = settings;
+    if (settings.output_mode == DlpOutputMode::kScrolling) build.settings.bit_depth = 1;
+    build.pixel_pitch       = pitch;
+    build.image_width       = static_cast<int>(width);
+    build.image_height      = static_cast<int>(height);
+    build.lane_count        = static_cast<int>(lanes);
+    build.lane_image_height = static_cast<int>(lane_height);
+    for (int i = 0; i < build.lane_count; ++i) {
+        const int start = i * settings.lane_pixel_width;
+        build.lane_starts.append(i > 0 && i == build.lane_count - 1 ? build.image_width - settings.lane_pixel_width
+                                                                    : start);
+    }
+    build.storage = QSharedPointer<QTemporaryDir>::create(QDir::tempPath() + "/ornlslicer-dlp-XXXXXX");
     if (!build.storage->isValid()) return fail(error, "Could not create temporary DLP output directory.");
     return true;
 }
@@ -153,14 +181,15 @@ bool DlpRasterizer::writeLayer(DlpBuild& build, int number, double z, const QIma
     layer.empty      = imageEmpty(mask);
     if (!saveBmp(mask, layer.image_path, build.settings.bit_depth, error)) return false;
     for (int i = 0; i < build.lane_count; ++i) {
-        QImage lane_image(build.settings.lane_pixel_width, build.image_height, QImage::Format_Grayscale8);
+        QImage lane_image(build.settings.lane_pixel_width, build.lane_image_height, QImage::Format_Grayscale8);
         if (lane_image.isNull()) return fail(error, "Could not allocate DLP lane image.");
         lane_image.fill(0);
-        const qint64 start = qint64(i) * build.settings.lane_pixel_width;
-        const int count    = static_cast<int>(std::min<qint64>(build.settings.lane_pixel_width, mask.width() - start));
+        const qint64 start       = qint64(i) * build.settings.lane_pixel_width;
+        const int masked_columns = static_cast<int>(start - build.lane_starts[i]);
+        const int count = static_cast<int>(std::min<qint64>(build.settings.lane_pixel_width, mask.width() - start));
         if (count > 0) {
             for (int y = 0; y < mask.height(); ++y)
-                std::memcpy(lane_image.scanLine(y), mask.constScanLine(y) + start, count);
+                std::memcpy(lane_image.scanLine(y) + masked_columns, mask.constScanLine(y) + start, count);
         }
         DlpLane lane;
         lane.number     = i + 1;
@@ -185,7 +214,7 @@ bool DlpExporter::exportBuild(const DlpBuild& build, const QString& destination,
     QSaveFile csv(directory.absoluteFilePath("build.csv"));
     if (!csv.open(QIODevice::WriteOnly | QIODevice::Text)) return fail(error, "Could not write DLP build.csv.");
     QTextStream stream(&csv);
-    stream << "layer,z_mm,lane,file,empty\n";
+    stream << "layer,z_mm,lane,file,empty,x_min_mm,y_max_mm,pixel_pitch_mm,width_px,height_px\n";
     for (const auto& layer : build.layers) {
         const QString folder = QString("Layer %1").arg(layer.number);
         if (!directory.mkpath(folder)) return fail(error, "Could not create DLP export layer directory.");
@@ -194,7 +223,15 @@ bool DlpExporter::exportBuild(const DlpBuild& build, const QString& destination,
             const QString target   = directory.absoluteFilePath(relative);
             if (!QFile::copy(source, target)) return fail(error, "Could not export DLP image: " + target);
             stream << layer.number << ',' << QString::number(Distance(layer.z).to(mm), 'g', 15) << ',' << lane << ','
-                   << relative << ',' << (empty ? 1 : 0) << '\n';
+                   << relative << ',' << (empty ? 1 : 0) << ','
+                   << QString::number(Distance(build.settings.x_min +
+                                               (lane == 0 ? 0 : build.lane_starts[lane - 1] * build.pixel_pitch))
+                                          .to(mm),
+                                      'g', 15)
+                   << ',' << QString::number(Distance(build.settings.y_max).to(mm), 'g', 15) << ','
+                   << QString::number(Distance(build.pixel_pitch).to(mm), 'g', 15) << ','
+                   << (lane == 0 ? build.image_width : build.settings.lane_pixel_width) << ','
+                   << (lane == 0 ? build.image_height : build.lane_image_height) << '\n';
             return true;
         };
         if (!copyImage(0, layer.image_path, layer.empty)) return false;

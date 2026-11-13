@@ -35,10 +35,12 @@ QImage displayedImage(QGraphicsView* view) {
     return {};
 }
 
-QVector<int> laneBorders(QGraphicsView* view) {
+QVector<int> laneBorders(QGraphicsView* view, Qt::PenStyle style = Qt::SolidLine) {
     QVector<int> positions;
     for (auto* item : view->scene()->items()) {
-        if (auto* line = qgraphicsitem_cast<QGraphicsLineItem*>(item)) { positions.append(line->line().x1()); }
+        if (auto* line = qgraphicsitem_cast<QGraphicsLineItem*>(item); line && line->pen().style() == style) {
+            positions.append(line->line().x1());
+        }
     }
     std::sort(positions.begin(), positions.end());
     return positions;
@@ -69,9 +71,14 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     build->image_width               = 250;
     build->image_height              = 140;
+    build->lane_image_height         = 160;
     build->lane_count                = 3;
+    build->lane_starts               = {0, 100, 150};
     build->pixel_pitch               = 100;
+    build->settings.x_min            = 2000;
+    build->settings.projection_width = 10000;
     build->settings.lane_pixel_width = 100;
+    build->settings.bit_depth        = 8;
     QImage full(250, 140, QImage::Format_RGB32);
     full.fill(Qt::black);
     {
@@ -88,10 +95,12 @@ int main(int argc, char* argv[]) {
         if (layer.empty) full.fill(Qt::black);
         expect(full.save(layer.image_path, "BMP"), "Could not save full DLP preview fixture.");
         for (int lane = 1; lane <= 3; ++lane) {
-            QImage image(100, 140, QImage::Format_RGB32);
+            QImage image(100, build->lane_image_height, QImage::Format_RGB32);
             image.fill(Qt::black);
             QPainter painter(&image);
-            painter.drawImage(0, 0, full.copy((lane - 1) * 100, 0, std::min(100, 250 - (lane - 1) * 100), 140));
+            const int source_start = (lane - 1) * 100;
+            const int overlap      = source_start - build->lane_starts[lane - 1];
+            painter.drawImage(overlap, 0, full.copy(source_start, 0, std::min(100, 250 - source_start), 140));
             painter.end();
             const auto path = build->storage->filePath(QString("layer%1_lane%2.bmp").arg(number).arg(lane));
             expect(image.save(path, "BMP"), "Could not save lane DLP preview fixture.");
@@ -153,6 +162,13 @@ int main(int argc, char* argv[]) {
         expect(displayedImage(view) == QImage(build->layers[0].image_path),
                "Whole-layer preview must preserve the exported image pixels and orientation.");
         expect(laneBorders(view) == QVector<int>({100, 200}), "Lane borders must match exported pixel boundaries.");
+        expect(laneBorders(view, Qt::DashLine) == QVector<int>({150}),
+               "The shifted final footprint must be distinct from exposure boundaries.");
+        expect(status->text().contains("Static") && status->text().contains("250 x 140 px") &&
+                   status->text().contains("25.000 x 14.000 mm") && status->text().contains("Pixel pitch = 0.1 mm") &&
+                   status->text().contains("8-bit") && status->text().contains("dashed: shifted"),
+               "The full-layer status must show the cached format, dimensions, physical size, pitch, depth, and "
+               "overlay legend.");
         expect(std::abs(view->transform().m11() - view->transform().m22()) < 1e-8,
                "The preview must preserve the physical aspect ratio of square pixels.");
         const auto whole_capture = screenshot(prefix + "whole-layer");
@@ -161,27 +177,46 @@ int main(int argc, char* argv[]) {
                    renderedColor(whole_capture, view, preview, QPointF(10.5, 10.5)) == QColor(Qt::black),
                "The rendered whole layer must show solid geometry, its hole, and the empty background in both themes.");
         borders->setChecked(false);
-        expect(laneBorders(view).isEmpty(), "The lane-border toggle must hide the overlay.");
+        expect(laneBorders(view).isEmpty() && laneBorders(view, Qt::DashLine).isEmpty(),
+               "The lane-border toggle must hide both exposure and footprint borders.");
         borders->setChecked(true);
 
         lanes->setCurrentIndex(3);
         app.processEvents();
-        expect(
-            displayedImage(view) == QImage(build->layers[0].lanes[2].image_path) && displayedImage(view).width() == 100,
-            "Selecting the final lane must show its complete fixed-width exported image, including padding.");
-        expect(!borders->isEnabled() && laneBorders(view).isEmpty(), "Lane images must not show whole-layer borders.");
+        expect(displayedImage(view) == QImage(build->layers[0].lanes[2].image_path) &&
+                   displayedImage(view).size() == QSize(100, 160),
+               "Selecting the final lane must show its complete fixed-width exported image, including padding.");
+        expect(!borders->isEnabled() && laneBorders(view).isEmpty() && laneBorders(view, Qt::DashLine).isEmpty(),
+               "Lane images must not show whole-layer borders.");
+        expect(status->text().contains("100 x 160 px") && status->text().contains("10.000 x 16.000 mm") &&
+                   status->text().contains("X origin = 17.000 mm") &&
+                   status->text().contains("Left overlap masked = 50 px (5.000 mm)"),
+               "Lane status must report its padded physical footprint, shifted origin, and masked overlap.");
         const auto lane_capture = screenshot(prefix + "last-lane");
-        expect(renderedColor(lane_capture, view, preview, QPointF(5.5, 40.5)) == QColor(Qt::white) &&
-                   renderedColor(lane_capture, view, preview, QPointF(75.5, 40.5)) == QColor(Qt::black),
-               "The rendered final lane must show its geometry and black padding in both themes.");
+        expect(renderedColor(lane_capture, view, preview, QPointF(5.5, 40.5)) == QColor(Qt::black) &&
+                   renderedColor(lane_capture, view, preview, QPointF(55.5, 40.5)) == QColor(Qt::white) &&
+                   renderedColor(lane_capture, view, preview, QPointF(75.5, 40.5)) == QColor(Qt::black) &&
+                   renderedColor(lane_capture, view, preview, QPointF(55.5, 150.5)) == QColor(Qt::black),
+               "The rendered final lane must show a masked left overlap, right-hand exposure, and black padding in "
+               "both themes.");
         layers->setCurrentIndex(1);
         expect(lanes->currentIndex() == 3 && status->text().contains("Empty") &&
                    displayedImage(view) == QImage(build->layers[1].lanes[2].image_path),
                "Changing layers must preserve the selected lane and identify empty images.");
         export_button->click();
         lanes->setCurrentIndex(0);
-        expect(borders->isEnabled() && laneBorders(view) == QVector<int>({100, 200}),
+        expect(borders->isEnabled() && laneBorders(view) == QVector<int>({100, 200}) &&
+                   laneBorders(view, Qt::DashLine) == QVector<int>({150}),
                "Returning to the whole layer must restore the border overlay.");
+        auto scrolling                  = QSharedPointer<ORNL::DlpBuild>::create(*build);
+        scrolling->settings.output_mode = ORNL::DlpOutputMode::kScrolling;
+        scrolling->settings.bit_depth   = 1;
+        preview->setBuild(scrolling);
+        lanes->setCurrentIndex(3);
+        expect(status->text().contains("Scrolling") && status->text().contains("1-bit") &&
+                   status->text().contains("X origin = 17.000 mm"),
+               "Preview format and output depth must come from the selected completed build snapshot.");
+        screenshot(prefix + "scrolling-last-lane");
     }
     expect(export_requests == 2, "The export control must request export of the cached build.");
     preview->clear();

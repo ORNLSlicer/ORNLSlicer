@@ -43,6 +43,8 @@ DlpPreview::DlpPreview(QWidget* parent) : QWidget(parent) {
     m_lane_selector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     m_lane_borders = new QCheckBox(tr("Show lane borders"), this);
     m_lane_borders->setObjectName("dlpLaneBorders");
+    m_lane_borders->setToolTip(
+        tr("Solid lines mark exposure boundaries. A dashed line marks the shifted final-lane footprint."));
     m_lane_borders->setChecked(true);
     m_export = new QPushButton(tr("Export DLP Build..."), this);
     m_export->setObjectName("dlpExport");
@@ -137,13 +139,38 @@ void DlpPreview::updateImage() {
             const int x = i * m_build->settings.lane_pixel_width;
             m_scene->addLine(x, 0, x, image.height(), border);
         }
+        const int final_start = m_build->lane_starts.last();
+        if (final_start != (m_build->lane_count - 1) * m_build->settings.lane_pixel_width) {
+            border.setStyle(Qt::DashLine);
+            m_scene->addLine(final_start, 0, final_start, image.height(), border);
+        }
     }
     m_scene->setSceneRect(image_rect);
     m_view->fitInView(image_rect, Qt::KeepAspectRatio);
-    m_status->setText(tr("Layer %1 | Z = %2 mm | %3 | %4")
-                          .arg(layer.number)
-                          .arg(Distance(layer.z).to(mm), 0, 'f', 3)
-                          .arg(full ? tr("Entire layer") : tr("Lane %1").arg(layer.lanes[lane].number))
-                          .arg(empty ? tr("Empty") : tr("Contains geometry")));
+    QString status = tr("Layer %1 | Z = %2 mm | %3 | %4")
+                         .arg(layer.number)
+                         .arg(Distance(layer.z).to(mm), 0, 'f', 3)
+                         .arg(full ? tr("Entire layer") : tr("Lane %1").arg(layer.lanes[lane].number))
+                         .arg(empty ? tr("Empty") : tr("Contains geometry"));
+    status += tr("\n%1 | %2 x %3 px | %4 x %5 mm | Pixel pitch = %6 mm | %7-bit")
+                  .arg(m_build->settings.output_mode == DlpOutputMode::kStatic ? tr("Static") : tr("Scrolling"))
+                  .arg(image.width())
+                  .arg(image.height())
+                  .arg(Distance(image.width() * m_build->pixel_pitch).to(mm), 0, 'f', 3)
+                  .arg(Distance(image.height() * m_build->pixel_pitch).to(mm), 0, 'f', 3)
+                  .arg(Distance(m_build->pixel_pitch).to(mm), 0, 'g', 8)
+                  .arg(m_build->settings.bit_depth);
+    if (!full) {
+        const int start   = m_build->lane_starts[lane];
+        const int overlap = lane * m_build->settings.lane_pixel_width - start;
+        status += tr("\nX origin = %1 mm | Left overlap masked = %2 px (%3 mm)")
+                      .arg(Distance(m_build->settings.x_min + start * m_build->pixel_pitch).to(mm), 0, 'f', 3)
+                      .arg(overlap)
+                      .arg(Distance(overlap * m_build->pixel_pitch).to(mm), 0, 'f', 3);
+    }
+    else if (m_build->lane_starts.last() != (m_build->lane_count - 1) * m_build->settings.lane_pixel_width) {
+        status += tr("\nSolid: exposure boundaries; dashed: shifted final-lane footprint.");
+    }
+    m_status->setText(status);
 }
 }  // namespace ORNL

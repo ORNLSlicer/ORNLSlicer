@@ -39,6 +39,7 @@ void DlpSlicer::preProcess(nlohmann::json opt_data) {
         settings.z_max +=
             std::abs(global->setting<double>(PRS::Dimensions::kWMax) - global->setting<double>(PRS::Dimensions::kWMin));
     settings.layer_height     = global->setting<double>(PS::Layer::kLayerHeight);
+    settings.output_mode      = static_cast<DlpOutputMode>(global->setting<int>(ES::DlpSlicer::kOutputMode));
     settings.projection_width = global->setting<double>(ES::DlpSlicer::kProjectionWidth);
     settings.lane_pixel_width = global->setting<int>(ES::DlpSlicer::kPixelWidth);
     const int bit_depth       = global->setting<int>(ES::DlpSlicer::kBitDepth);

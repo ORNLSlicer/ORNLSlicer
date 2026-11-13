@@ -6,6 +6,7 @@
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTimer>
+#include <QtEndian>
 #include <cstdlib>
 
 #include "dlp/dlp_build.h"
@@ -79,8 +80,9 @@ bool sharedLayerGrid(const QString& output) {
     settings->setSetting(ORNL::PRS::Dimensions::kEnableW, false);
     settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1000.0);
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kDlp));
-    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 4000.0);
-    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 8);
+    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 2048000.0);
+    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 4096);
+    settings->setSetting(ORNL::ES::DlpSlicer::kOutputMode, static_cast<int>(ORNL::DlpOutputMode::kStatic));
     settings->setSetting(ORNL::ES::DlpSlicer::kBitDepth, 0);
 
     const auto result = sliceDlp(output);
@@ -136,7 +138,7 @@ bool sharedLayerGrid(const QString& output) {
         return false;
     QFile copied(exported.path() + "/build/Layer 1/Layer_1_Full.bmp");
     passed &= expect(copied.open(QIODevice::ReadOnly) && !before.isEmpty() && copied.readAll() == before &&
-                         near(build.settings.projection_width, 4000) && build.settings.lane_pixel_width == 8 &&
+                         near(build.settings.projection_width, 2048000) && build.settings.lane_pixel_width == 4096 &&
                          build.settings.bit_depth == 1 && build.layers.size() == 6,
                      "Export must preserve the completed DLP result rather than reinterpret current settings.");
     return passed;
@@ -149,8 +151,9 @@ bool machineZCoordinates(const QString& output) {
     const auto settings = ORNL::GSM->getGlobal();
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kDlp));
     settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1000.0);
-    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 4000.0);
-    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 8);
+    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 2048000.0);
+    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 4096);
+    settings->setSetting(ORNL::ES::DlpSlicer::kOutputMode, static_cast<int>(ORNL::DlpOutputMode::kStatic));
     settings->setSetting(ORNL::ES::DlpSlicer::kBitDepth, 0);
     settings->setSetting(ORNL::PRS::Dimensions::kWMin, -4000.0);
     settings->setSetting(ORNL::PRS::Dimensions::kWMax, 0.0);
@@ -186,6 +189,72 @@ bool machineZCoordinates(const QString& output) {
         }
     }
     settings->setSetting(ORNL::PRS::Dimensions::kEnableW, false);
+    return passed;
+}
+
+bool projectorFormats(const QString& output) {
+    ORNL::CSM->clearParts();
+    setBounds(0, 409600, 0, 108000, 0, 1000);
+    addBox("format_probe", ORNL::MeshType::kBuild, {1000, 1000, 0}, {1000, 1000, 1000});
+    const auto settings = ORNL::GSM->getGlobal();
+    settings->setSetting(ORNL::PRS::Dimensions::kEnableW, false);
+    settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kDlp));
+    settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1000.0);
+    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 204800.0);
+    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 4096);
+    settings->setSetting(ORNL::ES::DlpSlicer::kOutputMode, static_cast<int>(ORNL::DlpOutputMode::kStatic));
+    settings->setSetting(ORNL::ES::DlpSlicer::kBitDepth, 1);
+    const auto static_result = sliceDlp(output);
+    if (!expect(static_result.completed == 1 && static_result.error.isEmpty() && static_result.build &&
+                    static_result.build->layers.size() == 1,
+                "A 108 mm static build must fit in one 4096 by 2160 projector frame."))
+        return false;
+    const auto& static_build = *static_result.build;
+    bool passed = expect(static_build.image_width == 8192 && static_build.image_height == 2160 &&
+                             static_build.lane_image_height == 2160 && static_build.lane_count == 2 &&
+                             near(static_build.pixel_pitch, 50) && static_build.settings.bit_depth == 8,
+                         "Static slicing must snapshot the selected depth and physical projector resolution.");
+    const QImage static_lane(static_build.layers[0].lanes[0].image_path);
+    passed &= expect(static_lane.size() == QSize(4096, 2160) && qGray(static_lane.pixel(20, 2130)) == 255,
+                     "Static lane BMPs must use one full frame and preserve physical geometry placement.");
+
+    settings->setSetting(ORNL::PRS::Dimensions::kYMax, 108050.0);
+    const auto too_deep = sliceDlp(output);
+    passed &= expect(too_deep.completed == 0 && !too_deep.error.isEmpty() && !too_deep.build,
+                     "Static slicing must reject build depth beyond one frame instead of clipping or tiling it.");
+
+    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 8);
+    const auto invalid_width = sliceDlp(output);
+    passed &= expect(invalid_width.completed == 0 && !invalid_width.error.isEmpty() && !invalid_width.build,
+                     "Static slicing must reject projector widths other than 4096 pixels.");
+
+    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 4096);
+    settings->setSetting(ORNL::ES::DlpSlicer::kOutputMode, static_cast<int>(ORNL::DlpOutputMode::kScrolling));
+    settings->setSetting(ORNL::PRS::Dimensions::kYMax, 108850.0);
+    const auto scrolling = sliceDlp(output);
+    if (!expect(scrolling.completed == 1 && scrolling.error.isEmpty() && scrolling.build &&
+                    scrolling.build->layers.size() == 1,
+                "Scrolling slicing must support build depths above a static frame."))
+        return false;
+    const auto& scroll_build = *scrolling.build;
+    passed &= expect(scroll_build.image_height == 2177 && scroll_build.lane_image_height == 4352 &&
+                         scroll_build.settings.bit_depth == 1,
+                     "Scrolling must round lane heights to 2176-row blocks and override an 8-bit selection.");
+    const QString lane_path = scroll_build.layers[0].lanes[0].image_path;
+    QFile lane_file(lane_path);
+    passed &= expect(lane_file.open(QIODevice::ReadOnly), "Could not inspect scrolling BMP encoding.");
+    const QByteArray header = lane_file.read(30);
+    passed &= expect(header.size() == 30 && qFromLittleEndian<quint16>(header.constData() + 28) == 1,
+                     "Scrolling BMP files must be encoded at 1 bit per pixel.");
+    const QImage scroll_lane(lane_path);
+    passed &= expect(scroll_lane.size() == QSize(4096, 4352) && qGray(scroll_lane.pixel(20, 2150)) == 255 &&
+                         qGray(scroll_lane.pixel(20, 2177)) == 0 && qGray(scroll_lane.pixel(20, 4351)) == 0,
+                     "Scrolling lanes must preserve geometry and black-pad below the build to a complete block.");
+    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 8);
+    const auto invalid_scroll_width = sliceDlp(output);
+    passed &= expect(
+        invalid_scroll_width.completed == 0 && !invalid_scroll_width.error.isEmpty() && !invalid_scroll_width.build,
+        "Scrolling slicing must reject projector widths other than 4096 pixels.");
     return passed;
 }
 
@@ -228,8 +297,9 @@ bool preservesImageSlicer(const QString& directory) {
     }
 
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kDlp));
-    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 4000.0);
-    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 8);
+    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 2048000.0);
+    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 4096);
+    settings->setSetting(ORNL::ES::DlpSlicer::kOutputMode, static_cast<int>(ORNL::DlpOutputMode::kStatic));
     settings->setSetting(ORNL::ES::DlpSlicer::kBitDepth, 1);
     const auto dlp = sliceDlp(directory + "/unused.gcode");
     if (!expect(dlp.completed == 1 && dlp.error.isEmpty() && dlp.build,
@@ -244,8 +314,9 @@ bool sessionRoutesDlpResults(const QString& directory) {
     const auto session  = ORNL::CSM;
     const auto settings = ORNL::GSM->getGlobal();
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kDlp));
-    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 4000.0);
-    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 8);
+    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 2048000.0);
+    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 4096);
+    settings->setSetting(ORNL::ES::DlpSlicer::kOutputMode, static_cast<int>(ORNL::DlpOutputMode::kStatic));
     session->setDefaultGcodeDir(directory);
     int dlp_completions = 0, gcode_completions = 0, failures = 0;
     QEventLoop loop;
@@ -298,6 +369,7 @@ int main(int argc, char* argv[]) {
     ORNL::GSM->setConsoleSettings(QSharedPointer<ORNL::SettingsBase>::create());
     bool passed = sharedLayerGrid(directory.path() + "/unused.gcode");
     passed &= machineZCoordinates(directory.path() + "/unused.gcode");
+    passed &= projectorFormats(directory.path() + "/unused.gcode");
     passed &= preservesImageSlicer(directory.path());
     passed &= sessionRoutesDlpResults(directory.path());
     ORNL::CSM->clearParts();

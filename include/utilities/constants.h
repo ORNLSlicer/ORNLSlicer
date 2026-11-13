@@ -1049,6 +1049,7 @@ class Constants {
 
         class DlpSlicer {
            public:
+            static const QString kOutputMode;
             static const QString kProjectionWidth;
             static const QString kPixelWidth;
             static const QString kBitDepth;
