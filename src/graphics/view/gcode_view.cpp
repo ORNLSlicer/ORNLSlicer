@@ -258,7 +258,7 @@ void GCodeView::hideSegmentType(SegmentDisplayType type, bool hidden) {
     if (m_gcode_object.isNull()) return;
 
     m_gcode_object->hideSegmentType(type, hidden);
-    if (!m_true_width_overlay_object.isNull()) { m_true_width_overlay_object->hideSegmentType(type, hidden); }
+    refreshTrueWidthOverlay();
 
     this->update();
 }
@@ -326,7 +326,8 @@ QVector<QVector<QSharedPointer<SegmentBase>>> GCodeView::visiblePrintableGCodeSu
         for (const QSharedPointer<SegmentBase>& segment : layer) {
             const bool in_segment_range =
                 visible_segment_index >= m_state.low_segment && visible_segment_index <= high_segment;
-            if (in_segment_range && !static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) {
+            if (in_segment_range &&
+                !static_cast<bool>(segment->displayType() & (SegmentDisplayType::kTravel | m_state.hidden_type))) {
                 layer_subset.push_back(segment);
             }
 
@@ -358,6 +359,7 @@ void GCodeView::refreshTrueWidthOverlay() {
     key.preview_mode     = preview_mode;
     key.vertex_threshold = vertex_threshold;
     key.use_true_widths  = m_use_true_segment_widths;
+    key.hidden_type      = m_state.hidden_type & ~SegmentDisplayType::kTravel;
 
     if (m_true_width_overlay_key_valid && key == m_true_width_overlay_key) { return; }
 

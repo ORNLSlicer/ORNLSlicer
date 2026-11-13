@@ -290,18 +290,20 @@ class GCodeView : public BaseView {
 
     //! \brief Cache key for the visible-range true-width overlay.
     struct TrueWidthOverlayKey {
-        uint low_layer                = 0;
-        uint high_layer               = 0;
-        uint low_segment              = 0;
-        uint high_segment             = 0;
-        GCodePreviewMode preview_mode = GCodePreviewMode::kAuto;
-        int vertex_threshold          = 0;
-        bool use_true_widths          = false;
+        uint low_layer                 = 0;
+        uint high_layer                = 0;
+        uint low_segment               = 0;
+        uint high_segment              = 0;
+        GCodePreviewMode preview_mode  = GCodePreviewMode::kAuto;
+        int vertex_threshold           = 0;
+        bool use_true_widths           = false;
+        SegmentDisplayType hidden_type = SegmentDisplayType::kNone;
 
         bool operator==(const TrueWidthOverlayKey& other) const {
             return low_layer == other.low_layer && high_layer == other.high_layer && low_segment == other.low_segment &&
                    high_segment == other.high_segment && preview_mode == other.preview_mode &&
-                   vertex_threshold == other.vertex_threshold && use_true_widths == other.use_true_widths;
+                   vertex_threshold == other.vertex_threshold && use_true_widths == other.use_true_widths &&
+                   hidden_type == other.hidden_type;
         }
     };
 
