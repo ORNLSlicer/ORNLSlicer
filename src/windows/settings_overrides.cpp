@@ -172,6 +172,7 @@ SettingsOverridesDialog::SettingsOverridesDialog(QWidget* parent) : QDialog(pare
 
     auto* description = new QLabel(
         "Part overrides replace global values. Layer overrides replace part values. "
+        "Settings meshes replace values on their target parts. "
         "Select an override to show it in Settings. This overview updates automatically.",
         this);
     description->setWordWrap(true);
@@ -339,6 +340,7 @@ void SettingsOverridesDialog::refresh() {
                 int high;
                 SettingsBase inherited;
                 SettingsBase effective;
+                QSharedPointer<Part> target;
             };
             QList<int> boundaries {low, high + 1};
             if (low >= 0) {
@@ -352,7 +354,7 @@ void SettingsOverridesDialog::refresh() {
             }
             QList<Context> contexts;
             for (int index = 0; index + 1 < boundaries.size(); ++index) {
-                Context context {boundaries.at(index), boundaries.at(index + 1) - 1, *global, *global};
+                Context context {boundaries.at(index), boundaries.at(index + 1) - 1, *global, *global, {}};
                 context.effective.populate(part->getSb());
                 if (low >= 0) {
                     context.inherited.populate(part->getSb());
@@ -366,6 +368,45 @@ void SettingsOverridesDialog::refresh() {
                     }
                 }
                 contexts.append(context);
+            }
+            if (low < 0 && part->getMeshType() == MeshType::kSettings) {
+                QList<Context> target_contexts;
+                const auto parent = part->parent();
+                for (const auto& target : parts) {
+                    // Match the direct-parent or all-build scope used by SlicingUtilities::GetPartsByType.
+                    if (target->getMeshType() != MeshType::kBuild || (!parent.isNull() && parent != target)) continue;
+                    Context base {-1, -1, *global, *global, target};
+                    base.inherited.populate(target->getSb());
+                    base.effective = base.inherited;
+                    base.effective.populate(settings);
+                    target_contexts.append(base);
+
+                    const auto target_ranges = target->getSettingsRanges().values();
+                    QList<int> target_boundaries;
+                    for (const auto& range : target_ranges) {
+                        target_boundaries.append(range->low());
+                        target_boundaries.append(range->high() + 1);
+                    }
+                    std::sort(target_boundaries.begin(), target_boundaries.end());
+                    target_boundaries.erase(std::unique(target_boundaries.begin(), target_boundaries.end()),
+                                            target_boundaries.end());
+                    for (int index = 0; index + 1 < target_boundaries.size(); ++index) {
+                        Context context {target_boundaries.at(index), target_boundaries.at(index + 1) - 1,
+                                         base.inherited, base.inherited, target};
+                        bool covered = false;
+                        // A settings mesh overlays the target layer, after all of its ranges in stored QMap order.
+                        for (const auto& range : target_ranges) {
+                            if (!range->includesIndex(context.low)) continue;
+                            context.inherited.populate(range->getSb());
+                            covered = true;
+                        }
+                        if (!covered) continue;
+                        context.effective = context.inherited;
+                        context.effective.populate(settings);
+                        target_contexts.append(context);
+                    }
+                }
+                if (!target_contexts.isEmpty()) contexts = target_contexts;
             }
             const bool modifier_disabled = !part->modifierEnabled() && (part->getMeshType() == MeshType::kSettings ||
                                                                         part->getMeshType() == MeshType::kClipping);
@@ -400,7 +441,15 @@ void SettingsOverridesDialog::refresh() {
                     if (!inherited_values.contains(text)) inherited_values.append(text);
                     QString source = low >= 0 && part->getSb()->contains(key) ? "Part: " + part->name() : "Global";
                     QString later_source;
-                    if (low >= 0) {
+                    if (!context.target.isNull()) {
+                        source = context.target->getSb()->contains(key) ? "Part: " + context.target->name() : "Global";
+                        for (const auto& range : context.target->getSettingsRanges()) {
+                            if (range->includesIndex(context.low) && range->getSb()->contains(key))
+                                source = "Part: " + context.target->name() + " / " +
+                                         layer_scope(range->low(), range->high());
+                        }
+                    }
+                    else if (low >= 0) {
                         bool before_owner = true;
                         for (const auto& range : ranges) {
                             if (!range->includesIndex(context.low)) continue;
@@ -415,9 +464,13 @@ void SettingsOverridesDialog::refresh() {
                                 later_source = layer_scope(range->low(), range->high());
                         }
                     }
-                    const QString context_scope = low < 0 ? "Part" : layer_scope(context.low, context.high);
-                    inherited_details.append((contexts.size() > 1 ? context_scope + ": " : QString()) +
-                                             "Source: " + source + "\nValue: " + text);
+                    QString context_scope = low < 0 ? "Part" : layer_scope(context.low, context.high);
+                    if (!context.target.isNull())
+                        context_scope = context.target->name() +
+                                        (context.low < 0 ? QString() : " / " + layer_scope(context.low, context.high));
+                    inherited_details.append(
+                        (contexts.size() > 1 || !context.target.isNull() ? context_scope + ": " : QString()) +
+                        "Source: " + source + "\nValue: " + text);
                     QString reason;
                     if (modifier_disabled)
                         reason = "The owning modifier is disabled.";
@@ -440,7 +493,7 @@ void SettingsOverridesDialog::refresh() {
                                             : metadata_it == master.end() ? "Unknown"
                                                                           : "Active";
                 if (mixed_activity)
-                    inactive_reason = "Activity varies across this range.\n" + activity_details.join('\n');
+                    inactive_reason = "Activity varies by part or layer.\n" + activity_details.join('\n');
                 else if (inactive_contexts > 0 && contexts.size() > 1)
                     inactive_reason = activity_details.join('\n');
                 const QString category = metadataText(metadata, Constants::Settings::Master::kMajor) + " / " +

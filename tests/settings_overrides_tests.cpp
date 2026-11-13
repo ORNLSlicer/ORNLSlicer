@@ -12,9 +12,12 @@
 #include <QTableWidget>
 #include <cstdlib>
 
+#include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_factory.h"
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "slicing/slicing_utilities.h"
 #include "test_utils.h"
 #include "windows/settings_overrides.h"
 
@@ -502,6 +505,124 @@ int main(int argc, char* argv[]) {
                                                                                                : "/overlaps-dark.png")),
                    "Could not save the overlapping-range report screenshot.");
     }
+    ORNL::CSM->clearParts();
+
+    global->reset();
+    global->setSetting("slicing_mode", 0);
+    global->setSetting("perimeter", false);
+    global->setSetting("perimeter_speed", 100000.0);
+    const auto add_modifier_part = [&](const QString& name, ORNL::MeshType type) {
+        auto mesh = QSharedPointer<ORNL::ClosedMesh>::create(ORNL::MeshFactory::CreateBoxMesh(10000, 10000, 10000));
+        mesh->setName(name);
+        mesh->setType(type);
+        auto part = QSharedPointer<ORNL::Part>::create(mesh, QString(), type);
+        ORNL::CSM->addPart(part);
+        return part;
+    };
+    auto target = add_modifier_part("Target build", ORNL::MeshType::kBuild);
+    target->getSb()->setSetting("perimeter", true);
+    target->getSb()->setSetting("perimeter_speed", 200000.0);
+    auto other = add_modifier_part("Other build", ORNL::MeshType::kBuild);
+    other->getSb()->setSetting("perimeter_speed", 400000.0);
+    auto modifier = add_modifier_part("Local modifier", ORNL::MeshType::kSettings);
+    modifier->getSb()->setSetting("perimeter_speed", 100000.0);
+    target->adoptChild(modifier);
+    const auto modifier_source = [&] {
+        const int row = findRow(table, modifier->name(), "perimeter_speed", "Part");
+        expect(row >= 0, "The settings modifier's speed override must exist.");
+        return row < 0 ? QString() : table->item(row, 5)->toolTip();
+    };
+    expect(ORNL::SlicingUtilities::GetPartsByType(ORNL::CSM->partsSnapshot(), ORNL::MeshType::kSettings, target)
+                   .contains(modifier) &&
+               !ORNL::SlicingUtilities::GetPartsByType(ORNL::CSM->partsSnapshot(), ORNL::MeshType::kSettings, other)
+                    .contains(modifier),
+           "The parented modifier fixture must apply only to its target build object during slicing.");
+    dialog.refresh();
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 4) == "100" + velocity_suffix &&
+               cell(modifier->name(), "perimeter_speed", "Part", 5) == "200" + velocity_suffix &&
+               cell(modifier->name(), "perimeter_speed", "Part", 6) == "100" + velocity_suffix,
+           "A modifier restoring Global must remain visible when it replaces its target's differing value.");
+    expect(modifier_source().contains(target->name()) && !modifier_source().contains(other->name()),
+           "A parented modifier's replacement source must identify only the target build object.");
+    modifier->getSb()->setSetting("perimeter_speed", 200000.0);
+    dialog.refresh();
+    expect(findRow(table, modifier->name(), "perimeter_speed", "Part") < 0,
+           "A parented modifier matching its target must be redundant even when another build has a different value.");
+    modifier->getSb()->setSetting("perimeter_speed", 150000.0);
+    dialog.refresh();
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 5) == "200" + velocity_suffix,
+           "A modifier's replacement value must come from its target rather than Global.");
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 7) == "Active",
+           "Modifier feature conditions must inherit enabled features from the target build object.");
+    const int modifier_row      = select(modifier->name(), "perimeter_speed", "Part");
+    const int modifier_requests = requests;
+    show_setting->click();
+    expect(requests == modifier_requests + 1 && requested_part == modifier->getId() && requested_low == -1 &&
+               requested_high == -1 && requested_key == "perimeter_speed",
+           "A modifier's aggregate replacement context must navigate to the owning modifier's setting.");
+    target->createSettingsRange(1, 2);
+    target->getSettingsRange(1, 2)->getSb()->setSetting("perimeter_speed", 300000.0);
+    dialog.refresh();
+    const QString local_inherited = cell(modifier->name(), "perimeter_speed", "Part", 5);
+    expect(local_inherited.startsWith("Varies:") && local_inherited.contains("200" + velocity_suffix) &&
+               local_inherited.contains("300" + velocity_suffix) && !local_inherited.contains("400" + velocity_suffix),
+           "A parented modifier must report differing part and layer values from its target only.");
+    expect(modifier_source().contains(target->name()) && modifier_source().contains("Layers 2-3") &&
+               !modifier_source().contains(other->name()),
+           "A modifier's replacement sources must identify the target and its affected layer range.");
+    expect(modifier_row >= 0 && table->currentRow() == findRow(table, modifier->name(), "perimeter_speed", "Part") &&
+               table->item(table->currentRow(), 3)->isSelected(),
+           "Aggregating new target layer contexts must preserve the selected modifier override.");
+    modifier->setModifierEnabled(false);
+    dialog.refresh();
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 7) == "Inactive",
+           "A disabled settings modifier must retain its replacement values with an Inactive status.");
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 5) == local_inherited,
+           "Disabling a modifier must retain the values it would replace on its target.");
+    modifier->setModifierEnabled(true);
+    target->orphanChild(modifier);
+    expect(ORNL::SlicingUtilities::GetPartsByType(ORNL::CSM->partsSnapshot(), ORNL::MeshType::kSettings, target)
+                   .contains(modifier) &&
+               ORNL::SlicingUtilities::GetPartsByType(ORNL::CSM->partsSnapshot(), ORNL::MeshType::kSettings, other)
+                   .contains(modifier),
+           "The unparented modifier fixture must apply to both build objects during slicing.");
+    const auto modifier_global_before = global->json();
+    const auto target_before          = target->getSb()->json();
+    const auto target_ranges_before   = target->SettingsRangesToJson();
+    const auto other_before           = other->getSb()->json();
+    const auto modifier_before        = modifier->getSb()->json();
+    dialog.refresh();
+    const QString global_inherited = cell(modifier->name(), "perimeter_speed", "Part", 5);
+    expect(global_inherited.startsWith("Varies:") && global_inherited.contains("200" + velocity_suffix) &&
+               global_inherited.contains("300" + velocity_suffix) && global_inherited.contains("400" + velocity_suffix),
+           "An unparented modifier must aggregate every target build object's part and layer values.");
+    expect(modifier_source().contains(target->name()) && modifier_source().contains(other->name()) &&
+               modifier_source().contains("Layers 2-3"),
+           "An unparented modifier's replacement tooltip must identify every target and layer source.");
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 7) == "Unknown",
+           "Modifier activity must vary when one target enables its feature and another disables it.");
+    expect(global->json() == modifier_global_before && target->getSb()->json() == target_before &&
+               target->SettingsRangesToJson() == target_ranges_before && other->getSb()->json() == other_before &&
+               modifier->getSb()->json() == modifier_before && modifier->parent().isNull(),
+           "Evaluating modifier targets must not change Global, target, modifier, layer, or parent settings.");
+    filter->setText(modifier->name());
+    for (const auto theme : {ORNL::ThemeName::kLightMode, ORNL::ThemeName::kDarkMode}) {
+        apply_theme(theme);
+        table->resizeColumnsToContents();
+        if (argc > 1)
+            expect(
+                dialog.grab().save(QString(argv[1]) + (theme == ORNL::ThemeName::kLightMode ? "/modifiers-light.png"
+                                                                                            : "/modifiers-dark.png")),
+                "Could not save the modifier inheritance report screenshot.");
+    }
+    filter->clear();
+    target->clearSettingsRanges();
+    target->getSb()->setSetting("perimeter_speed", 100000.0);
+    other->getSb()->setSetting("perimeter_speed", 100000.0);
+    modifier->getSb()->setSetting("perimeter_speed", 100000.0);
+    dialog.refresh();
+    expect(findRow(table, modifier->name(), "perimeter_speed", "Part") < 0,
+           "A modifier matching every target's inherited value must remain redundant.");
     ORNL::CSM->clearParts();
 
     preferences->setDistanceUnit(old_distance);
