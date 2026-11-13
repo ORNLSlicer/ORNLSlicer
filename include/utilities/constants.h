@@ -1046,6 +1046,13 @@ class Constants {
             static const QString kLargestGap;
             static const QString kMaxStitch;
         };
+
+        class DlpSlicer {
+           public:
+            static const QString kProjectionWidth;
+            static const QString kPixelWidth;
+            static const QString kBitDepth;
+        };
     };
 
     class Settings {

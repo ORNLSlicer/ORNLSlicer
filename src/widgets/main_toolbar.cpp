@@ -413,7 +413,7 @@ void MainToolbar::enableCorrectOptions() {
         m_segment_info_action->setEnabled(true);
         m_2d_gcode_action->setEnabled(true);
         m_show_ghosts_action->setEnabled(true);
-        m_export_gcode_action->setEnabled(true);
+        m_export_gcode_action->setEnabled(m_export_available);
     }
     else {
         m_add_action->setEnabled(true);
@@ -502,6 +502,7 @@ void MainToolbar::setSliceAbility(bool status) {
 }
 
 void MainToolbar::setExportAbility(bool status) {
+    m_export_available = status;
     m_export_gcode_action->setEnabled(status);
 }
 

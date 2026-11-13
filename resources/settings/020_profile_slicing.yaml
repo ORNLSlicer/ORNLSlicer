@@ -4,12 +4,13 @@ settings:
   - name: "slicing_mode"
     display: "Slicing Mode"
     type: "enumeration"
-    tooltip: "Selects the slicing workflow to use. Planar creates flat layer slices along the slice plane normal. Cylindrical creates radial or helical paths around a cylinder axis. Image creates image slices from the model cross sections."
+    tooltip: "Selects the slicing workflow to use. Planar creates flat layer slices along the slice plane normal. Cylindrical creates radial or helical paths around a cylinder axis. Image creates image slices from the model cross sections. DLP creates bitmap exposure masks split into projector lanes."
     depends: {}
     options:
       - "Planar"
       - "Cylindrical"
       - "Image"
+      - "DLP"
     default: 0
     minor: "Slicing"
     major: "Profile"

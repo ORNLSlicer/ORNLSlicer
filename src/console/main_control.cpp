@@ -11,6 +11,7 @@
 #include <qtmetamacros.h>
 
 #include "configs/settings_base.h"
+#include "dlp/dlp_build.h"
 #include "gcode/gcode_meta.h"
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
@@ -37,9 +38,12 @@ void MainControl::continueStartup() {
 
     connect(CSM.get(), &SessionManager::partAdded, this, &MainControl::loadComplete);
     connect(CSM.get(), &SessionManager::forwardSliceComplete, this, &MainControl::sliceComplete);
+    connect(CSM.get(), &SessionManager::forwardDlpSliceComplete, this, &MainControl::dlpSliceComplete);
     connect(CSM.get(), &SessionManager::sliceFailed, this, [this](const QString& message) {
         std::cerr << message.toStdString() << std::endl;
-        emit finished();
+        const bool dlp =
+            static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode)) == SlicingMode::kDlp;
+        emit finished(dlp ? 1 : 0);
     });
     connect(CSM.get(), &SessionManager::updateDialog, this, &MainControl::displayProgress);
 }
@@ -127,6 +131,20 @@ void MainControl::sliceComplete(QString filepath, bool alterFile) {
         loader->start();
     }
     else { emit finished(); }
+}
+
+void MainControl::dlpSliceComplete() {
+    const auto build = CSM->dlpBuild();
+    QString error;
+    if (build.isNull() ||
+        !DlpExporter::exportBuild(*build, m_options->setting<QString>(Constants::ConsoleOptionStrings::kOutputLocation),
+                                  &error)) {
+        std::cerr << (error.isEmpty() ? QStringLiteral("No completed DLP build is available.") : error).toStdString()
+                  << std::endl;
+        emit finished(1);
+        return;
+    }
+    emit finished();
 }
 
 void MainControl::updateOutputInformation(QString tempLocation, GcodeMeta meta, bool generateArcSchedule) {

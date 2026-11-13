@@ -31,6 +31,7 @@
 #include "threading/mesh_loader.h"
 #include "threading/session_loader.h"
 #include "threading/slicers/cylindrical_slicer.h"
+#include "threading/slicers/dlp_slicer.h"
 #include "threading/slicers/image_slicer.h"
 #include "threading/slicers/planar_slicer.h"
 #include "units/derivative_units.h"
@@ -590,16 +591,18 @@ bool SessionManager::isBuildMode() {
 }
 
 bool SessionManager::doSlice() {
-    try {
-        WriterBase::layerNumber(GSM->getGlobal(), 0);
-    } catch (const std::invalid_argument& error) {
-        const QString message = QString::fromUtf8(error.what());
-        Diagnostics::logLine(message);
-        emit forwardStatusUpdate(message);
-        return false;
+    const SlicingMode type = static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode));
+    if (type != SlicingMode::kDlp) {
+        try {
+            WriterBase::layerNumber(GSM->getGlobal(), 0);
+        } catch (const std::invalid_argument& error) {
+            const QString message = QString::fromUtf8(error.what());
+            Diagnostics::logLine(message);
+            emit forwardStatusUpdate(message);
+            return false;
+        }
     }
     const GcodeSyntax syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
-    const SlicingMode type   = static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode));
     if (type == SlicingMode::kCylindrical && !supportsCylindricalSlicing(syntax)) {
         const QString message = "Cylindrical slicing requires Printer > Machine Setup > Syntax to be Arc Specialties.";
         qWarning() << message;
@@ -668,9 +671,17 @@ bool SessionManager::requiresWeldScheduleFile() const {
     return m_ast && m_ast->requiresWeldScheduleFile();
 }
 
+QSharedPointer<const DlpBuild> SessionManager::dlpBuild() const {
+    const auto* slicer = dynamic_cast<const DlpSlicer*>(m_ast.get());
+    return slicer ? slicer->build() : QSharedPointer<const DlpBuild>();
+}
+
 bool SessionManager::sliceComplete() {
     Diagnostics::logLine(QString("SessionManager slice complete: %1").arg(tempGcodeFile));
-    emit forwardSliceComplete(tempGcodeFile, true);
+    if (m_slicing_mode == SlicingMode::kDlp)
+        emit forwardDlpSliceComplete();
+    else
+        emit forwardSliceComplete(tempGcodeFile, true);
     return true;
 }
 
@@ -727,6 +738,9 @@ bool SessionManager::changeSlicer(SlicingMode type) {
             break;
         case SlicingMode::kCylindrical:
             m_ast.reset(new CylindricalSlicer(tempGcodeFile));
+            break;
+        case SlicingMode::kDlp:
+            m_ast.reset(new DlpSlicer(tempGcodeFile));
             break;
         default:
             qWarning() << "Unknown slicing mode requested. Falling back to Planar slicer.";

@@ -1,0 +1,44 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "dlp_projection_width"
+    display: "Projection Width"
+    type: "distance"
+    tooltip: "Physical X width of each DLP projector lane. Lanes span the full printer Y dimension, and the last lane is padded with black pixels to this width."
+    depends: {"slicing_mode":3}
+    visible_if: {"slicing_mode":3}
+    options: []
+    default: 25400
+    minor: "DLP Slicer"
+    major: "Experimental"
+    namespace: "Experimental::DlpSlicer"
+    symbol: "kProjectionWidth"
+    local: false
+  - name: "dlp_pixel_width"
+    display: "Projection Width in Pixels"
+    type: "positive_int"
+    tooltip: "Number of pixels across each DLP projector lane. Projection Width divided by this value defines the physical size of each square image pixel."
+    depends: {"slicing_mode":3}
+    visible_if: {"slicing_mode":3}
+    options: []
+    default: 1024
+    minor: "DLP Slicer"
+    major: "Experimental"
+    namespace: "Experimental::DlpSlicer"
+    symbol: "kPixelWidth"
+    local: false
+  - name: "dlp_bit_depth"
+    display: "BMP Bit Depth"
+    type: "enumeration"
+    tooltip: "Selects 1-bit or 8-bit BMP output. Exposure masks use white geometry on a black background."
+    depends: {"slicing_mode":3}
+    visible_if: {"slicing_mode":3}
+    options:
+      - "1-bit"
+      - "8-bit"
+    default: 0
+    minor: "DLP Slicer"
+    major: "Experimental"
+    namespace: "Experimental::DlpSlicer"
+    symbol: "kBitDepth"
+    local: false

@@ -163,12 +163,12 @@ Boris Cherny (creator of Claude Code) keeps his team's file around 100 lines. Un
 
 ### Commands
 
-Run from the repository root. Enter `nix develop .#ornlslicerDev -L` first, then run these commands inside that shell:
+Run from the repository root. Enter `systemd-run --user --scope -p MemoryHigh=16G -p MemoryMax=20G -p MemorySwapMax=1G nix develop .#ornlslicerDev -L --max-jobs 1 --cores 2` first, then run these commands inside that shell. The scope caps the shell and its build/test processes; Nix daemon dependency builds run outside it, so keep the Nix job limits.
 
 - Configure this checkout before building: `cmake --preset generic-llvm-ninja`.
-- Build the application: `cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer -j 32`. Replace `Debug` with `Release` for a release build; both configurations share the same build tree.
-- Build a focused test (example): `cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer_settings_manager_tests -j 32`, then run `ctest --test-dir build/generic-llvm-ninja -C Debug -R '^settings_manager_tests$' --output-on-failure`. CMake test target names have the `ornlslicer_` prefix; CTest names do not.
-- Build all targets before running the full test suite: `cmake --build build/generic-llvm-ninja --config Debug -j 32`, then `ctest --test-dir build/generic-llvm-ninja -C Debug --output-on-failure`.
+- Build the application: `cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer -j 8`. Replace `Debug` with `Release` for a release build; both configurations share the same build tree.
+- Build a focused test (example): `cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer_settings_manager_tests -j 8`, then run `ctest --test-dir build/generic-llvm-ninja -C Debug -R '^settings_manager_tests$' --output-on-failure`. CMake test target names have the `ornlslicer_` prefix; CTest names do not.
+- Build all targets before running the full test suite: `cmake --build build/generic-llvm-ninja --config Debug -j 8`, then `ctest --test-dir build/generic-llvm-ninja -C Debug --output-on-failure`.
 - Install formatting hooks once per checkout: `pre-commit install`. Format staged files with `pre-commit run`, or selected files with `pre-commit run --files <path> ...`.
 - Regenerate setting metadata after editing the YAML sources: `python3 scripts/generate_master_config.py resources/settings resources/configs/master.conf resources/configs/setting_inputs.conf`.
 
@@ -202,3 +202,6 @@ When the user corrects your approach, append a one-line rule here before ending 
 - For CLI export checks, pass an output prefix without a suffix and verify the generated G-code is a non-empty regular file.
 - Preload archive entries before creating `.s2p` variants with Python; passing the source archive's `ZipInfo` objects to `writestr()` mutates their offsets.
 - Constrain support restoration to paths through the unsupported contact; preserve angle-classified organic branch seeds and keep negative test probes beyond restoration reach of joining contacts.
+- Use the units API, such as `Distance(value).to(mm)`, for exported physical values; raw division by unit constants exposes floating-point conversion noise.
+- Exercise DLP with negative machine Z limits and W travel, and validate full-layer and padded-lane image sizes before allocating raster memory.
+- Limit builds on this workstation to eight compiler jobs and one build at a time inside the memory-limited scope above; after an OOM kill or desktop loss, stop and inspect memory before retrying, and never repeat the same resource settings automatically.

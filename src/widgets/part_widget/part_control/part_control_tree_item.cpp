@@ -104,6 +104,8 @@ void PartControlTreeItem::updateToolTip() {
             const auto mode = static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode));
             if (mode == SlicingMode::kImage)
                 warning = "Image slicing does not support clipping or settings meshes.";
+            else if (mode == SlicingMode::kDlp)
+                warning = "DLP slicing does not support clipping or settings meshes.";
             else if (mode == SlicingMode::kCylindrical && m_mesh_type == MeshType::kSettings)
                 warning = "Cylindrical slicing does not support settings meshes.";
         }

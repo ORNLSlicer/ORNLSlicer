@@ -63,5 +63,25 @@ class SettingGroupTests(unittest.TestCase):
                     self.assertEqual(entry.get("columns", 1), 1)
 
 
+class DlpSettingTests(unittest.TestCase):
+    def test_dlp_mode_preserves_existing_mode_indices(self):
+        master, _ = generator.load_settings(ROOT / "resources/settings")
+        self.assertEqual(master["slicing_mode"]["options"].split(", "), ["Planar", "Cylindrical", "Image", "DLP"])
+        self.assertEqual(master["slicing_mode"]["default"], 0)
+
+    def test_dlp_settings_are_global_and_only_visible_in_dlp_mode(self):
+        master, _ = generator.load_settings(ROOT / "resources/settings")
+        for name, default in (("dlp_projection_width", 25400), ("dlp_pixel_width", 1024), ("dlp_bit_depth", 0)):
+            with self.subTest(setting=name):
+                setting = master[name]
+                self.assertEqual(setting["major"], "Experimental")
+                self.assertEqual(setting["minor"], "DLP Slicer")
+                self.assertEqual(setting["depends"], {"slicing_mode": 3})
+                self.assertEqual(setting["visible_if"], {"slicing_mode": 3})
+                self.assertFalse(setting["local"])
+                self.assertEqual(setting["default"], default)
+        self.assertEqual(master["dlp_bit_depth"]["options"].split(", "), ["1-bit", "8-bit"])
+
+
 if __name__ == "__main__":
     unittest.main()

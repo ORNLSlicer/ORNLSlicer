@@ -56,7 +56,10 @@ enum class SlicingMode : uint8_t {
     kCylindrical = 1,
 
     //! @brief Image-based slicing workflow.
-    kImage = 2
+    kImage = 2,
+
+    //! @brief DLP exposure-mask slicing workflow.
+    kDlp = 3
 };
 
 /*!

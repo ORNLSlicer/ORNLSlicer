@@ -58,6 +58,8 @@ class SessionLoader;
 class PartMetaItem;
 class PartTransformUndoCommand;
 class SettingValueUndoCommand;
+class DlpPreview;
+struct DlpBuild;
 
 //! \brief Define for quick access to this singleton.
 #define MWIN MainWindow::getInstance()
@@ -139,6 +141,11 @@ class MainWindow : public QMainWindow {
    private slots:
     //! \brief Start the slicing.
     void doSlice();
+
+    //! \brief Preview and export completed DLP images independently of G-Code.
+    void showDlpBuild();
+    void exportDlpBuild();
+    void clearDlpBuild();
 
     //! \brief Import GCode
     void importGCode();
@@ -400,6 +407,9 @@ class MainWindow : public QMainWindow {
     //! \brief Tool Windows
     PreferencesWindow* m_pref_window;
     GcodeExport* m_export_window;
+    DlpPreview* m_dlp_preview;
+    QSharedPointer<const DlpBuild> m_dlp_build;
+    bool m_dlp_slice_active = false;
     FlowrateCalcWindow* m_flowrate_calc_window;
     XtrudeCalcWindow* m_xtrude_calc_window;
     SettingsFileCompareDialog* m_settings_file_compare_window;

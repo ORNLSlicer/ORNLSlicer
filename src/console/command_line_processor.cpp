@@ -67,8 +67,8 @@ void CommandLineConverter::setupCommandLineParser(QCommandLineParser& parser) {
                       "Valid settings file to extract global settings from.", "file", ""});
     parser.addOption(
         {Constants::ConsoleOptionStrings::kInputSTLTransform, "File containing model transforms.", "file", ""});
-    parser.addOption(
-        {Constants::ConsoleOptionStrings::kOutputLocation, "File to write out Gcode to.", "directory", ""});
+    parser.addOption({Constants::ConsoleOptionStrings::kOutputLocation,
+                      "Output file prefix for G-code, or a new/empty build directory for DLP.", "directory", ""});
 
     // preference option
     parser.addOption({Constants::ConsoleOptionStrings::kShiftPartsOnLoad,

@@ -51,6 +51,9 @@ class MainControl : public QObject {
     //! \param alterFile: whether or not the file is able to be altered during parsing
     void sliceComplete(QString filepath, bool alterFile);
 
+    //! \brief Export a completed DLP build to the requested output directory.
+    void dlpSliceComplete();
+
     //! \brief Update required info for export
     //! \brief tempLocation: location of temp file
     //! \brief meta: selected meta used for tempLocation's generation

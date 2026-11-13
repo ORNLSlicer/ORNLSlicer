@@ -1486,6 +1486,7 @@ void PartView::updateSlicingGeometryPreview(QSharedPointer<PartObject> gop) {
             gop->plane()->show();
             break;
         case SlicingMode::kImage:
+        case SlicingMode::kDlp:
             break;
     }
 }

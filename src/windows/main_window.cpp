@@ -48,6 +48,7 @@
 #include <qurl.h>
 #include <qwidget.h>
 
+#include "dlp/dlp_build.h"
 #include "geometry/mesh/open_mesh.h"
 #include "geometry/segment_base.h"
 #include "graphics/view/gcode_view.h"
@@ -62,6 +63,7 @@
 #include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
 #include "widgets/cmd_widget.h"
+#include "widgets/dlp_preview.h"
 #include "widgets/gcode_widget.h"
 #include "widgets/gcodebar.h"
 #include "widgets/layerbar.h"
@@ -337,7 +339,11 @@ void MainWindow::setupWindows() {
     m_xtrude_calc_window           = new XtrudeCalcWindow(this);
     m_settings_file_compare_window = new SettingsFileCompareDialog(this);
     m_export_window                = new GcodeExport(this);
-    m_layertimebar                 = new LayerTimesWindow(this);
+    m_dlp_preview                  = new DlpPreview(this);
+    m_dlp_preview->setWindowFlag(Qt::Window);
+    m_dlp_preview->setWindowTitle(tr("DLP Build Preview"));
+    m_dlp_preview->resize(900, 650);
+    m_layertimebar = new LayerTimesWindow(this);
     // m_ingersollPostProcessor = new IngersollPostProcessor(this);
     m_about_window     = new AboutWindow(this);
     m_changelog_window = new ChangelogWindow(this);
@@ -561,6 +567,7 @@ void MainWindow::setupActions() {
     // Menu View
     m_actions["part_view"]    = {"Part View", ":/icons/cube_black.png", false, QKeySequence(), nullptr};
     m_actions["gcode_view"]   = {"G-Code View", ":/icons/3d_black.png", false, QKeySequence(), nullptr};
+    m_actions["dlp_preview"]  = {"DLP Preview", ":/icons/layers_black.png", false, QKeySequence(), nullptr};
     m_actions["reset_camera"] = {"Reset Camera", ":/icons/camera_reset_black.png", false, QKeySequence(), nullptr};
 
     // Menu Settings
@@ -586,6 +593,7 @@ void MainWindow::setupActions() {
                                  nullptr};
     m_actions["gcode_import"] = {"Import G-Code", ":/icons/import_black.png", false, QKeySequence(), nullptr};
     m_actions["gcode_export"] = {"Export G-Code", ":/icons/export_black.png", false, QKeySequence(), nullptr};
+    m_actions["dlp_export"]   = {"Export DLP Build", ":/icons/export_black.png", false, QKeySequence(), nullptr};
 
     // Menu Tools
     m_actions["flowrate_calc"]       = {"Flowrate Calculator", ":/icons/calculator_black.png", false, QKeySequence(),
@@ -688,6 +696,7 @@ void MainWindow::setupActions() {
     // View
     m_menu_view->addAction(m_actions["part_view"].action);
     m_menu_view->addAction(m_actions["gcode_view"].action);
+    m_menu_view->addAction(m_actions["dlp_preview"].action);
     m_menu_view->addSeparator();
     m_menu_view->addAction(m_actions["reset_camera"].action);
     m_menu_view->addSeparator();
@@ -714,6 +723,7 @@ void MainWindow::setupActions() {
     m_menu_project->addSeparator();
     m_menu_project->addAction(m_actions["gcode_import"].action);
     m_menu_project->addAction(m_actions["gcode_export"].action);
+    m_menu_project->addAction(m_actions["dlp_export"].action);
 
     // Tools
     m_menu_tools->addAction(m_actions["flowrate_calc"].action);
@@ -787,6 +797,15 @@ void MainWindow::setupInsert() {
 void MainWindow::setupEvents() {
     // Menu connections.
     connect(m_menu_recent_files, &QMenu::aboutToShow, this, &MainWindow::updateRecentFilesMenu);
+    m_actions["dlp_preview"].action->setEnabled(false);
+    m_actions["dlp_export"].action->setEnabled(false);
+    connect(m_actions["dlp_preview"].action, &QAction::triggered, this, [this] {
+        m_dlp_preview->show();
+        m_dlp_preview->raise();
+        m_dlp_preview->activateWindow();
+    });
+    connect(m_actions["dlp_export"].action, &QAction::triggered, this, &MainWindow::exportDlpBuild);
+    connect(m_dlp_preview, &DlpPreview::exportRequested, this, &MainWindow::exportDlpBuild);
     connect(m_actions["last_session"].action, &QAction::triggered, this, &MainWindow::autoLoad);
     connect(m_actions["screenshot"].action, &QAction::triggered, m_part_widget, &PartWidget::takeScreenshot);
 
@@ -953,14 +972,22 @@ void MainWindow::setupEvents() {
 
     // Session connections.
     connect(CSM.get(), &SessionManager::partAdded, m_part_widget, &PartWidget::add);
+    connect(CSM.get(), &SessionManager::partsCleared, this, &MainWindow::clearDlpBuild);
+    connect(CSM.get(), &SessionManager::forwardDlpSliceComplete, this, &MainWindow::showDlpBuild);
     connect(CSM.get(), &SessionManager::forwardSliceComplete, this, &MainWindow::importFile);
     connect(CSM.get(), &SessionManager::forwardSliceComplete, this, &MainWindow::enableExportMenu);
     connect(CSM.get(), &SessionManager::forwardSliceComplete, this, [this]() {
+        m_dlp_slice_active = false;
         m_main_toolbar->setView(1);
         switchViews(1);
     });
     connect(CSM.get(), &SessionManager::forwardStatusUpdate, this, &MainWindow::updateStatus);
-    connect(CSM.get(), &SessionManager::sliceFailed, this, [this]() { m_slice_dialog.reset(); });
+    connect(CSM.get(), &SessionManager::sliceFailed, this, [this](const QString& message) {
+        const bool show_dlp_error = m_dlp_slice_active;
+        m_dlp_slice_active        = false;
+        m_slice_dialog.reset();
+        if (show_dlp_error) QMessageBox::warning(this, tr("DLP Slicing Failed"), message);
+    });
     connect(CSM.get(), &SessionManager::sessionSaved, this, [this](QString path) {
         QMessageBox::information(this, "Save Project", "Project has been successfully saved to " + path);
     });
@@ -1390,6 +1417,14 @@ void MainWindow::setBusy(bool busy, QString msg) {
 }
 
 void MainWindow::doSlice() {
+    clearDlpBuild();
+    m_dlp_slice_active =
+        static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode)) == SlicingMode::kDlp;
+    if (m_dlp_slice_active) {
+        m_actions["gcode_export"].action->setEnabled(false);
+        m_main_toolbar->setExportAbility(false);
+        m_actions["build_log"].action->setEnabled(false);
+    }
     m_gcode_widget->clear();
     m_gcodebar->clear();
     m_layertimebar->clear();
@@ -1401,11 +1436,13 @@ void MainWindow::doSlice() {
     connect(CSM.get(), &SessionManager::updateDialog, m_slice_dialog.get(),
             QOverload<StatusUpdateStepType, int>::of(&SliceDialog::updateStatus));
     connect(m_slice_dialog.get(), &SliceDialog::cancelSlice, CSM.get(), &SessionManager::cancelSlice);
+    connect(m_slice_dialog.get(), &SliceDialog::cancelSlice, this, [this] { m_dlp_slice_active = false; });
 
     m_slice_dialog->show();
 
     // Execute.
     if (!CSM->doSlice()) {
+        m_dlp_slice_active = false;
         m_slice_dialog.reset();
         return;
     }
@@ -1413,6 +1450,44 @@ void MainWindow::doSlice() {
     m_statusbar->showMessage("Slicing the loaded part(s) ...");
     m_cmdbar->append("Slicing the loaded part(s) ...");
     // m_progressbar->show();
+}
+
+void MainWindow::showDlpBuild() {
+    m_dlp_slice_active = false;
+    m_slice_dialog.reset();
+    m_dlp_build = CSM->dlpBuild();
+    if (!m_dlp_build) return;
+
+    m_dlp_preview->setBuild(m_dlp_build);
+    m_actions["dlp_preview"].action->setEnabled(true);
+    m_actions["dlp_export"].action->setEnabled(true);
+    m_dlp_preview->show();
+    m_dlp_preview->raise();
+    m_dlp_preview->activateWindow();
+    updateStatus(tr("DLP slicing complete."));
+}
+
+void MainWindow::exportDlpBuild() {
+    if (!m_dlp_build) return;
+    const QString destination = QFileDialog::getExistingDirectory(
+        this, tr("Select an Empty Folder for DLP Build Export"), CSM->getMostRecentGcodeLocation());
+    if (destination.isEmpty()) return;
+
+    QString error;
+    if (!DlpExporter::exportBuild(*m_dlp_build, destination, &error)) {
+        QMessageBox::warning(this, tr("DLP Export Failed"), error);
+        return;
+    }
+    CSM->setMostRecentGcodeLocation(destination);
+    updateStatus(tr("DLP build exported to %1").arg(destination));
+}
+
+void MainWindow::clearDlpBuild() {
+    m_dlp_build.clear();
+    m_dlp_preview->clear();
+    m_dlp_preview->hide();
+    m_actions["dlp_preview"].action->setEnabled(false);
+    m_actions["dlp_export"].action->setEnabled(false);
 }
 
 void MainWindow::loadModel(MeshType mt) {

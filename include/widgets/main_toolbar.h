@@ -161,6 +161,9 @@ class MainToolbar : public QToolBar {
     //! \brief if selected part has layer-specific settings available for visualization
     bool m_layer_settings_range_available = false;
 
+    //! \brief whether a completed G-Code file is available for export
+    bool m_export_available = false;
+
     //! \brief tracks whether the optimization point toggle has been manually changed this session
     bool m_optimization_points_user_toggled = false;
 };

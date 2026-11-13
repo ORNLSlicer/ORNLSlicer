@@ -130,6 +130,22 @@ int main(int argc, char* argv[]) {
     app.processEvents();
     passed &= checkIconContrast(startup_toolbar);
 
+    QAction* export_action = nullptr;
+    for (auto* action : startup_toolbar.actions()) {
+        if (action->text() == "Export G-code") export_action = action;
+    }
+    if (!ORNL::Testing::expect(export_action != nullptr, "The toolbar must expose the G-Code export command."))
+        return EXIT_FAILURE;
+    startup_toolbar.setExportAbility(true);
+    startup_toolbar.setView(1);
+    passed &= ORNL::Testing::expect(export_action->isEnabled(), "Completed G-Code must remain exportable.");
+    startup_toolbar.setExportAbility(false);
+    startup_toolbar.setView(0);
+    startup_toolbar.setView(1);
+    passed &= ORNL::Testing::expect(!export_action->isEnabled(),
+                                    "Switching views after a DLP slice must not re-enable stale G-Code export.");
+    startup_toolbar.setView(0);
+
     int iteration = 0;
     for (auto theme : {ORNL::ThemeName::kLightMode, ORNL::ThemeName::kDarkMode, ORNL::ThemeName::kLightMode}) {
         passed &= apply_theme(startup_parent, theme);

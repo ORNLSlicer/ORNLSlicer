@@ -34,6 +34,7 @@ namespace ORNL {
 enum class SlicingMode : uint8_t;
 class SessionLoader;
 class AbstractSlicingThread;
+struct DlpBuild;
 
 /*!
  *  \class SessionManager
@@ -221,6 +222,9 @@ class SessionManager : public QObject {
     //! \brief Whether the completed slice requires a generated ARC weld schedule companion.
     bool requiresWeldScheduleFile() const;
 
+    //! \brief Completed DLP images and layout, independent of subsequent settings edits.
+    QSharedPointer<const DlpBuild> dlpBuild() const;
+
     //! \brief Returns the time elapsed for the current slice.
     qint64 getSliceTimeElapsed();
 
@@ -283,6 +287,9 @@ class SessionManager : public QObject {
 
     //! \brief Signal that slicing has complete.  Forward to main window to start visualization and adjust layer times.
     void forwardSliceComplete(QString filepath, bool alterFile);
+
+    //! \brief DLP images are ready for preview or export without G-Code parsing.
+    void forwardDlpSliceComplete();
 
     //! \brief Signal that slicing failed and no G-Code should be imported or exported.
     void sliceFailed(QString message);
