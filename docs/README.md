@@ -30,6 +30,7 @@ The setup guide includes build, test, editor, and troubleshooting instructions.
 - [Cachix Workflow](contributing/cachix.md)
 - [Versioning and Releases](contributing/versioning.md)
 - [Maintaining the Changelog](contributing/changelog.md)
+- [Maintaining the User Guide](contributing/user-guide.md)
 
 For source-grounded architecture, runtime flows, ownership boundaries, extension
 points, and validation paths, start with the [OpenWiki quickstart](../openwiki/quickstart.md).

@@ -30,7 +30,8 @@ The Linux and Windows application packages use a filtered source containing:
 - `resources/`, including generated settings configuration
 - `templates/`
 - `version.json`
-- `docs/ornlslicer-user-guide.pdf`, which is installed with the application
+- `docs/ornlslicer-user-guide.pdf`, `docs/ornlslicer-user-guide.md`, and
+  `docs/user-guide-images/`, which are installed with the application
 
 Changes to `.github/`, `openwiki/`, or non-installed documentation do not
 change the application source path. Changes to the listed inputs do. Nix

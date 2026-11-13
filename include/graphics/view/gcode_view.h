@@ -59,6 +59,12 @@ class GCodeView : public BaseView {
     //! \brief Set camera to view from an isometric direction.
     void setIsoView();
 
+    //! \brief Applies camera pan to the G-code view camera target.
+    //! \param v World-space translation vector to apply.
+    //! \param absolute If true, set the camera target to \p v; otherwise apply \p v as a relative pan.
+    //! \note This override keeps G-code navigation centered on the printer volume.
+    void translateCamera(QVector3D v, bool absolute = false) override;
+
    public slots:
     //! \brief Changes the view to use an orthographic projection instead of the normal perspective view.
     void useOrthographic(bool ortho);
@@ -142,12 +148,6 @@ class GCodeView : public BaseView {
 
     //! \brief Alters the view matrix depending on the projection type and the new view size.
     void resizeGL(int width, int height) override;
-
-    //! \brief Applies camera pan to the G-code view camera target.
-    //! \param v World-space translation vector to apply.
-    //! \param absolute If true, set the camera target to \p v; otherwise apply \p v as a relative pan.
-    //! \note This override keeps G-code navigation centered on the printer volume.
-    void translateCamera(QVector3D v, bool absolute) override;
 
     //! \brief Applies shared camera rotation unless the G-code view is orthographic.
     //! \param screen_delta Horizontal and vertical NDC-style delta requested by keyboard or mouse input.

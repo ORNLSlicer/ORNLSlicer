@@ -104,6 +104,16 @@ class BaseView : public QOpenGLWidget, public QOpenGLFunctions_3_3_Core {
     //! \return The camera object.
     QSharedPointer<CameraManager> camera();
 
+    //! \brief Applies a pan request to the camera.
+    //! \param v World-space translation vector to apply.
+    //! \param absolute If true, set the camera pan target to \p v; otherwise apply \p v as a relative pan.
+    //! \note Derived views can override this when camera panning also affects view-specific scene objects.
+    virtual void translateCamera(QVector3D v, bool absolute = false);
+
+    //! \brief Translates the camera from a normalized screen-space input delta.
+    //! \param screen_delta Horizontal and vertical NDC-style delta.
+    void translateCameraByScreenDelta(const QVector2D screen_delta);
+
    protected:
     /*!
      * \title Object Methods
@@ -199,11 +209,6 @@ class BaseView : public QOpenGLWidget, public QOpenGLFunctions_3_3_Core {
     virtual void handleWheelBackward(QPointF mouse_ndc_pos, float delta);
     //! \brief Gives derived views first chance at non-camera key presses.
     virtual bool handleKeyPress(QKeyEvent* e);
-    //! \brief Applies a pan request from mouse or keyboard navigation.
-    //! \param v World-space translation vector to apply.
-    //! \param absolute If true, set the camera pan target to \p v; otherwise apply \p v as a relative pan.
-    //! \note Derived views can override this when camera panning also affects view-specific scene objects.
-    virtual void translateCamera(QVector3D v, bool absolute);
     //! \brief Applies a camera rotation from a normalized screen-space input delta.
     //! \param screen_delta Horizontal and vertical NDC-style delta using the same convention as mouse rotation.
     //! \note Derived views can override this to constrain or disable rotation for a particular projection mode.

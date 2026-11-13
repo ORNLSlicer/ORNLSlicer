@@ -19,6 +19,10 @@ class SettingsFileCompareDialog : public QDialog {
    public:
     explicit SettingsFileCompareDialog(QWidget* parent = nullptr);
 
+    //! \brief Populate the file fields and display a comparison of two in-memory settings documents.
+    void compareDocuments(const QString& first_path, const fifojson& first, const QString& second_path,
+                          const fifojson& second);
+
    private slots:
     void browseFirstFile();
     void browseSecondFile();
@@ -27,6 +31,7 @@ class SettingsFileCompareDialog : public QDialog {
 
    private:
     void browseForFile(QLineEdit* target, const QString& title);
+    void showResult(const SettingsFileComparator::Result& result);
     void displayResult(const SettingsFileComparator::Result& result);
     void clearResult();
 

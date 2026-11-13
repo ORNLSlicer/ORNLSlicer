@@ -236,6 +236,23 @@ if(WIN32)
     target_link_libraries(${PROJECT_NAME}_cli ${PROJECT_NAME}_obj)
 endif()
 
+add_executable(${PROJECT_NAME}_gui_capture EXCLUDE_FROM_ALL
+    tools/gui_capture.cpp
+    tools/gui_capture/capture_common.cpp
+    tools/gui_capture/capture_demos.cpp
+    tools/gui_capture/capture_gui.cpp
+    tools/gui_capture/capture_settings_menus.cpp
+)
+target_include_directories(
+    ${PROJECT_NAME}_gui_capture
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/tools/gui_capture
+        ${CMAKE_CURRENT_LIST_DIR}/include
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+        ${ORNLSLICER_INCLUDE_DIRS}
+)
+target_link_libraries(${PROJECT_NAME}_gui_capture PRIVATE ${PROJECT_NAME}_obj)
+
 option(ORNLSLICER_BUILD_TESTS "Build ORNLSlicer test executables" ${BUILD_TESTING})
 if(ORNLSLICER_BUILD_TESTS)
     enable_testing()
@@ -856,7 +873,13 @@ if(WIN32)
     install(FILES $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}_cli> DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-install(FILES ${CMAKE_CURRENT_LIST_DIR}/docs/ornlslicer-user-guide.pdf DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES
+    ${CMAKE_CURRENT_LIST_DIR}/docs/ornlslicer-user-guide.pdf
+    ${CMAKE_CURRENT_LIST_DIR}/docs/ornlslicer-user-guide.md
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
+)
+
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/resources/fonts/OFL.txt
     DESTINATION ${CMAKE_INSTALL_DOCDIR}/licenses RENAME NotoSans-OFL.txt)
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/docs/user-guide-images DESTINATION ${CMAKE_INSTALL_DOCDIR})
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/templates              DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})

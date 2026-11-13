@@ -4,7 +4,7 @@ settings:
   - name: "fan"
     display: "Fan Control"
     type: "boolean"
-    tooltip: "Sets how and when the fan will operate"
+    tooltip: "Enables cooling-fan commands for filament printing. Supported writers turn the fan on using Max Fan Speed and turn it off at shutdown."
     depends: {"AND":[{"slicing_mode":0},{"machine_type":1}]}
     options: []
     default: false
@@ -16,7 +16,7 @@ settings:
   - name: "fan_min_speed"
     display: "Min Fan Speed"
     type: "percentage100"
-    tooltip: "Minimum speed the fan will be on"
+    tooltip: "Reserved minimum cooling-fan percentage. The current slicing and writer paths do not read this value, so it has no effect."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"machine_type":1},{"fan":true}]}]}
     options: []
     default: 0
@@ -28,7 +28,7 @@ settings:
   - name: "fan_max_speed"
     display: "Max Fan Speed"
     type: "percentage100"
-    tooltip: "Maximum speed the fan will be on"
+    tooltip: "Sets the cooling-fan percentage emitted by supported writers when Fan Control is enabled."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"machine_type":1},{"fan":true}]}]}
     options: []
     default: 0

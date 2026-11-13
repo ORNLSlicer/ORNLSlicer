@@ -52,7 +52,7 @@ settings:
   - name: "retraction_open_spaces_only"
     display: "Retract on Open Spaces Only"
     type: "boolean"
-    tooltip: "If seleted, retraction will occur only when crossing open spaces"
+    tooltip: "If selected, retracts only for travel moves that cross open space."
     depends: {"AND":[{"machine_type":1},{"retraction":true}]}
     options: []
     default: false
@@ -64,7 +64,7 @@ settings:
   - name: "retraction_layer_change"
     display: "Retract on Layer Change"
     type: "boolean"
-    tooltip: "If seleted, retraction will occur between every layer"
+    tooltip: "If selected, retracts during every layer change."
     depends: {"AND":[{"machine_type":1},{"retraction":true}]}
     options: []
     default: false

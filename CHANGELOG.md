@@ -15,6 +15,7 @@ Release versions follow the project's
 - Added parent assignment, detachment, modifier activation, and undoable hierarchy controls, with an Applies to column showing modifier targets ([#373](https://github.com/ORNLSlicer/ORNLSlicer/pull/373)).
 - Added cube and stacked-layer icons beside global settings to distinguish part and layer overrides, showing both when both apply.
 - Added a Starting Layer Number setting under Printer > G-Code for continuation builds, with consistent layer, bead, block, and individual-layer export numbering ([#347](https://github.com/ORNLSlicer/ORNLSlicer/issues/347)).
+- Added the canonical Markdown and PDF user guide with an auto-generated settings reference appendix, automated GUI screenshot capture, and an in-app **Help > User Guide** fallback viewer ([#198](https://github.com/ORNLSlicer/ORNLSlicer/issues/198), [#243](https://github.com/ORNLSlicer/ORNLSlicer/pull/243)).
 
 ### Changed
 
