@@ -122,8 +122,22 @@ bool DlpRasterizer::initialize(DlpBuild& build, const DlpSettings& settings, QSt
         build.lane_starts.append(i > 0 && i == build.lane_count - 1 ? build.image_width - settings.lane_pixel_width
                                                                     : start);
     }
-    build.storage = QSharedPointer<QTemporaryDir>::create(QDir::tempPath() + "/ornlslicer-dlp-XXXXXX");
-    if (!build.storage->isValid()) return fail(error, "Could not create temporary DLP output directory.");
+    // Qt canonicalizes Unix temp paths, yielding an empty path if a launch environment's root disappears.
+    QString temporary_root = QDir::tempPath();
+#ifdef Q_OS_UNIX
+    if (temporary_root.isEmpty()) temporary_root = QFile::decodeName(qgetenv("TMPDIR"));
+#endif
+    if (temporary_root.isEmpty())
+        return fail(error,
+                    "Could not resolve the DLP temporary output directory. "
+                    "Check the application's temporary-directory environment and restart it.");
+    temporary_root = QDir(temporary_root).absolutePath();
+    QDir().mkpath(temporary_root);
+    build.storage = QSharedPointer<QTemporaryDir>::create(temporary_root + "/ornlslicer-dlp-XXXXXX");
+    if (!build.storage->isValid())
+        return fail(error, QString("Could not create temporary DLP output directory in \"%1\": %2\n"
+                                   "Check that this location is writable and has free space.")
+                               .arg(QDir::toNativeSeparators(temporary_root), build.storage->errorString()));
     return true;
 }
 

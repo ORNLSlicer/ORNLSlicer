@@ -1,7 +1,10 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QImageReader>
+#include <QProcess>
+#include <QProcessEnvironment>
 #include <QTemporaryDir>
 #include <QtEndian>
 #include <limits>
@@ -333,10 +336,73 @@ bool testImageAllocationLimit() {
     QImageReader::setAllocationLimit(previous_limit);
     return passed;
 }
+
+bool temporaryRootChild(const QString& root) {
+    if (!Testing::expect(QDir::cleanPath(QDir::tempPath()) == root && QFileInfo(root).isDir() &&
+                             QFileInfo(root).fileName() == "temp-root",
+                         "The temporary-root child must use its isolated test directory"))
+        return false;
+    if (!Testing::expect(QDir().rmdir(root), "Could not remove the empty test temp root after startup")) return false;
+
+    bool passed = true;
+    QString storage_path;
+    {
+        DlpBuild build;
+        QString error;
+        const bool initialized = DlpRasterizer::initialize(build, settings(), &error);
+        passed &= Testing::expect(initialized, "DLP must recover a deleted temporary root: " + error.toStdString());
+        if (initialized) {
+            storage_path = build.storage->path();
+            passed &= Testing::expect(QFileInfo(storage_path).isDir() && QFileInfo(storage_path).absolutePath() == root,
+                                      "DLP output must live under the recovered temporary root");
+        }
+    }
+    passed &= Testing::expect(!storage_path.isEmpty() && !QFileInfo::exists(storage_path),
+                              "Releasing a DLP build must remove its temporary child directory");
+    if (QFileInfo(root).isDir() &&
+        !Testing::expect(QDir().rmdir(root), "DLP storage cleanup must leave an empty temporary root"))
+        return false;
+
+    QFile blocker(root);
+    if (!Testing::expect(blocker.open(QIODevice::WriteOnly), "Could not create the temporary-root blocker file"))
+        return false;
+    blocker.close();
+    QTemporaryDir probe(root + "/probe-XXXXXX");
+    DlpBuild blocked;
+    QString error;
+    passed &= Testing::expect(!DlpRasterizer::initialize(blocked, settings(), &error) &&
+                                  error.contains(QDir::toNativeSeparators(root)) && !probe.isValid() &&
+                                  !probe.errorString().isEmpty() && error.contains(probe.errorString()),
+                              "An unusable temporary root must report its path and the filesystem failure reason");
+    return passed;
+}
+
+bool testTemporaryRoot() {
+    QTemporaryDir directory(QDir::tempPath() + "/ornlslicer-dlp-temp-test-XXXXXX");
+    if (!Testing::expect(directory.isValid(), "Could not create temporary-root fixture directory")) return false;
+    const QString root = QDir::cleanPath(directory.filePath("temp-root"));
+    if (!Testing::expect(QDir().mkpath(root), "Could not create isolated temporary root")) return false;
+    auto environment = QProcessEnvironment::systemEnvironment();
+    for (const auto* name : {"TMPDIR", "TMP", "TEMP"}) environment.insert(QString::fromLatin1(name), root);
+    QProcess child;
+    child.setProcessEnvironment(environment);
+    child.start(QCoreApplication::applicationFilePath(), {"--temporary-root", root});
+    if (!child.waitForFinished(30000)) {
+        child.kill();
+        child.waitForFinished(5000);
+        return Testing::expect(false, "Temporary-root child failed: " + child.errorString().toStdString());
+    }
+    return Testing::expect(child.exitStatus() == QProcess::NormalExit && child.exitCode() == 0,
+                           "Temporary-root regression failed:\n" + child.readAllStandardOutput().toStdString() +
+                               child.readAllStandardError().toStdString());
+}
 }  // namespace
 
 int main(int argc, char* argv[]) {
     QCoreApplication application(argc, argv);
+    const auto arguments = application.arguments();
+    if (arguments.size() == 3 && arguments[1] == "--temporary-root")
+        return temporaryRootChild(arguments[2]) ? EXIT_SUCCESS : EXIT_FAILURE;
     bool passed = testRaster();
     passed &= testExport(1);
     passed &= testExport(8);
@@ -344,5 +410,6 @@ int main(int argc, char* argv[]) {
     passed &= testFormats();
     passed &= testInvalid();
     passed &= testImageAllocationLimit();
+    passed &= testTemporaryRoot();
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
