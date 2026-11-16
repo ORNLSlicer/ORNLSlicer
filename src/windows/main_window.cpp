@@ -1469,8 +1469,18 @@ void MainWindow::showDlpBuild() {
 
 void MainWindow::exportDlpBuild() {
     if (!m_dlp_build) return;
-    const QString destination = QFileDialog::getExistingDirectory(
-        this, tr("Select an Empty Folder for DLP Build Export"), CSM->getMostRecentGcodeLocation());
+    QFileDialog dialog(this);
+    dialog.setOption(QFileDialog::DontUseNativeDialog);
+    dialog.setWindowTitle(tr("Create DLP Build Folder"));
+    dialog.setDirectory(CSM->getMostRecentGcodeLocation());
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
+    dialog.setLabelText(QFileDialog::FileName, tr("Folder name:"));
+    dialog.setLabelText(QFileDialog::Accept, tr("Create Folder"));
+    dialog.setOption(QFileDialog::DontConfirmOverwrite);
+    if (dialog.exec() != QDialog::Accepted) return;
+    const QString destination = dialog.selectedFiles().value(0);
     if (destination.isEmpty()) return;
 
     QString error;
@@ -1478,7 +1488,7 @@ void MainWindow::exportDlpBuild() {
         QMessageBox::warning(this, tr("DLP Export Failed"), error);
         return;
     }
-    CSM->setMostRecentGcodeLocation(destination);
+    CSM->setMostRecentGcodeLocation(QFileInfo(destination).absolutePath());
     updateStatus(tr("DLP build exported to %1").arg(destination));
 }
 

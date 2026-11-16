@@ -7,11 +7,13 @@
 #include <QGraphicsView>
 #include <QHBoxLayout>
 #include <QImage>
+#include <QImageReader>
 #include <QLabel>
 #include <QPen>
 #include <QPushButton>
 #include <QResizeEvent>
 #include <QSignalBlocker>
+#include <QTransform>
 #include <QVBoxLayout>
 #include <utility>
 
@@ -120,14 +122,36 @@ void DlpPreview::updateImage() {
     const bool empty  = full ? layer.empty : layer.lanes[lane].empty;
     m_lane_borders->setEnabled(full);
     m_scene->clear();
-    const QImage image(path);
-    if (image.isNull()) {
+    const QSize expected_size(full ? m_build->image_width : m_build->settings.lane_pixel_width,
+                              full ? m_build->image_height : m_build->lane_image_height);
+    const int bit_depth = m_build->settings.bit_depth;
+    const auto format   = bit_depth == 1   ? QImage::Format_Mono
+                          : bit_depth == 8 ? QImage::Format_Indexed8
+                                           : QImage::Format_Invalid;
+    QImageReader reader(path, "bmp");
+    QImage image;
+    if (!expected_size.isEmpty() && format != QImage::Format_Invalid && reader.size() == expected_size &&
+        reader.imageFormat() == format) {
+        const qint64 row_bytes = ((qint64(expected_size.width()) * bit_depth + 31) / 32) * 4;
+        const int limit        = QImageReader::allocationLimit();
+        if (limit <= 0 || row_bytes * expected_size.height() <= qint64(limit) * 1024 * 1024) {
+            // Reuse a validated native-depth buffer instead of Qt's conservative 32-bit allocation estimate.
+            image = QImage(expected_size, format);
+            if (!image.isNull() && !reader.read(&image)) image = QImage();
+        }
+    }
+    const QImage display_image = image.width() > 2048 || image.height() > 2048
+                                     ? image.scaled(2048, 2048, Qt::KeepAspectRatio, Qt::FastTransformation)
+                                     : image;
+    if (display_image.isNull()) {
         m_scene->setSceneRect(QRectF());
         m_status->setText(tr("Could not load DLP image: %1").arg(path));
         return;
     }
 
-    m_scene->addPixmap(QPixmap::fromImage(image));
+    auto* pixels = m_scene->addPixmap(QPixmap::fromImage(display_image));
+    pixels->setTransform(QTransform::fromScale(double(image.width()) / display_image.width(),
+                                               double(image.height()) / display_image.height()));
     const QRectF image_rect(0, 0, image.width(), image.height());
     QPen frame(QColor(128, 128, 128));
     frame.setCosmetic(true);
@@ -160,6 +184,8 @@ void DlpPreview::updateImage() {
                   .arg(Distance(image.height() * m_build->pixel_pitch).to(mm), 0, 'f', 3)
                   .arg(Distance(m_build->pixel_pitch).to(mm), 0, 'g', 8)
                   .arg(m_build->settings.bit_depth);
+    if (display_image.size() != image.size())
+        status += tr(" | Preview: %1 x %2 px").arg(display_image.width()).arg(display_image.height());
     if (!full) {
         const int start   = m_build->lane_starts[lane];
         const int overlap = lane * m_build->settings.lane_pixel_width - start;

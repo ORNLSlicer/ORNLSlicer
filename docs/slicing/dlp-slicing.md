@@ -9,7 +9,7 @@ DLP is a separate slicing mode that exports BMP exposure masks. The existing Ima
 3. Select **Profile > Slicing > Slicing Mode > DLP** and set **Profile > Layer > Layer Height**.
 4. Under **Experimental > DLP Slicer**, choose **Output Mode**, set **Projection Width**, and use **4096** for **Projection Width in Pixels**. Static output offers **1-bit** and **8-bit** BMPs; Scrolling output always uses **1-bit**.
 5. Slice. The **DLP Build Preview** window opens with layer selection, lane selection, and a lane-border overlay. Reopen it through **View > DLP Preview**.
-6. Use **Export DLP Build** in the preview or Project menu and select an empty destination folder. The folder selection dialog can create a new folder.
+6. Use **Export DLP Build** in the preview or Project menu, browse to the parent location, enter a **Folder name**, and click **Create Folder**. The export creates that folder and saves the build inside it.
 
 Projection width is the physical X width of one projector lane. It uses the configured distance units, including inches. Dividing this width by the 4096-pixel lane width defines the physical size of each square pixel. The default width of **204.8 mm** gives a **0.05 mm/pixel** pitch.
 
@@ -17,7 +17,9 @@ Static lane images are **4096 × 2160 pixels**, or **204.8 × 108 mm** at the de
 
 Scrolling lane images remain **4096 pixels wide**. Their height is rounded up to a multiple of **2176 rows**, with black padding below minimum Y. At the default pitch, each 2176-row block is **108.8 mm** long. Selecting Scrolling mode overrides the static BMP bit-depth selection and exports 1-bit images.
 
-The full-layer diagnostic image covers the entire configured printer XY area without lane-frame padding. DLP checks both full-layer and padded-lane dimensions against Qt's image allocation limit before slicing and reports an actionable error if they exceed it. Large printers may require a wider physical projection lane or a smaller build area for a practical test resolution.
+The full-layer diagnostic image covers the entire configured printer XY area without lane-frame padding. Before slicing, DLP checks its actual grayscale working-buffer size, including scanline padding, against Qt's image allocation limit. Padded lane images retain their 32-bit memory budget under the same limit. Large printers may require a wider physical projection lane or a smaller build area if either allocation exceeds the limit.
+
+Preview images are reduced to fit within 2048 × 2048 pixels before display. The preview retains the full-resolution coordinates, lane borders, and physical-size readouts and identifies its reduced display dimensions. Exported BMPs and CSV dimensions remain at full resolution. This allows, for example, a 16384 × 12288 full layer with a 192 MiB grayscale buffer even though a full-size 32-bit display image would require 768 MiB. The global image-loading limit remains unchanged.
 
 ## Geometry and images
 

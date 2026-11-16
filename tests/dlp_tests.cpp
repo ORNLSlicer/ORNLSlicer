@@ -129,7 +129,7 @@ bool testExport(int bit_depth) {
     }
 
     QTemporaryDir destination;
-    const QString output = destination.filePath("build");
+    const QString output = destination.filePath("Hex Build v1.0");
     passed &= Testing::expect(DlpExporter::exportBuild(build, output, &error), error.toStdString());
     passed &= Testing::expect(QFile::exists(output + "/Layer 1/Layer_1_Full.bmp") &&
                                   QFile::exists(output + "/Layer 1/Layer1_3.bmp") &&
@@ -151,6 +151,66 @@ bool testExport(int bit_depth) {
     QFile unchanged(output + "/build.csv");
     passed &= Testing::expect(unchanged.open(QIODevice::ReadOnly) && unchanged.readAll() == content,
                               "Rejected DLP exports must leave existing files untouched");
+    QFile existing_file(destination.filePath("existing.txt"));
+    if (!Testing::expect(existing_file.open(QIODevice::WriteOnly) && existing_file.write("keep") == 4,
+                         "Could not create the existing-file export fixture"))
+        return false;
+    existing_file.close();
+    passed &= Testing::expect(!DlpExporter::exportBuild(build, existing_file.fileName(), &error),
+                              "DLP export must reject an existing file entered as a folder name");
+    passed &= Testing::expect(existing_file.open(QIODevice::ReadOnly) && existing_file.readAll() == "keep",
+                              "An existing file must remain unchanged when used as the export destination");
+    return passed;
+}
+
+bool testGrayscaleEncoding() {
+    bool passed = true;
+    const uchar levels[] {0, 1, 63, 127, 128, 192, 254, 255, 128};
+    for (int bit_depth : {1, 8}) {
+        auto grayscale  = settings(bit_depth);
+        grayscale.x_min = 0;
+        grayscale.x_max = 9;
+        grayscale.y_max = 11;
+        DlpBuild build;
+        QString error;
+        if (!Testing::expect(DlpRasterizer::initialize(build, grayscale, &error), error.toStdString())) return false;
+        QImage input(9, 1, QImage::Format_Grayscale8);
+        for (int x = 0; x < 9; ++x) input.scanLine(0)[x] = levels[x];
+        if (!Testing::expect(DlpRasterizer::writeLayer(build, 1, 500, input, &error), error.toStdString()))
+            return false;
+        const QImage saved(build.layers[0].image_path);
+        if (!Testing::expect(saved.size() == QSize(9, 1), "Could not decode the grayscale BMP fixture")) return false;
+        bool pixels_match = true;
+        for (int x = 0; x < 9; ++x) {
+            const int expected = bit_depth == 1 ? (levels[x] >= 128 ? 255 : 0) : levels[x];
+            pixels_match &= qGray(saved.pixel(x, 0)) == expected;
+        }
+        passed &= Testing::expect(
+            pixels_match, "BMP encoding must threshold 1-bit pixels at 128 and preserve 8-bit grayscale values");
+        QFile file(build.layers[0].image_path);
+        if (!Testing::expect(file.open(QIODevice::ReadOnly), "Could not inspect the grayscale BMP encoding"))
+            return false;
+        const QByteArray encoded = file.readAll();
+        if (!Testing::expect(encoded.size() >= 54, "BMP encoding must include a complete header")) return false;
+        const quint32 pixels  = qFromLittleEndian<quint32>(encoded.constData() + 10);
+        const quint32 palette = 14 + qFromLittleEndian<quint32>(encoded.constData() + 14);
+        const int colors      = bit_depth == 1 ? 2 : 256;
+        if (!Testing::expect(palette + colors * 4 <= pixels && pixels + 2 <= encoded.size(),
+                             "BMP encoding must include its palette and active pixel bytes"))
+            return false;
+        bool palette_matches = true;
+        for (int i = 0; i < colors; ++i) {
+            const int gray = bit_depth == 1 ? i * 255 : i;
+            for (int channel = 0; channel < 3; ++channel)
+                palette_matches &= static_cast<uchar>(encoded[palette + i * 4 + channel]) == gray;
+        }
+        passed &= Testing::expect(palette_matches,
+                                  "BMP palettes must encode black at index zero and the full grayscale range");
+        if (bit_depth == 1)
+            passed &= Testing::expect(
+                static_cast<uchar>(encoded[pixels]) == 0x0f && (static_cast<uchar>(encoded[pixels + 1]) & 0x80) == 0x80,
+                "1-bit BMP pixels must be packed most-significant-bit first across byte boundaries");
+    }
     return passed;
 }
 
@@ -323,6 +383,47 @@ bool testImageAllocationLimit() {
                                   reduced.image_height == 4 && reduced.lane_count == 1,
                               "Reducing the printer area must allow a practical full-resolution DLP test");
 
+    auto four_lane             = settings();
+    four_lane.x_min            = 0;
+    four_lane.x_max            = 508000;
+    four_lane.y_min            = 0;
+    four_lane.y_max            = 381000;
+    four_lane.projection_width = 127000;
+    four_lane.output_mode      = DlpOutputMode::kScrolling;
+    DlpBuild four_lane_build;
+    passed &= Testing::expect(
+        DlpRasterizer::initialize(four_lane_build, four_lane, &error) && four_lane_build.image_width == 16384 &&
+            four_lane_build.image_height == 12288 && four_lane_build.lane_count == 4 &&
+            four_lane_build.lane_image_height == 13056,
+        "A four-lane build with a 192 MiB grayscale raster must not be rejected by its 768 MiB full-preview estimate");
+
+    auto wide  = four_lane;
+    wide.x_max = 2032000;
+    DlpBuild oversized_raster;
+    passed &= Testing::expect(
+        !DlpRasterizer::initialize(oversized_raster, wide, &error) && !oversized_raster.storage,
+        "A full grayscale raster exceeding the allocation limit must fail before creating storage even when lanes fit");
+
+    auto tall  = four_lane;
+    tall.x_max = 127000;
+    tall.y_max = 508000;
+    DlpBuild oversized_padded_lane;
+    passed &= Testing::expect(
+        !DlpRasterizer::initialize(oversized_padded_lane, tall, &error) && !oversized_padded_lane.storage,
+        "A 272 MiB padded lane preview must remain rejected when the full grayscale raster is only 64 MiB");
+
+    auto padded_raster        = settings();
+    padded_raster.x_min       = 0;
+    padded_raster.x_max       = 17623;
+    padded_raster.y_min       = 0;
+    padded_raster.y_max       = 15232;
+    padded_raster.output_mode = DlpOutputMode::kScrolling;
+    DlpBuild oversized_stride;
+    passed &= Testing::expect(
+        !DlpRasterizer::initialize(oversized_stride, padded_raster, &error) && !oversized_stride.storage,
+        "Full-raster preflight must include grayscale scanline alignment when pixel count alone fits the allocation "
+        "limit");
+
     QImageReader::setAllocationLimit(32);
     small.x_max = 1;
     DlpBuild oversized_lane;
@@ -406,6 +507,7 @@ int main(int argc, char* argv[]) {
     bool passed = testRaster();
     passed &= testExport(1);
     passed &= testExport(8);
+    passed &= testGrayscaleEncoding();
     passed &= testLaneCoverage();
     passed &= testFormats();
     passed &= testInvalid();

@@ -44,14 +44,19 @@ bool imageEmpty(const QImage& image) {
 bool saveBmp(const QImage& image, const QString& path, int bit_depth, QString* error) {
     QImage output;
     if (bit_depth == 1) {
-        output = image.convertToFormat(QImage::Format_Mono, {qRgb(0, 0, 0), qRgb(255, 255, 255)}, Qt::ThresholdDither);
+        output = QImage(image.size(), QImage::Format_Mono);
+        if (output.isNull()) return fail(error, "Could not allocate DLP bitmap: " + path);
+        output.setColorTable({qRgb(0, 0, 0), qRgb(255, 255, 255)});
+        output.fill(0);
+        for (int y = 0; y < image.height(); ++y) {
+            const uchar* source = image.constScanLine(y);
+            uchar* target       = output.scanLine(y);
+            for (int x = 0; x < image.width(); ++x) {
+                if (source[x] >= 128) target[x / 8] |= uchar(0x80 >> (x % 8));
+            }
+        }
     }
-    else {
-        QVector<QRgb> colors;
-        colors.reserve(256);
-        for (int i = 0; i < 256; ++i) colors.append(qRgb(i, i, i));
-        output = image.convertToFormat(QImage::Format_Indexed8, colors, Qt::ThresholdDither);
-    }
+    else { output = image.convertToFormat(QImage::Format_Indexed8); }
     if (output.isNull() || !output.save(path, "BMP")) return fail(error, "Could not write DLP image: " + path);
     return true;
 }
@@ -96,18 +101,22 @@ bool DlpRasterizer::initialize(DlpBuild& build, const DlpSettings& settings, QSt
                                    "the final footprint with maximum X without shifting exposure geometry.")
                                .arg(Distance(pitch).to(mm), 0, 'g', 12));
 
-    // The preview can expand BMP pixels to 32 bits; honor its image reader's allocation limit before slicing.
+    // Full layers use grayscale working buffers and bounded previews. Lane limits retain the 32-bit budget.
     const int allocation_limit = QImageReader::allocationLimit();
-    const double preview_bytes = std::max(width * height, settings.lane_pixel_width * lane_height) * 4.0;
-    if (allocation_limit > 0 && preview_bytes > allocation_limit * 1024.0 * 1024.0)
+    const double raster_bytes  = std::ceil(width / 4.0) * 4.0 * height;
+    const double lane_bytes    = settings.lane_pixel_width * lane_height * 4.0;
+    if (allocation_limit > 0 && std::max(raster_bytes, lane_bytes) > allocation_limit * 1024.0 * 1024.0)
         return fail(error, QString("DLP images exceed the %1 MiB image allocation limit. Full layer: %2 x %3 pixels; "
-                                   "lane: %4 x %5 pixels. Increase Projection Width "
+                                   "lane: %4 x %5 pixels. Full grayscale raster: %6 MiB; "
+                                   "lane 32-bit budget: %7 MiB. Increase Projection Width "
                                    "or reduce the printer XY dimensions.")
                                .arg(allocation_limit)
                                .arg(width, 0, 'f', 0)
                                .arg(height, 0, 'f', 0)
                                .arg(settings.lane_pixel_width)
-                               .arg(lane_height, 0, 'f', 0));
+                               .arg(lane_height, 0, 'f', 0)
+                               .arg(raster_bytes / (1024.0 * 1024.0), 0, 'f', 1)
+                               .arg(lane_bytes / (1024.0 * 1024.0), 0, 'f', 1));
 
     build          = DlpBuild();
     build.settings = settings;

@@ -204,5 +204,7 @@ When the user corrects your approach, append a one-line rule here before ending 
 - Constrain support restoration to paths through the unsupported contact; preserve angle-classified organic branch seeds and keep negative test probes beyond restoration reach of joining contacts.
 - Use the units API, such as `Distance(value).to(mm)`, for exported physical values; raw division by unit constants exposes floating-point conversion noise.
 - Exercise DLP with negative machine Z limits and W travel, and validate full-layer and padded-lane image sizes before allocating raster memory.
+- Budget DLP full-layer grayscale storage separately from lane previews, and avoid full-size ARGB conversions when encoding or previewing monochrome BMPs.
+- Ask for a new DLP export folder name and remember its parent directory as the next export location.
 - Recover missing Unix temporary roots from raw `TMPDIR`; `QDir::tempPath()` can return an empty canonical path after the directory disappears.
 - Limit builds on this workstation to eight compiler jobs and one build at a time inside the memory-limited scope above; after an OOM kill or desktop loss, stop and inspect memory before retrying, and never repeat the same resource settings automatically.
