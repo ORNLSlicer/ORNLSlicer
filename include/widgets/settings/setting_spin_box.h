@@ -83,5 +83,9 @@ class SettingSpinBox : public QSpinBox, public SettingRowBase {
 
     //! \brief Keeps track of if a warning has been emitted or not.
     bool m_warn;
+
+   private:
+    //! \brief Displays a fixed setting without replacing an unsupported value loaded from a project.
+    void updateFixedValue(int stored_value);
 };
 }  // namespace ORNL

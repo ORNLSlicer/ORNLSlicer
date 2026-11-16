@@ -9,6 +9,7 @@
 #include <QStatusBar>
 #include <QTimer>
 #include <QUndoCommand>
+#include <algorithm>
 
 #include <qaction.h>
 #include <qapplication.h>
@@ -58,6 +59,7 @@
 #include "part/part.h"
 #include "threading/gcode_loader.h"
 #include "threading/session_loader.h"
+#include "threading/slicers/dlp_slicer.h"
 #include "utilities/constants.h"
 #include "utilities/dialog_utils.h"
 #include "utilities/enums.h"
@@ -74,6 +76,7 @@
 #include "widgets/settings/setting_bar.h"
 #include "windows/about.h"
 #include "windows/dialogs/cs_dbg.h"
+#include "windows/dialogs/dlp_dialogs.h"
 #include "windows/dialogs/slice_dialog.h"
 #include "windows/dialogs/template_save.h"
 #include "windows/flowratecalc.h"
@@ -1417,9 +1420,22 @@ void MainWindow::setBusy(bool busy, QString msg) {
 }
 
 void MainWindow::doSlice() {
-    clearDlpBuild();
-    m_dlp_slice_active =
+    const bool is_dlp =
         static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode)) == SlicingMode::kDlp;
+    if (is_dlp && CSM->isBuildMode()) {
+        m_part_widget->updatePartTransformations();
+        DlpPreflight summary;
+        QString error;
+        if (!DlpSlicer::preflight(summary, &error)) {
+            QMessageBox::warning(this, tr("DLP Slicing Failed"), error);
+            return;
+        }
+        QMessageBox dialog(this);
+        configureDlpSummaryDialog(dialog, summary);
+        if (dialog.exec() != QMessageBox::Ok) return;
+    }
+    clearDlpBuild();
+    m_dlp_slice_active = is_dlp;
     if (m_dlp_slice_active) {
         m_actions["gcode_export"].action->setEnabled(false);
         m_main_toolbar->setExportAbility(false);
@@ -1432,11 +1448,13 @@ void MainWindow::doSlice() {
 
     if (!CSM->isBuildMode()) return;
 
-    m_slice_dialog.reset(new SliceDialog(this));
+    m_slice_dialog.reset(new SliceDialog(this, is_dlp));
     connect(CSM.get(), &SessionManager::updateDialog, m_slice_dialog.get(),
             QOverload<StatusUpdateStepType, int>::of(&SliceDialog::updateStatus));
     connect(m_slice_dialog.get(), &SliceDialog::cancelSlice, CSM.get(), &SessionManager::cancelSlice);
     connect(m_slice_dialog.get(), &SliceDialog::cancelSlice, this, [this] { m_dlp_slice_active = false; });
+    if (is_dlp)
+        connect(CSM.get(), &SessionManager::forwardStatusUpdate, m_slice_dialog.get(), &SliceDialog::updateMessage);
 
     m_slice_dialog->show();
 
@@ -1465,27 +1483,28 @@ void MainWindow::showDlpBuild() {
     m_dlp_preview->raise();
     m_dlp_preview->activateWindow();
     updateStatus(tr("DLP slicing complete."));
+    if (std::all_of(m_dlp_build->layers.cbegin(), m_dlp_build->layers.cend(),
+                    [](const DlpLayer& layer) { return layer.empty; }))
+        QMessageBox::warning(this, tr("Empty DLP Build"),
+                             tr("This build contains no exposed pixels. Check part placement, printer bounds, "
+                                "and layer height. Empty layers have been preserved."));
 }
 
 void MainWindow::exportDlpBuild() {
     if (!m_dlp_build) return;
     QFileDialog dialog(this);
-    dialog.setOption(QFileDialog::DontUseNativeDialog);
-    dialog.setWindowTitle(tr("Create DLP Build Folder"));
-    dialog.setDirectory(CSM->getMostRecentGcodeLocation());
-    dialog.setAcceptMode(QFileDialog::AcceptSave);
-    dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
-    dialog.setLabelText(QFileDialog::FileName, tr("Folder name:"));
-    dialog.setLabelText(QFileDialog::Accept, tr("Create Folder"));
-    dialog.setOption(QFileDialog::DontConfirmOverwrite);
+    configureDlpFolderDialog(dialog, CSM->getMostRecentGcodeLocation());
     if (dialog.exec() != QDialog::Accepted) return;
     const QString destination = dialog.selectedFiles().value(0);
     if (destination.isEmpty()) return;
 
     QString error;
-    if (!DlpExporter::exportBuild(*m_dlp_build, destination, &error)) {
-        QMessageBox::warning(this, tr("DLP Export Failed"), error);
+    bool canceled = false;
+    if (!exportDlpWithProgress(this, m_dlp_build, destination, &error, &canceled)) {
+        if (canceled)
+            updateStatus(tr("DLP export canceled."));
+        else
+            QMessageBox::warning(this, tr("DLP Export Failed"), error);
         return;
     }
     CSM->setMostRecentGcodeLocation(QFileInfo(destination).absolutePath());

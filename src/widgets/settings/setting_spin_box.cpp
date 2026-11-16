@@ -44,6 +44,7 @@ SettingSpinBox::SettingSpinBox(SettingTab* parent, QSharedPointer<SettingsBase> 
     this->setMaximum(INT_MAX);
     this->setAlignment(Qt::AlignRight);
     this->setValue(cur);
+    if (m_json.contains("fixed")) updateFixedValue(static_cast<int>(cur));
 
     connect(this, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingSpinBox::valueChanged);
     connect(this, &SettingSpinBox::modified, parent, &SettingTab::keyModified);
@@ -103,11 +104,30 @@ void SettingSpinBox::reloadValue() {
     this->blockSignals(true);
     bool consistent = true;
     int cur         = reloadValueHelper<int>(consistent);
-    if (consistent) setValue(cur);
+    if (consistent) {
+        if (m_json.contains("fixed"))
+            updateFixedValue(cur);
+        else
+            setValue(cur);
+    }
 
     this->blockSignals(false);
     emit modified(m_key);
     emit warnParent(warningCountDelta(!consistent, m_warn));
+}
+
+void SettingSpinBox::updateFixedValue(int stored_value) {
+    const int fixed = m_json.at("fixed").get<int>();
+    setRange(stored_value, stored_value);
+    setValue(stored_value);
+    setReadOnly(true);
+    setButtonSymbols(QAbstractSpinBox::NoButtons);
+    setSuffix(stored_value == fixed ? tr(" (fixed)") : tr(" (requires %1)").arg(fixed));
+    setToolTip(stored_value == fixed
+                   ? QString::fromStdString(m_json.at(Constants::Settings::Master::kToolTip).get<std::string>())
+                   : tr("The saved value %1 is unsupported. Click the reset button to use the required %2 pixels.")
+                         .arg(stored_value)
+                         .arg(fixed));
 }
 
 void SettingSpinBox::wheelEvent(QWheelEvent* event) {

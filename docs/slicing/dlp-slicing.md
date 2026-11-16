@@ -7,11 +7,13 @@ DLP is a separate slicing mode that exports BMP exposure masks. The existing Ima
 1. Configure a rectangular build volume under **Printer > Dimensions**, including minimum and maximum X, Y, and Z.
 2. Load and position the build models and any imported support models.
 3. Select **Profile > Slicing > Slicing Mode > DLP** and set **Profile > Layer > Layer Height**.
-4. Under **Experimental > DLP Slicer**, choose **Output Mode**, set **Projection Width**, and use **4096** for **Projection Width in Pixels**. Static output offers **1-bit** and **8-bit** BMPs; Scrolling output always uses **1-bit**.
-5. Slice. The **DLP Build Preview** window opens with layer selection, lane selection, and a lane-border overlay. Reopen it through **View > DLP Preview**.
+4. Under **Experimental > DLP Slicer**, choose **Output Mode** and set **Projection Width**. **Projection Width in Pixels** is fixed at **4096**. Static output offers **1-bit** and **8-bit** BMPs; Scrolling output always uses **1-bit**.
+5. Click **Slice** to review pixel pitch, image dimensions, layer/lane counts, black padding, and estimated image memory and storage. Warnings identify models outside the printer bounds. Choose **Slice** in the summary to begin; the DLP progress window supports cancellation during layers. The **DLP Build Preview** opens when slicing finishes, with layer selection, lane selection, and a lane-border overlay. Reopen it through **View > DLP Preview**.
 6. Use **Export DLP Build** in the preview or Project menu, browse to the parent location, enter a **Folder name**, and click **Create Folder**. The export creates that folder and saves the build inside it.
 
 Projection width is the physical X width of one projector lane. It uses the configured distance units, including inches. Dividing this width by the 4096-pixel lane width defines the physical size of each square pixel. The default width of **204.8 mm** gives a **0.05 mm/pixel** pitch.
+
+If an older project contains a different pixel width, its saved value remains visible with **requires 4096**. Click the adjacent reset button (**Use required value (4096)**) to update it before slicing.
 
 Static lane images are **4096 × 2160 pixels**, or **204.8 × 108 mm** at the default pitch. Static mode supports one frame in Y: reduce the configured build depth or increase the physical projection width if it would exceed 2160 rows. Shorter builds are padded with black rows below minimum Y.
 
@@ -62,6 +64,8 @@ layer,z_mm,lane,file,empty,x_min_mm,y_max_mm,pixel_pitch_mm,width_px,height_px
 ```
 
 `z_mm` is the slice-plane height in millimeters regardless of display units. Lane `0` identifies the full-layer image. `file` is relative to the export root. `empty` is `1` when the image contains no exposed pixels and `0` otherwise. `x_min_mm` and `y_max_mm` locate the image's left and top edges, including the final lane's shifted footprint. `pixel_pitch_mm` gives both physical pixel dimensions; `width_px` and `height_px` include black padding. These physical values always use millimeters. Export requires a new or empty directory to avoid mixing builds.
+
+Export runs in the background with progress and **Cancel Export**. Images and CSV are first written to a temporary folder beside the destination; the completed folder is published only after all files succeed. A failed or canceled export removes its temporary output, so the same folder name can be retried. Slicing's temporary image cache remains available for another export.
 
 ## Command line
 

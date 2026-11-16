@@ -29,7 +29,7 @@ REQUIRED_FIELDS = (
     "local",
 )
 
-OPTIONAL_FIELDS = ("name", "visible_if", "group")
+OPTIONAL_FIELDS = ("name", "visible_if", "group", "fixed")
 
 INPUT_REQUIRED_FIELDS = (
     "display",
@@ -305,6 +305,17 @@ def validate_setting(setting: OrderedDict[str, Any], setting_names: set[str]) ->
         if setting["default"] < 0:
             raise ValueError(f"{name}: non_negative_int default must be zero or greater")
 
+    if "fixed" in setting:
+        minimum = 1 if setting["type"] in {"positive_int", "power"} else 0
+        if (
+            setting["type"] not in {"number", "non_negative_int", "positive_int", "power"}
+            or type(setting["fixed"]) is not int
+            or type(setting["default"]) is not int
+            or setting["fixed"] < minimum
+            or setting["fixed"] != setting["default"]
+        ):
+            raise ValueError(f"{name}: fixed must match the valid integer default of an integer setting")
+
     validate_dependency(setting["depends"], setting_names, name)
     validate_dependency(setting.get("visible_if"), setting_names, f"{name}: visible_if")
 
@@ -406,6 +417,8 @@ def normalize_for_master(setting: OrderedDict[str, Any]) -> OrderedDict[str, Any
         entry["visible_if"] = setting["visible_if"]
     if "group" in setting:
         entry["group"] = setting["group"]
+    if "fixed" in setting:
+        entry["fixed"] = setting["fixed"]
     return entry
 
 

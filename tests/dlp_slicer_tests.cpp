@@ -2,6 +2,7 @@
 #include <QDir>
 #include <QEventLoop>
 #include <QFile>
+#include <QFileInfo>
 #include <QMap>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -52,17 +53,23 @@ void setBounds(double x_min, double x_max, double y_min, double y_max, double z_
 
 struct SliceResult {
     QSharedPointer<const ORNL::DlpBuild> build;
-    int completed = 0;
+    int completed      = 0;
+    int started_layers = 0;
     QString error;
 };
 
-SliceResult sliceDlp(const QString& output, bool cancel = false) {
+SliceResult sliceDlp(const QString& output, bool cancel = false, bool cancel_during = false) {
     SliceResult result;
     QObject callbacks;
     ORNL::DlpSlicer slicer(output);
     QObject::connect(&slicer, &ORNL::AbstractSlicingThread::sliceComplete, &callbacks, [&] { ++result.completed; });
     QObject::connect(&slicer, &ORNL::AbstractSlicingThread::sliceFailed, &callbacks,
                      [&](const QString& message) { result.error = message; });
+    QObject::connect(&slicer, &ORNL::AbstractSlicingThread::statusMessage, &callbacks, [&](const QString& message) {
+        if (!message.startsWith("Slicing DLP layer ")) return;
+        ++result.started_layers;
+        if (cancel_during) slicer.setCancel();
+    });
     if (cancel) slicer.setCancel();
     slicer.doSlice();
     result.build = slicer.build();
@@ -85,6 +92,16 @@ bool sharedLayerGrid(const QString& output) {
     settings->setSetting(ORNL::ES::DlpSlicer::kOutputMode, static_cast<int>(ORNL::DlpOutputMode::kStatic));
     settings->setSetting(ORNL::ES::DlpSlicer::kBitDepth, 0);
 
+    ORNL::DlpPreflight summary;
+    QString preflight_error;
+    if (!expect(ORNL::DlpSlicer::preflight(summary, &preflight_error) && preflight_error.isEmpty() &&
+                    !summary.layout.storage && summary.layout.layers.isEmpty() && summary.warnings.isEmpty() &&
+                    summary.layer_count == 6 && summary.file_count == 13 && summary.layout.image_width == 20 &&
+                    summary.layout.image_height == 12 && summary.layout.lane_image_height == 2160 &&
+                    near(summary.layout.pixel_pitch, 500) && summary.working_bytes > 0 && summary.output_bytes > 0,
+                "DLP preflight must predict the complete layout and resources without temporary images."))
+        return false;
+
     const auto result = sliceDlp(output);
     if (!expect(result.completed == 1 && result.error.isEmpty() && result.build,
                 "DLP slicing must complete successfully for build and imported support meshes."))
@@ -94,7 +111,13 @@ bool sharedLayerGrid(const QString& output) {
                 "DLP slicing must use the printer bounds and one shared bed-relative layer grid."))
         return false;
 
-    bool passed = true;
+    double actual_bytes = 0;
+    for (const auto& layer : build.layers) {
+        actual_bytes += QFileInfo(layer.image_path).size();
+        for (const auto& lane : layer.lanes) actual_bytes += QFileInfo(lane.image_path).size();
+    }
+    bool passed = expect(near(summary.output_bytes, actual_bytes),
+                         "Preflight BMP storage estimates must match every actual padded 1-bit image file.");
     for (int i = 0; i < build.layers.size(); ++i) {
         const auto& layer = build.layers[i];
         passed &= expect(layer.number == i + 1 && near(layer.z, 2500 + i * 1000),
@@ -117,10 +140,17 @@ bool sharedLayerGrid(const QString& output) {
     passed &= expect(clipped.completed == 1 && clipped.error.isEmpty() && clipped.build &&
                          clipped.build->layers.size() == 5 && near(clipped.build->layers.last().z, 6500),
                      "DLP cross-sections must stop at the configured printer Z maximum.");
+    passed &= expect(ORNL::DlpSlicer::preflight(summary, &preflight_error) && summary.layer_count == 5 &&
+                         summary.warnings.join(' ').contains("elevated"),
+                     "Preflight must predict Z-clipped layer counts and identify the affected part.");
 
     const auto cancelled = sliceDlp(output, true);
     passed &= expect(cancelled.completed == 0 && !cancelled.error.isEmpty() && !cancelled.build,
                      "Cancelled DLP slicing must report failure without publishing a partial or successful build.");
+    const auto active_cancelled = sliceDlp(output, false, true);
+    passed &= expect(active_cancelled.started_layers == 1 && active_cancelled.completed == 0 &&
+                         active_cancelled.error == "DLP slicing canceled." && !active_cancelled.build,
+                     "Cancellation after a layer starts must stop that layer and never publish a completed build.");
 
     const QByteArray before = [&] {
         QFile file(build.layers.first().image_path);
@@ -164,6 +194,12 @@ bool machineZCoordinates(const QString& output) {
                              near(without_w.build->settings.z_min, 0) && near(without_w.build->settings.z_max, 2000) &&
                              without_w.build->layers.size() == 2,
                          "Negative machine Z limits must map to the positive build volume without W travel.");
+    ORNL::DlpPreflight summary;
+    QString error;
+    passed &= expect(ORNL::DlpSlicer::preflight(summary, &error) && summary.layer_count == 2 &&
+                         summary.warnings.join(' ').contains("clipped") &&
+                         summary.warnings.join(' ').contains("entirely black"),
+                     "Preflight must warn when normalized Z travel cannot reach any model bounds.");
     if (without_w.build) {
         for (int i = 0; i < without_w.build->layers.size(); ++i) {
             passed &= expect(near(without_w.build->layers[i].z, 500 + i * 1000) && without_w.build->layers[i].empty,
@@ -172,6 +208,9 @@ bool machineZCoordinates(const QString& output) {
     }
 
     settings->setSetting(ORNL::PRS::Dimensions::kEnableW, true);
+    passed &= expect(ORNL::DlpSlicer::preflight(summary, &error) && summary.layer_count == 5 &&
+                         summary.warnings.isEmpty() && near(summary.layout.settings.z_max, 6000),
+                     "Preflight must include W travel and avoid false clipping warnings for normalized machine Z.");
     const auto with_w = sliceDlp(output);
     passed &= expect(with_w.completed == 1 && with_w.error.isEmpty() && with_w.build &&
                          near(with_w.build->settings.z_min, 0) && near(with_w.build->settings.z_max, 6000) &&
@@ -192,6 +231,29 @@ bool machineZCoordinates(const QString& output) {
     return passed;
 }
 
+bool preflightBoundsWarnings() {
+    ORNL::CSM->clearParts();
+    setBounds(0, 8000, 0, 8000, 0, 4000);
+    addBox("outside_xy", ORNL::MeshType::kBuild, {9000, 1000, 0}, {1000, 1000, 1000});
+    const auto settings = ORNL::GSM->getGlobal();
+    settings->setSetting(ORNL::PRS::Dimensions::kEnableW, false);
+    settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1000.0);
+    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 2048000.0);
+    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 4096);
+    settings->setSetting(ORNL::ES::DlpSlicer::kOutputMode, static_cast<int>(ORNL::DlpOutputMode::kStatic));
+    settings->setSetting(ORNL::ES::DlpSlicer::kBitDepth, 0);
+    ORNL::DlpPreflight summary;
+    QString error;
+    bool passed = expect(ORNL::DlpSlicer::preflight(summary, &error) && summary.layer_count == 1 &&
+                             summary.warnings.join(' ').contains("outside_xy") &&
+                             summary.warnings.join(' ').contains("entirely black"),
+                         "Preflight must warn about a model entirely outside the printable XY area.");
+    settings->setSetting(ORNL::PRS::Dimensions::kXMax, 12000.0);
+    passed &= expect(ORNL::DlpSlicer::preflight(summary, &error) && summary.warnings.isEmpty(),
+                     "Expanding the printer to contain geometry must clear clipping and empty-output warnings.");
+    return passed;
+}
+
 bool projectorFormats(const QString& output) {
     ORNL::CSM->clearParts();
     setBounds(0, 409600, 0, 108000, 0, 1000);
@@ -204,16 +266,26 @@ bool projectorFormats(const QString& output) {
     settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 4096);
     settings->setSetting(ORNL::ES::DlpSlicer::kOutputMode, static_cast<int>(ORNL::DlpOutputMode::kStatic));
     settings->setSetting(ORNL::ES::DlpSlicer::kBitDepth, 1);
+    ORNL::DlpPreflight summary;
+    QString preflight_error;
+    if (!expect(ORNL::DlpSlicer::preflight(summary, &preflight_error) && summary.layer_count == 1 &&
+                    summary.file_count == 4,
+                "Static preflight must count the full image, every lane image, and build.csv."))
+        return false;
     const auto static_result = sliceDlp(output);
     if (!expect(static_result.completed == 1 && static_result.error.isEmpty() && static_result.build &&
                     static_result.build->layers.size() == 1,
                 "A 108 mm static build must fit in one 4096 by 2160 projector frame."))
         return false;
     const auto& static_build = *static_result.build;
-    bool passed = expect(static_build.image_width == 8192 && static_build.image_height == 2160 &&
-                             static_build.lane_image_height == 2160 && static_build.lane_count == 2 &&
-                             near(static_build.pixel_pitch, 50) && static_build.settings.bit_depth == 8,
-                         "Static slicing must snapshot the selected depth and physical projector resolution.");
+    double actual_bytes      = QFileInfo(static_build.layers.first().image_path).size();
+    for (const auto& lane : static_build.layers.first().lanes) actual_bytes += QFileInfo(lane.image_path).size();
+    bool passed = expect(near(summary.output_bytes, actual_bytes),
+                         "Preflight BMP storage estimates must match the actual padded 8-bit image files.");
+    passed &= expect(static_build.image_width == 8192 && static_build.image_height == 2160 &&
+                         static_build.lane_image_height == 2160 && static_build.lane_count == 2 &&
+                         near(static_build.pixel_pitch, 50) && static_build.settings.bit_depth == 8,
+                     "Static slicing must snapshot the selected depth and physical projector resolution.");
     const QImage static_lane(static_build.layers[0].lanes[0].image_path);
     passed &= expect(static_lane.size() == QSize(4096, 2160) && qGray(static_lane.pixel(20, 2130)) == 255,
                      "Static lane BMPs must use one full frame and preserve physical geometry placement.");
@@ -369,6 +441,7 @@ int main(int argc, char* argv[]) {
     ORNL::GSM->setConsoleSettings(QSharedPointer<ORNL::SettingsBase>::create());
     bool passed = sharedLayerGrid(directory.path() + "/unused.gcode");
     passed &= machineZCoordinates(directory.path() + "/unused.gcode");
+    passed &= preflightBoundsWarnings();
     passed &= projectorFormats(directory.path() + "/unused.gcode");
     passed &= preservesImageSlicer(directory.path());
     passed &= sessionRoutesDlpResults(directory.path());

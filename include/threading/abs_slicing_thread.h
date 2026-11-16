@@ -3,6 +3,7 @@
 #include <QElapsedTimer>
 #include <QQueue>
 #include <QThread>
+#include <atomic>
 #include <functional>
 
 #include <nlohmann/json_fwd.hpp>
@@ -182,6 +183,6 @@ class AbstractSlicingThread : public QObject {
     QThread m_internal_thread;
 
     //! \brief Cancel flag set by session manager if user clicks on cancel button
-    bool m_should_cancel;
+    std::atomic_bool m_should_cancel;
 };
 }  // namespace ORNL

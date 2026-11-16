@@ -301,8 +301,7 @@ void AbstractSlicingThread::setCancel() {
 }
 
 bool AbstractSlicingThread::shouldCancel() {
-    if (m_should_cancel) {
-        m_should_cancel = false;
+    if (m_should_cancel.exchange(false)) {
         m_temp_gcode_output_file.close();
         m_layer_programs.clear();
         m_requires_weld_schedule_file = false;

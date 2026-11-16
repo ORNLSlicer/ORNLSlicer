@@ -84,6 +84,45 @@ bool testRaster() {
     return passed;
 }
 
+bool testSlicingCancellation() {
+    DlpBuild build;
+    QString error;
+    if (!Testing::expect(DlpRasterizer::initialize(build, settings(), &error), error.toStdString())) return false;
+    const QVector<PolygonList> sections {PolygonList {rectangle(-20, 0, 20, 20)}};
+    int checks  = 0;
+    bool passed = Testing::expect(DlpRasterizer::rasterize(sections, build, [&] { return ++checks >= 3; }).isNull() &&
+                                      checks == 3 && build.layers.isEmpty(),
+                                  "Cancellation during raster rows must discard the incomplete image");
+    const QImage image = DlpRasterizer::rasterize(sections, build);
+    if (!Testing::expect(!image.isNull(), "Could not create the cancellation fixture image")) return false;
+
+    checks                   = 0;
+    const QString first_full = build.storage->filePath("Layer 1/Layer_1_Full.bmp");
+    passed &= Testing::expect(!DlpRasterizer::writeLayer(build, 1, 500, image, &error, [&] { return ++checks >= 5; }) &&
+                                  checks == 5 && error == "DLP slicing canceled." && build.layers.isEmpty() &&
+                                  !QFileInfo::exists(first_full),
+                              "Cancellation during 1-bit encoding must not save or publish an incomplete layer");
+
+    checks                    = 0;
+    const QString second_full = build.storage->filePath("Layer 2/Layer_2_Full.bmp");
+    const QString second_lane = build.storage->filePath("Layer 2/Layer2_1.bmp");
+    passed &=
+        Testing::expect(!DlpRasterizer::writeLayer(build, 2, 1500, image, &error,
+                                                   [&] { return QFileInfo::exists(second_full) && ++checks >= 4; }) &&
+                            checks == 4 && error == "DLP slicing canceled." && build.layers.isEmpty() &&
+                            QFileInfo::exists(second_full) && !QFileInfo::exists(second_lane),
+                        "Cancellation while copying a lane must retain no completed layer or incomplete lane image");
+
+    const QString final_lane = build.storage->filePath(QString("Layer 3/Layer3_%1.bmp").arg(build.lane_count));
+    passed &= Testing::expect(
+        !DlpRasterizer::writeLayer(build, 3, 2500, image, &error, [&] { return QFileInfo::exists(final_lane); }) &&
+            error == "DLP slicing canceled." && QFileInfo::exists(final_lane) && build.layers.isEmpty(),
+        "Cancellation after the last image is written must still prevent layer publication");
+    passed &= Testing::expect(DlpRasterizer::writeLayer(build, 3, 2500, image, &error) && build.layers.size() == 1,
+                              "A canceled layer must remain retryable without publishing duplicate layers");
+    return passed;
+}
+
 bool testExport(int bit_depth) {
     bool passed = true;
     DlpBuild build;
@@ -211,6 +250,95 @@ bool testGrayscaleEncoding() {
                 static_cast<uchar>(encoded[pixels]) == 0x0f && (static_cast<uchar>(encoded[pixels + 1]) & 0x80) == 0x80,
                 "1-bit BMP pixels must be packed most-significant-bit first across byte boundaries");
     }
+    return passed;
+}
+
+bool testExportRecovery() {
+    DlpBuild build;
+    QString error;
+    if (!Testing::expect(DlpRasterizer::initialize(build, settings(8), &error), error.toStdString())) return false;
+    const QImage image = DlpRasterizer::rasterize({}, build);
+    if (!Testing::expect(DlpRasterizer::writeLayer(build, 1, 500, image, &error), error.toStdString())) return false;
+
+    QTemporaryDir directory;
+    if (!Testing::expect(directory.isValid(), "Could not create the export-recovery fixture")) return false;
+    const QString destination = directory.filePath("Retry Build");
+    const QString source      = build.layers[0].lanes[1].image_path;
+    const QString backup      = source + ".saved";
+    if (!Testing::expect(QFile::rename(source, backup), "Could not hide a cached image for the failed-copy fixture"))
+        return false;
+    bool canceled = true;
+    bool passed =
+        Testing::expect(!DlpExporter::exportBuild(build, destination, &error, {}, &canceled) && !canceled &&
+                            error.contains("image") && !QFileInfo::exists(destination) &&
+                            QDir(directory.path())
+                                .entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System)
+                                .isEmpty(),
+                        "A failed copy must remove staging files and leave the final folder absent");
+    if (!Testing::expect(QFile::rename(backup, source), "Could not restore the cached image after a copy failure"))
+        return false;
+    qint64 previous = -1, expected_total = 0;
+    bool progress_valid = true;
+    for (const auto& layer : build.layers) {
+        expected_total += QFileInfo(layer.image_path).size();
+        for (const auto& lane : layer.lanes) expected_total += QFileInfo(lane.image_path).size();
+    }
+    passed &= Testing::expect(
+        DlpExporter::exportBuild(
+            build, destination, &error,
+            [&](qint64 completed, qint64 total) {
+                progress_valid &= completed >= previous && completed <= total && total == expected_total &&
+                                  !QFileInfo::exists(destination);
+                previous = completed;
+                return true;
+            },
+            &canceled) &&
+            !canceled && progress_valid && previous == expected_total && QFile::exists(destination + "/build.csv"),
+        "A failed export must be retryable with monotonic byte progress and publish only the finished build");
+    QFile cached(source), exported(destination + "/Layer 1/" + QFileInfo(source).fileName());
+    passed &= Testing::expect(cached.open(QIODevice::ReadOnly) && exported.open(QIODevice::ReadOnly) &&
+                                  cached.readAll() == exported.readAll(),
+                              "Chunked export must preserve every byte of a BMP larger than the copy buffer");
+
+    const QString empty_destination = directory.filePath("Empty Build");
+    if (!Testing::expect(QDir().mkpath(empty_destination), "Could not create an existing empty export folder"))
+        return false;
+    qint64 canceled_at = 0;
+    passed &= Testing::expect(
+        !DlpExporter::exportBuild(
+            build, empty_destination, &error,
+            [&](qint64 completed, qint64 total) {
+                canceled_at = completed;
+                return completed < total / 2;
+            },
+            &canceled) &&
+            canceled && canceled_at > 0 && canceled_at < expected_total && QFileInfo(empty_destination).isDir() &&
+            QDir(empty_destination)
+                .entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System)
+                .isEmpty() &&
+            QDir(directory.path()).entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden).size() == 2,
+        "Canceling a partial image copy must remove staging files and preserve the existing empty folder");
+    passed &= Testing::expect(
+        DlpExporter::exportBuild(build, empty_destination, &error) && QFile::exists(empty_destination + "/build.csv"),
+        "A canceled export must be retryable in the same existing empty folder");
+
+    const QString raced_destination = directory.filePath("Raced Build");
+    bool wrote_blocker              = false;
+    passed &= Testing::expect(!DlpExporter::exportBuild(build, raced_destination, &error,
+                                                        [&](qint64 completed, qint64 total) {
+                                                            if (completed == total && !wrote_blocker) {
+                                                                QDir().mkpath(raced_destination);
+                                                                QFile blocker(raced_destination + "/keep.txt");
+                                                                wrote_blocker = blocker.open(QIODevice::WriteOnly) &&
+                                                                                blocker.write("keep") == 4;
+                                                            }
+                                                            return true;
+                                                        }) &&
+                                  wrote_blocker && !QFile::exists(raced_destination + "/build.csv"),
+                              "Publishing must reject a destination populated while the export was being staged");
+    QFile blocker(raced_destination + "/keep.txt");
+    passed &= Testing::expect(blocker.open(QIODevice::ReadOnly) && blocker.readAll() == "keep",
+                              "A destination changed during export must retain the newly created user file");
     return passed;
 }
 
@@ -505,8 +633,10 @@ int main(int argc, char* argv[]) {
     if (arguments.size() == 3 && arguments[1] == "--temporary-root")
         return temporaryRootChild(arguments[2]) ? EXIT_SUCCESS : EXIT_FAILURE;
     bool passed = testRaster();
+    passed &= testSlicingCancellation();
     passed &= testExport(1);
     passed &= testExport(8);
+    passed &= testExportRecovery();
     passed &= testGrayscaleEncoding();
     passed &= testLaneCoverage();
     passed &= testFormats();

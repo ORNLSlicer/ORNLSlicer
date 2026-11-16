@@ -9,6 +9,8 @@
 
 #include "utilities/enums.h"
 
+class QLabel;
+
 namespace ORNL {
 /*!
  * \class SliceDialog
@@ -18,7 +20,7 @@ class SliceDialog : public QDialog {
     Q_OBJECT
    public:
     //! \brief Standard constructor
-    SliceDialog(QWidget* parent = nullptr);
+    SliceDialog(QWidget* parent = nullptr, bool dlp = false);
 
    signals:
     //! \brief Signal slice to cancel when user clicks the button
@@ -29,6 +31,7 @@ class SliceDialog : public QDialog {
     //! \param type Current step type process
     //! \param percentage Percentage completed
     void updateStatus(StatusUpdateStepType type, int percentage);
+    void updateMessage(const QString& message);
 
    private:
     //! \brief Setup the static widgets and their layouts.
@@ -36,5 +39,7 @@ class SliceDialog : public QDialog {
 
     //! \brief List of progress bars to update via status
     QList<QProgressBar*> m_progress_bars;
+    QLabel* m_message = nullptr;
+    bool m_dlp;
 };
 }  // namespace ORNL

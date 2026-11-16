@@ -358,10 +358,14 @@ bool SettingRowBase::matchesInheritedValue(const QString& key, int index) const 
 void SettingRowBase::updateResetButton() {
     if (m_reset_button.isNull()) return;
 
-    const bool should_show = rowWidgetsVisible() && hasLocalOverride();
+    const bool reset_fixed = m_settings_bases.isEmpty() && m_json.contains("fixed") && m_sb->contains(m_key) &&
+                             m_sb->setting<fifojson>(m_key) != m_json.at("fixed");
+    const bool should_show = rowWidgetsVisible() && (hasLocalOverride() || reset_fixed);
+    m_reset_button->setToolTip(reset_fixed ? QObject::tr("Use required value (%1)").arg(m_json.at("fixed").get<int>())
+                                           : QObject::tr("Use inherited value"));
     m_reset_button->setVisible(should_show);
     m_reset_button->setEnabled(should_show && rowWidgetsEnabled());
-    const bool show_global = rowWidgetsVisible() && m_settings_bases.isEmpty();
+    const bool show_global = rowWidgetsVisible() && m_settings_bases.isEmpty() && !reset_fixed;
     m_part_override_indicator->setVisible(show_global && m_part_overridden);
     m_part_override_indicator->setEnabled(rowWidgetsEnabled());
     m_layer_override_indicator->setVisible(show_global && m_layer_overridden);
@@ -369,7 +373,13 @@ void SettingRowBase::updateResetButton() {
 }
 
 void SettingRowBase::resetLocalOverrides() {
-    if (m_settings_bases.isEmpty()) return;
+    if (m_settings_bases.isEmpty()) {
+        if (m_json.contains("fixed") && m_sb->contains(m_key) && m_sb->setting<fifojson>(m_key) != m_json.at("fixed")) {
+            valueChangedHelper<int>(m_json.at("fixed").get<int>());
+            reloadValue();
+        }
+        return;
+    }
 
     for (const QString& key : m_local_override_keys) {
         bool key_removed = false;

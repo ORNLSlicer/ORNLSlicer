@@ -30,7 +30,7 @@ QColor progressBarFillColor() {
 
 namespace ORNL {
 
-SliceDialog::SliceDialog(QWidget* parent) : QDialog(parent) {
+SliceDialog::SliceDialog(QWidget* parent, bool dlp) : QDialog(parent), m_dlp(dlp) {
     this->setupUi();
 }
 
@@ -42,13 +42,13 @@ void SliceDialog::setupUi() {
     QFont activeFont = QApplication::font();
     activeFont.setPointSize(16);
 
-    QLabel* stages = new QLabel("Slicing Stages");
+    QLabel* stages = new QLabel(m_dlp ? tr("DLP Exposure Images") : tr("Slicing Stages"));
     stages->setFont(activeFont);
     layout->addWidget(stages, 0, 0, 1, 3, Qt::AlignCenter);
 
     // currently 6 step types
     QColor fill_color = progressBarFillColor();
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < (m_dlp ? 1 : 6); ++i) {
         QProgressBar* bar = new QProgressBar(this);
         bar->setMinimum(0);
         bar->setMaximum(100);
@@ -60,8 +60,13 @@ void SliceDialog::setupUi() {
         bar->setPalette(palette);
 
         m_progress_bars.push_back(bar);
-        layout->addWidget(new QLabel(toString(static_cast<StatusUpdateStepType>(i))), i + 2, 0);
+        layout->addWidget(new QLabel(m_dlp ? tr("Layers") : toString(static_cast<StatusUpdateStepType>(i))), i + 2, 0);
         layout->addWidget(bar, i + 2, 1);
+    }
+    if (m_dlp) {
+        m_message = new QLabel(tr("Preparing DLP images…"), this);
+        m_message->setWordWrap(true);
+        layout->addWidget(m_message, 3, 0, 1, 3);
     }
     QPushButton* cancelButton = new QPushButton("Cancel Slice", this);
     connect(cancelButton, &QPushButton::clicked, this, [this] {
@@ -72,7 +77,11 @@ void SliceDialog::setupUi() {
 }
 
 void SliceDialog::updateStatus(StatusUpdateStepType type, int percentage) {
-    m_progress_bars[(int)type]->setValue(percentage);
+    if (int(type) >= 0 && int(type) < m_progress_bars.size()) m_progress_bars[int(type)]->setValue(percentage);
+}
+
+void SliceDialog::updateMessage(const QString& message) {
+    if (m_message) m_message->setText(message);
 }
 
 }  // namespace ORNL

@@ -64,6 +64,28 @@ class SettingGroupTests(unittest.TestCase):
 
 
 class DlpSettingTests(unittest.TestCase):
+    def test_dlp_pixel_width_is_fixed_without_changing_saved_value_type(self):
+        master, _ = generator.load_settings(ROOT / "resources/settings")
+        setting = master["dlp_pixel_width"]
+        self.assertEqual(setting["type"], "positive_int")
+        self.assertEqual(setting["fixed"], 4096)
+        self.assertNotIn("fixed", master["dlp_projection_width"])
+
+    def test_fixed_metadata_requires_a_matching_integer_default(self):
+        settings, _ = generator.parse_settings_file(ROOT / "resources/settings/041_experimental_dlp_slicer.yaml")
+        setting = next(setting for setting in settings if setting["name"] == "dlp_pixel_width")
+        names = {"slicing_mode"}
+        generator.validate_setting(setting, names)
+        for fixed in (1024, 4096.0, "4096", True, None, 0):
+            with self.subTest(fixed=fixed):
+                invalid = {**setting, "fixed": fixed}
+                with self.assertRaises(ValueError):
+                    generator.validate_setting(invalid, names)
+        for setting_type in ("distance", "boolean", "string"):
+            with self.subTest(setting_type=setting_type):
+                with self.assertRaises(ValueError):
+                    generator.validate_setting({**setting, "type": setting_type}, names)
+
     def test_dlp_mode_preserves_existing_mode_indices(self):
         master, _ = generator.load_settings(ROOT / "resources/settings")
         self.assertEqual(master["slicing_mode"]["options"].split(", "), ["Planar", "Cylindrical", "Image", "DLP"])

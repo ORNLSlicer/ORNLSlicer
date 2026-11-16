@@ -31,8 +31,9 @@ double roundedCeil(double value) {
     return std::ceil(value);
 }
 
-bool imageEmpty(const QImage& image) {
+bool imageEmpty(const QImage& image, const std::function<bool()>& canceled) {
     for (int y = 0; y < image.height(); ++y) {
+        if (canceled && canceled()) return true;
         const uchar* row = image.constScanLine(y);
         for (int x = 0; x < image.width(); ++x) {
             if (row[x] != 0) return false;
@@ -41,7 +42,9 @@ bool imageEmpty(const QImage& image) {
     return true;
 }
 
-bool saveBmp(const QImage& image, const QString& path, int bit_depth, QString* error) {
+bool saveBmp(const QImage& image, const QString& path, int bit_depth, QString* error,
+             const std::function<bool()>& canceled) {
+    if (canceled && canceled()) return fail(error, "DLP slicing canceled.");
     QImage output;
     if (bit_depth == 1) {
         output = QImage(image.size(), QImage::Format_Mono);
@@ -49,6 +52,7 @@ bool saveBmp(const QImage& image, const QString& path, int bit_depth, QString* e
         output.setColorTable({qRgb(0, 0, 0), qRgb(255, 255, 255)});
         output.fill(0);
         for (int y = 0; y < image.height(); ++y) {
+            if (canceled && canceled()) return fail(error, "DLP slicing canceled.");
             const uchar* source = image.constScanLine(y);
             uchar* target       = output.scanLine(y);
             for (int x = 0; x < image.width(); ++x) {
@@ -57,12 +61,14 @@ bool saveBmp(const QImage& image, const QString& path, int bit_depth, QString* e
         }
     }
     else { output = image.convertToFormat(QImage::Format_Indexed8); }
+    if (canceled && canceled()) return fail(error, "DLP slicing canceled.");
     if (output.isNull() || !output.save(path, "BMP")) return fail(error, "Could not write DLP image: " + path);
+    if (canceled && canceled()) return fail(error, "DLP slicing canceled.");
     return true;
 }
 }  // namespace
 
-bool DlpRasterizer::initialize(DlpBuild& build, const DlpSettings& settings, QString* error) {
+bool DlpRasterizer::layout(DlpBuild& build, const DlpSettings& settings, QString* error) {
     const double values[] {settings.x_min, settings.x_max, settings.y_min,        settings.y_max,
                            settings.z_min, settings.z_max, settings.layer_height, settings.projection_width};
     for (double value : values) {
@@ -131,6 +137,11 @@ bool DlpRasterizer::initialize(DlpBuild& build, const DlpSettings& settings, QSt
         build.lane_starts.append(i > 0 && i == build.lane_count - 1 ? build.image_width - settings.lane_pixel_width
                                                                     : start);
     }
+    return true;
+}
+
+bool DlpRasterizer::initialize(DlpBuild& build, const DlpSettings& settings, QString* error) {
+    if (!layout(build, settings, error)) return false;
     // Qt canonicalizes Unix temp paths, yielding an empty path if a launch environment's root disappears.
     QString temporary_root = QDir::tempPath();
 #ifdef Q_OS_UNIX
@@ -150,13 +161,16 @@ bool DlpRasterizer::initialize(DlpBuild& build, const DlpSettings& settings, QSt
     return true;
 }
 
-QImage DlpRasterizer::rasterize(const QVector<PolygonList>& sections, const DlpBuild& build) {
+QImage DlpRasterizer::rasterize(const QVector<PolygonList>& sections, const DlpBuild& build,
+                                const std::function<bool()>& canceled) {
+    if (canceled && canceled()) return {};
     QImage image(build.image_width, build.image_height, QImage::Format_Grayscale8);
     if (image.isNull()) return image;
     image.fill(0);
     const auto& settings = build.settings;
     QVector<double> intersections;
     for (int row = 0; row < image.height(); ++row) {
+        if (canceled && canceled()) return {};
         const double y = settings.y_max - ((row + 0.5) * build.pixel_pitch);
         if (y < settings.y_min) continue;
         uchar* pixels = image.scanLine(row);
@@ -187,7 +201,9 @@ QImage DlpRasterizer::rasterize(const QVector<PolygonList>& sections, const DlpB
     return image;
 }
 
-bool DlpRasterizer::writeLayer(DlpBuild& build, int number, double z, const QImage& image, QString* error) {
+bool DlpRasterizer::writeLayer(DlpBuild& build, int number, double z, const QImage& image, QString* error,
+                               const std::function<bool()>& canceled) {
+    if (canceled && canceled()) return fail(error, "DLP slicing canceled.");
     if (!build.storage || !build.storage->isValid() || image.isNull() || image.width() != build.image_width ||
         image.height() != build.image_height)
         return fail(error, "DLP layer image does not match the build layout.");
@@ -201,9 +217,10 @@ bool DlpRasterizer::writeLayer(DlpBuild& build, int number, double z, const QIma
     layer.number     = number;
     layer.z          = z;
     layer.image_path = directory.absoluteFilePath(QString("Layer_%1_Full.bmp").arg(number));
-    layer.empty      = imageEmpty(mask);
-    if (!saveBmp(mask, layer.image_path, build.settings.bit_depth, error)) return false;
+    layer.empty      = imageEmpty(mask, canceled);
+    if (!saveBmp(mask, layer.image_path, build.settings.bit_depth, error, canceled)) return false;
     for (int i = 0; i < build.lane_count; ++i) {
+        if (canceled && canceled()) return fail(error, "DLP slicing canceled.");
         QImage lane_image(build.settings.lane_pixel_width, build.lane_image_height, QImage::Format_Grayscale8);
         if (lane_image.isNull()) return fail(error, "Could not allocate DLP lane image.");
         lane_image.fill(0);
@@ -211,40 +228,86 @@ bool DlpRasterizer::writeLayer(DlpBuild& build, int number, double z, const QIma
         const int masked_columns = static_cast<int>(start - build.lane_starts[i]);
         const int count = static_cast<int>(std::min<qint64>(build.settings.lane_pixel_width, mask.width() - start));
         if (count > 0) {
-            for (int y = 0; y < mask.height(); ++y)
+            for (int y = 0; y < mask.height(); ++y) {
+                if (canceled && canceled()) return fail(error, "DLP slicing canceled.");
                 std::memcpy(lane_image.scanLine(y) + masked_columns, mask.constScanLine(y) + start, count);
+            }
         }
         DlpLane lane;
         lane.number     = i + 1;
         lane.image_path = directory.absoluteFilePath(QString("Layer%1_%2.bmp").arg(number).arg(lane.number));
-        lane.empty      = imageEmpty(lane_image);
-        if (!saveBmp(lane_image, lane.image_path, build.settings.bit_depth, error)) return false;
+        lane.empty      = imageEmpty(lane_image, canceled);
+        if (!saveBmp(lane_image, lane.image_path, build.settings.bit_depth, error, canceled)) return false;
         layer.lanes.append(lane);
     }
     build.layers.append(layer);
     return true;
 }
 
-bool DlpExporter::exportBuild(const DlpBuild& build, const QString& destination, QString* error) {
+bool DlpExporter::exportBuild(const DlpBuild& build, const QString& destination, QString* error,
+                              const std::function<bool(qint64, qint64)>& progress, bool* canceled) {
+    if (canceled) *canceled = false;
+    if (error) error->clear();
     if (!build.storage || !build.storage->isValid() || build.layers.isEmpty())
         return fail(error, "No completed DLP build is available to export.");
-    QDir directory(destination);
-    if (QFileInfo::exists(destination) &&
-        (!QFileInfo(destination).isDir() ||
-         !directory.entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System).isEmpty()))
-        return fail(error, "Select a new or empty directory for the DLP export.");
-    if (!directory.mkpath(".")) return fail(error, "Could not create DLP export directory: " + destination);
+    const QString output = QDir(destination).absolutePath();
+    const QFileInfo output_info(output);
+    const auto available = [&]() {
+        return !QFileInfo::exists(output) ||
+               (!QFileInfo(output).isSymLink() && QFileInfo(output).isDir() &&
+                QDir(output)
+                    .entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System)
+                    .isEmpty());
+    };
+    if (!available()) return fail(error, "Select a new or empty directory for the DLP export.");
+    const QString parent = output_info.absolutePath();
+    if (!QDir().mkpath(parent)) return fail(error, "Could not create DLP export parent directory: " + parent);
+    QTemporaryDir staging(parent + "/.ornlslicer-dlp-export-XXXXXX");
+    if (!staging.isValid())
+        return fail(error, "Could not create temporary DLP export directory: " + staging.errorString());
+    QDir directory(staging.path());
+    qint64 total = 0, completed = 0;
+    for (const auto& layer : build.layers) {
+        total += QFileInfo(layer.image_path).size();
+        for (const auto& lane : layer.lanes) total += QFileInfo(lane.image_path).size();
+    }
+    const auto keep_going = [&]() {
+        if (!progress || progress(completed, total)) return true;
+        if (canceled) *canceled = true;
+        return fail(error, "DLP export canceled.");
+    };
+    if (!keep_going()) return false;
     QSaveFile csv(directory.absoluteFilePath("build.csv"));
     if (!csv.open(QIODevice::WriteOnly | QIODevice::Text)) return fail(error, "Could not write DLP build.csv.");
     QTextStream stream(&csv);
     stream << "layer,z_mm,lane,file,empty,x_min_mm,y_max_mm,pixel_pitch_mm,width_px,height_px\n";
+    QByteArray buffer(1024 * 1024, Qt::Uninitialized);
     for (const auto& layer : build.layers) {
         const QString folder = QString("Layer %1").arg(layer.number);
         if (!directory.mkpath(folder)) return fail(error, "Could not create DLP export layer directory.");
         auto copyImage = [&](int lane, const QString& source, bool empty) {
             const QString relative = folder + "/" + QFileInfo(source).fileName();
             const QString target   = directory.absoluteFilePath(relative);
-            if (!QFile::copy(source, target)) return fail(error, "Could not export DLP image: " + target);
+            QFile input(source), output_file(target);
+            if (!input.open(QIODevice::ReadOnly))
+                return fail(error, "Could not read cached DLP image: " + source + "\n" + input.errorString());
+            if (!output_file.open(QIODevice::WriteOnly))
+                return fail(error, "Could not export DLP image: " + QDir(output).filePath(relative) + "\n" +
+                                       output_file.errorString());
+            while (!input.atEnd()) {
+                if (!keep_going()) return false;
+                const qint64 count = input.read(buffer.data(), buffer.size());
+                if (count < 0)
+                    return fail(error, "Could not read cached DLP image: " + source + "\n" + input.errorString());
+                if (output_file.write(buffer.constData(), count) != count)
+                    return fail(error, "Could not export DLP image: " + QDir(output).filePath(relative) + "\n" +
+                                           output_file.errorString());
+                completed += count;
+                if (!keep_going()) return false;
+            }
+            if (!output_file.flush())
+                return fail(error, "Could not finish DLP image: " + QDir(output).filePath(relative) + "\n" +
+                                       output_file.errorString());
             stream << layer.number << ',' << QString::number(Distance(layer.z).to(mm), 'g', 15) << ',' << lane << ','
                    << relative << ',' << (empty ? 1 : 0) << ','
                    << QString::number(Distance(build.settings.x_min +
@@ -264,6 +327,16 @@ bool DlpExporter::exportBuild(const DlpBuild& build, const QString& destination,
     }
     stream.flush();
     if (stream.status() != QTextStream::Ok || !csv.commit()) return fail(error, "Could not finish DLP build.csv.");
+    if (!keep_going()) return false;
+    if (!available()) return fail(error, "The DLP export destination is no longer an empty directory: " + output);
+    const bool existing = QFileInfo::exists(output);
+    if (existing && !QDir().rmdir(output))
+        return fail(error, "Could not prepare the empty DLP export directory: " + output);
+    if (!QDir().rename(staging.path(), output)) {
+        if (existing) QDir().mkpath(output);
+        return fail(error, "Could not publish the completed DLP export directory: " + output);
+    }
+    staging.setAutoRemove(false);
     return true;
 }
 }  // namespace ORNL

@@ -186,7 +186,7 @@ When the user corrects your approach, append a one-line rule here before ending 
 - Continue tracing unresolved code paths and implementing an authorized change; do not end the task at an intermediate finding.
 - Treat the hand-calculated NC angles supplied with #372 as approximate reference checks; verify the tool-frame geometry independently and do not assume discrepancies are truncation.
 - Provide every citation format available in the OSTI DOECode record and copy each verbatim; preserve its registered title, historical URL, date, sponsor, and DOI when reorganizing docs.
-- For GUI screenshots and regressions, match the application's Qt style and root stylesheet and exercise light and dark themes; setting the theme preference alone does not apply it.
+- For GUI screenshots and regressions, apply the application's Qt style and root stylesheet, process pending layout events, and test both themes; measure button text against its visible region. Setting the theme preference alone does not apply it.
 - Verify disabled toolbar icons are visibly muted relative to enabled icons and that unavailable checked controls lose their active background in both views and themes.
 - Verify that grouped-form gaps match the surrounding panel background and that individual sections retain their own fill.
 - Check resolved font family, size, and weight for headings and fields across theme switches.

@@ -32,11 +32,12 @@ settings:
   - name: "dlp_pixel_width"
     display: "Projection Width in Pixels"
     type: "positive_int"
-    tooltip: "Number of pixels across each DLP projector lane. Both Static and Scrolling output require 4096 pixels. Projection Width divided by this value defines the physical size of each square image pixel."
+    tooltip: "Fixed at 4096 pixels for both Static and Scrolling output. Change Projection Width to set the physical size of each square image pixel."
     depends: {"slicing_mode":3}
     visible_if: {"slicing_mode":3}
     options: []
     default: 4096
+    fixed: 4096
     minor: "DLP Slicer"
     major: "Experimental"
     namespace: "Experimental::DlpSlicer"

@@ -1,18 +1,26 @@
 #include <QAbstractButton>
 #include <QApplication>
 #include <QCheckBox>
+#include <QDir>
+#include <QDoubleSpinBox>
 #include <QFile>
+#include <QFontInfo>
 #include <QMessageBox>
 #include <QStandardPaths>
+#include <QStyleFactory>
 #include <QTemporaryDir>
 #include <QTimer>
+#include <QToolButton>
+#include <QVBoxLayout>
 #include <cstdlib>
 
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "test_utils.h"
+#include "utilities/theme_tool.h"
 #include "widgets/settings/setting_bar.h"
+#include "widgets/settings/setting_spin_box.h"
 #include "windows/preferences_window.h"
 
 int main(int argc, char* argv[]) {
@@ -239,5 +247,126 @@ int main(int argc, char* argv[]) {
     select_file("new");
     expect(manager->getGlobal()->setting<int>("tool_coordinate") == 7,
            "Later selections must preserve manual edits to keys absent from the newly active template.");
+
+    auto global = manager->getGlobal();
+    global->setSetting("slicing_mode", 3);
+    global->setSetting("dlp_pixel_width", 4096);
+    bar.restoreSettingValue("slicing_mode");
+    bar.restoreSettingValue("dlp_pixel_width");
+    ORNL::SettingSpinBox* fixed_width = nullptr;
+    QDoubleSpinBox* projection_width  = nullptr;
+    QSpinBox* ordinary_integer        = nullptr;
+    for (auto* pane : bar.getPanes()) {
+        for (auto* tab : pane->getTabs()) {
+            if (auto row = tab->getRow("dlp_pixel_width")) fixed_width = dynamic_cast<ORNL::SettingSpinBox*>(row.get());
+            if (auto row = tab->getRow("dlp_projection_width"))
+                projection_width = dynamic_cast<QDoubleSpinBox*>(row.get());
+            if (auto row = tab->getRow("tool_coordinate")) ordinary_integer = dynamic_cast<QSpinBox*>(row.get());
+        }
+    }
+    expect(fixed_width != nullptr && projection_width != nullptr && ordinary_integer != nullptr,
+           "DLP width and ordinary numeric controls must exist.");
+    if (fixed_width == nullptr || projection_width == nullptr || ordinary_integer == nullptr) return EXIT_FAILURE;
+    expect(fixed_width->value() == 4096 && fixed_width->minimum() == 4096 && fixed_width->maximum() == 4096 &&
+               fixed_width->isReadOnly() && fixed_width->buttonSymbols() == QAbstractSpinBox::NoButtons &&
+               fixed_width->text().contains("fixed"),
+           "DLP pixel width must visibly remain fixed at 4096 without editing arrows.");
+    fixed_width->setValue(1024);
+    fixed_width->stepUp();
+    expect(fixed_width->value() == 4096 && global->setting<int>("dlp_pixel_width") == 4096,
+           "Attempting to edit fixed pixel width must preserve its value.");
+    expect(!projection_width->isReadOnly() && !ordinary_integer->isReadOnly(),
+           "Fixing DLP pixel width must leave physical width and other numeric settings editable.");
+    int fixed_changes = 0;
+    QObject::connect(&bar, &ORNL::SettingBar::settingAboutToChange,
+                     [&](const QString& key, const QList<QSharedPointer<ORNL::SettingsBase>>&) {
+                         if (key == "dlp_pixel_width") ++fixed_changes;
+                     });
+    global->setSetting("dlp_pixel_width", 1024);
+    bar.restoreSettingValue("dlp_pixel_width");
+    expect(fixed_width->value() == 1024 && fixed_width->text().contains("requires 4096") &&
+               fixed_width->toolTip().contains("unsupported") && fixed_width->isReadOnly() &&
+               global->setting<int>("dlp_pixel_width") == 1024 && fixed_changes == 0,
+           "Loading an unsupported saved width must expose it without silently rewriting the project.");
+    select_category(3);
+    bar.findChild<QLineEdit*>(QString(), Qt::FindDirectChildrenOnly)->setText("Projection Width in Pixels");
+    app.processEvents();
+    QToolButton* reset_width = nullptr;
+    for (auto* button : bar.findChildren<QToolButton*>())
+        if (button->toolTip() == "Use required value (4096)") reset_width = button;
+    expect(reset_width && reset_width->isVisible() && reset_width->isEnabled(),
+           "An unsupported saved fixed width must offer an explicit recovery button.");
+    if (!reset_width) return EXIT_FAILURE;
+    reset_width->click();
+    expect(global->setting<int>("dlp_pixel_width") == 4096 && fixed_changes == 1 && reset_width->isHidden(),
+           "Clicking the recovery button must restore 4096 through normal settings-change notifications.");
+    fixed_width->setEnabled(false);
+    fixed_width->setEnabled(true);
+    expect(fixed_width->value() == 4096 && fixed_width->minimum() == 4096 && fixed_width->maximum() == 4096 &&
+               fixed_width->isReadOnly() && fixed_width->text().contains("fixed"),
+           "Reloading supported settings and toggling enablement must preserve fixed width behavior.");
+
+    QApplication::setStyle(QStyleFactory::create("fusion"));
+    expect(ORNL::Theme::initializeFonts(), "Could not initialize application fonts for DLP settings.");
+    for (auto theme : {ORNL::ThemeName::kLightMode, ORNL::ThemeName::kDarkMode}) {
+        preferences->setTheme(theme);
+        QApplication::setPalette(preferences->getTheme().getPalette());
+        QFile style(preferences->getTheme().getFolderPath() + "style.qss");
+        if (!ORNL::Testing::expect(style.open(QIODevice::ReadOnly), "Could not read the root stylesheet."))
+            return EXIT_FAILURE;
+        const QString stylesheet = style.readAll();
+        const QString prefix     = theme == ORNL::ThemeName::kLightMode ? "light-" : "dark-";
+        for (bool fixed : {false, true}) {
+            QWidget root;
+            root.setStyleSheet(stylesheet);
+            auto* layout  = new QVBoxLayout(&root);
+            auto settings = QSharedPointer<ORNL::SettingsBase>::create();
+            auto* tab     = new ORNL::SettingTab(&root, "DLP Slicer", QIcon(), 0, false, settings);
+            auto metadata = manager->getMaster()->json().at("dlp_pixel_width");
+            if (!fixed) metadata.erase("fixed");
+            tab->addRow("dlp_pixel_width", metadata);
+            tab->addRow("dlp_projection_width", manager->getMaster()->json().at("dlp_projection_width"));
+            tab->expandTab();
+            layout->addWidget(tab);
+            root.resize(590, 150);
+            root.show();
+            app.processEvents();
+            auto* width = dynamic_cast<QSpinBox*>(tab->getRow("dlp_pixel_width").get());
+            expect(width != nullptr && width->isVisible() && width->isReadOnly() == fixed &&
+                       QFontInfo(width->font()).family() == "Noto Sans",
+                   "DLP pixel width must render with application fonts and the expected editability in both themes.");
+            if (argc > 1) {
+                const QString name = prefix + (fixed ? "fixed-width.png" : "fixed-width-before.png");
+                expect(root.grab().save(QDir(QString::fromUtf8(argv[1])).filePath(name)),
+                       "Could not save DLP fixed-width screenshot.");
+            }
+            if (fixed) {
+                settings->setSetting("dlp_pixel_width", 1024);
+                tab->getRow("dlp_pixel_width")->reloadValue();
+                app.processEvents();
+                QToolButton* reset = nullptr;
+                for (auto* button : root.findChildren<QToolButton*>())
+                    if (button->toolTip() == "Use required value (4096)") reset = button;
+                expect(reset && reset->isVisible() && reset->isEnabled() &&
+                           settings->setting<int>("dlp_pixel_width") == 1024 && width->value() == 1024,
+                       "Unsupported fixed widths must remain visible and unchanged until explicitly restored in both "
+                       "themes.");
+                if (!reset) return EXIT_FAILURE;
+                if (argc > 1)
+                    expect(root.grab().save(
+                               QDir(QString::fromUtf8(argv[1])).filePath(prefix + "fixed-width-unsupported.png")),
+                           "Could not save unsupported DLP width screenshot.");
+                reset->click();
+                app.processEvents();
+                expect(settings->setting<int>("dlp_pixel_width") == 4096 && width->value() == 4096 &&
+                           width->isReadOnly() && reset->isHidden(),
+                       "Explicit recovery must restore the required fixed width in both themes.");
+                if (argc > 1)
+                    expect(root.grab().save(
+                               QDir(QString::fromUtf8(argv[1])).filePath(prefix + "fixed-width-recovered.png")),
+                           "Could not save recovered DLP width screenshot.");
+            }
+        }
+    }
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

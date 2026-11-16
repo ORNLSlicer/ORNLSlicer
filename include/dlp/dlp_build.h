@@ -5,6 +5,7 @@
 #include <QString>
 #include <QTemporaryDir>
 #include <QVector>
+#include <functional>
 
 #include "geometry/polygon_list.h"
 
@@ -51,19 +52,26 @@ struct DlpBuild {
 
 class DlpRasterizer {
    public:
+    //! Calculates and validates the layout without creating temporary files or raster buffers.
+    static bool layout(DlpBuild& build, const DlpSettings& settings, QString* error = nullptr);
+
     //! Validates physical dimensions and initializes an empty build's raster layout.
     static bool initialize(DlpBuild& build, const DlpSettings& settings, QString* error = nullptr);
 
     //! Fills each mesh using even-odd contours, then unions the mesh masks.
     //! Image axes are +X right and +Y up; pixels are sampled at their centers.
-    static QImage rasterize(const QVector<PolygonList>& sections, const DlpBuild& build);
+    static QImage rasterize(const QVector<PolygonList>& sections, const DlpBuild& build,
+                            const std::function<bool()>& canceled = {});
 
     //! Stores full and fixed-width lane BMPs, including empty images and final-lane padding.
-    static bool writeLayer(DlpBuild& build, int number, double z, const QImage& image, QString* error = nullptr);
+    static bool writeLayer(DlpBuild& build, int number, double z, const QImage& image, QString* error = nullptr,
+                           const std::function<bool()>& canceled = {});
 };
 
 class DlpExporter {
    public:
-    static bool exportBuild(const DlpBuild& build, const QString& destination, QString* error = nullptr);
+    //! Progress reports image bytes copied and total image bytes. Returning false cancels before publication.
+    static bool exportBuild(const DlpBuild& build, const QString& destination, QString* error = nullptr,
+                            const std::function<bool(qint64, qint64)>& progress = {}, bool* canceled = nullptr);
 };
 }  // namespace ORNL
