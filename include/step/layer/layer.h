@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QLinkedList>
+#include <QMatrix4x4>
 
 #include <qcontainerfwd.h>
 #include <qhash.h>
@@ -62,6 +63,10 @@ class Layer : public Step {
     //! \brief compensates for rotation and shift during cross sectioning using
     //!        m_plane_normal and m_shift amount; should only be called once
     void reorient();
+
+    //! \brief Returns the restoration transform for flattened paths immediately before reorient() is called.
+    //! \note Excludes per-segment clearance redirection performed after restoration.
+    QMatrix4x4 getReorientationTransform();
 
     //! \brief shifts this layers in three axis to compensate for raft layers that where added
     void compensateForRafts();

@@ -30,6 +30,10 @@ void TravelSegment::setLiftType(TravelLiftType newLiftType) {
     m_lift_type = newLiftType;
 }
 
+TravelLiftType TravelSegment::liftType() const {
+    return m_lift_type;
+}
+
 void TravelSegment::setWaypoints(const QVector<Point>& waypoints) {
     m_waypoints = waypoints;
 }

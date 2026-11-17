@@ -503,6 +503,28 @@ void Layer::unorient() {
     }
 }
 
+QMatrix4x4 Layer::getReorientationTransform() {
+    Point origin_shift = Point(.0, .0, .0) - m_shift_amount;
+    origin_shift.z(.0);
+    Point orientation_shift = getOrientationShift();
+
+    // Match reorient(): remove the flattened XY origin, rotate into the slicing plane, then restore the layer
+    // translation (including printer XY offsets). Ordinary deposition paths also receive a vertical half-layer
+    // shift; whether a printing segment exists is invariant under these rigid transforms.
+    const float z_component = std::abs(m_slicing_plane.normal().normalized().z());
+    if (!usesDepositionSurfaceReference() && !m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize) &&
+        z_component >= 1.0e-6f && getMinimumPrintZ() != std::numeric_limits<float>::max()) {
+        const Distance layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
+        orientation_shift.z(orientation_shift.z() + (layer_height / (2.0 * z_component))());
+    }
+
+    QMatrix4x4 transform;
+    transform.translate(orientation_shift.toQVector3D());
+    transform.rotate(MathUtils::CreateQuaternion(QVector3D(0, 0, 1), m_slicing_plane.normal()));
+    transform.translate(origin_shift.toQVector3D());
+    return transform;
+}
+
 void Layer::reorient() {
     // Unapply current origin shift
     Point origin_shift = Point(.0, .0, .0) - m_shift_amount;

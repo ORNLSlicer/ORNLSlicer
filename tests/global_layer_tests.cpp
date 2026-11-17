@@ -243,15 +243,172 @@ void appendWall(ORNL::Path& path, ORNL::RegionType type, bool deposition = true)
     }
 }
 
-void processTravels(const QSharedPointer<ORNL::SettingsBase>& settings, const QSharedPointer<TestRegion>& region) {
+ORNL::GlobalLayer::TravelRoutingStatistics processTravels(const QSharedPointer<ORNL::SettingsBase>& settings,
+                                                          const QSharedPointer<TestRegion>& region,
+                                                          const ORNL::Plane& plane = ORNL::Plane(ORNL::Point(),
+                                                                                                 QVector3D(0, 0, 1)),
+                                                          const ORNL::Point& shift = ORNL::Point()) {
     auto island = QSharedPointer<TestIsland>::create(squareAt(0), settings, nullptr);
     island->addRegion(region);
     ORNL::GlobalLayer layer(0);
-    addLayer(layer, "{00000000-0000-0000-0000-000000000001}", layerWithIsland(settings, island));
+    auto printing_layer = layerWithIsland(settings, island);
+    printing_layer->setOrientation(plane, shift);
+    addLayer(layer, "{00000000-0000-0000-0000-000000000001}", printing_layer);
     QVector<const TestIsland*> order;
     optimizeGlobalLayer(layer, settings, order);
     ORNL::Point location;
     layer.calculateModifiers(settings, location, 0);
+    return layer.getTravelRoutingStatistics();
+}
+
+bool travelLimitsAndOutcomes() {
+    auto settings = settingsWithIslandOrder(ORNL::IslandOrderOptimization::kNextClosest);
+    settings->setSetting(ORNL::PS::Travel::kAvoidCrossingPerimeters, true);
+    settings->setSetting(ORNL::PRS::Dimensions::kXMin, -2500);
+    settings->setSetting(ORNL::PRS::Dimensions::kXMax, 2500);
+    settings->setSetting(ORNL::PRS::Dimensions::kYMin, -540);
+    settings->setSetting(ORNL::PRS::Dimensions::kYMax, 1000);
+    settings->setSetting(ORNL::PRS::Dimensions::kXOffset, 1000);
+    settings->setSetting(ORNL::PRS::Dimensions::kYOffset, 2000);
+    settings->setSetting(ORNL::PRS::Dimensions::kZOffset, -500);
+    settings->setSetting(ORNL::PRS::Dimensions::kZMin, -500);
+    settings->setSetting(ORNL::PRS::Dimensions::kZMax, 500);
+    settings->setSetting(ORNL::PRS::Dimensions::kEnableW, true);
+    settings->setSetting(ORNL::PRS::Dimensions::kWMin, -2000);
+    settings->setSetting(ORNL::PRS::Dimensions::kWMax, 0);
+    auto region = QSharedPointer<TestRegion>::create(settings);
+    ORNL::Path path;
+    appendWall(path, ORNL::RegionType::kPerimeter);
+    auto travel = QSharedPointer<ORNL::TravelSegment>::create(ORNL::Point(-2000, -100, 0), ORNL::Point(2000, -100, 0));
+    path.append(travel);
+    region->getPaths().append(path);
+    auto stats = processTravels(settings, region);
+    bool passed =
+        ORNL::Testing::expect(stats.detours == 1 && stats.obstacle_segments == 4 &&
+                                  std::any_of(travel->waypoints().begin(), travel->waypoints().end(),
+                                              [](const auto& p) { return p.y() > 500; }),
+                              "Build-frame limits must choose the longer legal side despite XY and Z/W offsets.");
+    settings->setSetting(ORNL::PS::Layer::kBeadWidth, 300);
+    settings->setSetting(ORNL::PRS::Dimensions::kYMin, -700);
+    settings->setSetting(ORNL::PRS::Dimensions::kYMax, 700);
+    stats = processTravels(settings, region);
+    passed &= ORNL::Testing::expect(stats.reduced_clearance == 1 && !travel->waypoints().isEmpty(),
+                                    "A printer boundary must retain and report the tighter legal route.");
+    settings->setSetting(ORNL::PRS::Dimensions::kYMin, -500);
+    settings->setSetting(ORNL::PRS::Dimensions::kYMax, 500);
+    stats = processTravels(settings, region);
+    passed &=
+        ORNL::Testing::expect(stats.travel_limit == 1 && travel->waypoints().isEmpty(),
+                              "Blocked printer-boundary alternatives must report a direct travel-limit fallback.");
+    settings->setSetting(ORNL::PS::Travel::kAvoidCrossingPerimeters, false);
+    travel->setWaypoints({ORNL::Point(0, 1200, 0)});
+    stats = processTravels(settings, region);
+    passed &= ORNL::Testing::expect(stats.obstacle_segments == 0 && stats.clear == 0 && stats.detours == 0 &&
+                                        stats.reduced_clearance == 0 && stats.travel_limit == 0 &&
+                                        travel->waypoints().isEmpty(),
+                                    "Disabled avoidance must clear stale detours without constructing obstacles.");
+    return passed;
+}
+
+bool tiltedTravelLimits() {
+    auto settings = settingsWithIslandOrder(ORNL::IslandOrderOptimization::kNextClosest);
+    settings->setSetting(ORNL::PS::Travel::kAvoidCrossingPerimeters, true);
+    settings->setSetting(ORNL::PS::Layer::kBeadWidth, 300);
+    settings->setSetting(ORNL::PS::Layer::kLayerHeight, 100);
+    settings->setSetting(ORNL::PRS::Dimensions::kZMax, 2000);
+    auto region = QSharedPointer<TestRegion>::create(settings);
+    ORNL::Path path;
+    appendWall(path, ORNL::RegionType::kPerimeter);
+    auto travel = QSharedPointer<ORNL::TravelSegment>::create(ORNL::Point(-2000, -100, 0), ORNL::Point(2000, -100, 0));
+    path.append(travel);
+    region->getPaths().append(path);
+    const auto stats =
+        processTravels(settings, region, ORNL::Plane(ORNL::Point(), QVector3D(0, -1, 1)), ORNL::Point(0, 0, 354));
+    return ORNL::Testing::expect(stats.detours == 1 &&
+                                     std::any_of(travel->waypoints().begin(), travel->waypoints().end(),
+                                                 [](const auto& p) { return p.y() > 500; }) &&
+                                     travel->start() == ORNL::Point(-2000, -100, 0) &&
+                                     travel->end() == ORNL::Point(2000, -100, 0),
+                                 "Tilted detours must respect the restored build floor and preserve endpoints.");
+}
+
+bool detourCannotNewlyLiftEndpointsBeyondTravelLimits() {
+    auto settings = settingsWithIslandOrder(ORNL::IslandOrderOptimization::kNextClosest);
+    settings->setSetting(ORNL::PS::Travel::kAvoidCrossingPerimeters, true);
+    settings->setSetting(ORNL::PRS::Dimensions::kXMin, -2500);
+    settings->setSetting(ORNL::PRS::Dimensions::kXMax, 2000);
+    settings->setSetting(ORNL::PS::Travel::kLiftHeight, 200);
+    settings->setSetting(ORNL::PS::Travel::kMinTravelForLift, 4100);
+    settings->setSetting(ORNL::PS::Slicing::kSlicePlaneNormalX, 1.0f);
+    settings->setSetting(ORNL::PS::Slicing::kSlicePlaneNormalZ, 1.0f);
+    auto region = QSharedPointer<TestRegion>::create(settings);
+    ORNL::Path path;
+    appendWall(path, ORNL::RegionType::kPerimeter);
+    auto travel = appendTravel(path);
+    region->getPaths().append(path);
+    const auto stats = processTravels(settings, region);
+    return ORNL::Testing::expect(stats.travel_limit == 1 && travel->waypoints().isEmpty(),
+                                 "A detour must not newly enable a lift past X max at an unchanged endpoint.");
+}
+
+bool cylindricalTravelLimitsIgnoreRectangularRanges() {
+    auto settings = settingsWithIslandOrder(ORNL::IslandOrderOptimization::kNextClosest);
+    settings->setSetting(ORNL::PS::Travel::kAvoidCrossingPerimeters, true);
+    settings->setSetting(ORNL::PS::Layer::kBeadWidth, 300);
+    settings->setSetting(ORNL::PRS::Dimensions::kBuildVolumeType, ORNL::BuildVolumeType::kCylindrical);
+    settings->setSetting(ORNL::PRS::Dimensions::kOuterRadius, 1000);
+    settings->setSetting(ORNL::PRS::Dimensions::kXMin, -100);
+    settings->setSetting(ORNL::PRS::Dimensions::kXMax, 100);
+    auto region = QSharedPointer<TestRegion>::create(settings);
+    ORNL::Path path;
+    appendWall(path, ORNL::RegionType::kPerimeter);
+    auto travel = QSharedPointer<ORNL::TravelSegment>::create(ORNL::Point(-900, 0, 0), ORNL::Point(900, 0, 0));
+    path.append(travel);
+    region->getPaths().append(path);
+    const auto stats = processTravels(settings, region);
+    return ORNL::Testing::expect(stats.reduced_clearance == 1 && !travel->waypoints().isEmpty() &&
+                                     std::all_of(travel->waypoints().begin(), travel->waypoints().end(),
+                                                 [](const auto& p) { return std::hypot(p.x(), p.y()) <= 1001; }),
+                                 "Cylindrical limits must use the radius and ignore stale rectangular ranges.");
+}
+
+bool unliftedDetoursRemainLegalNearCeiling() {
+    auto settings = settingsWithIslandOrder(ORNL::IslandOrderOptimization::kNextClosest);
+    settings->setSetting(ORNL::PS::Travel::kAvoidCrossingPerimeters, true);
+    settings->setSetting(ORNL::PS::Slicing::kSlicePlaneNormalZ, 1.0f);
+    settings->setSetting(ORNL::PRS::Dimensions::kZMax, 1000);
+    settings->setSetting(ORNL::PS::Travel::kLiftHeight, 200);
+    settings->setSetting(ORNL::PS::Travel::kMinTravelForLift, 10000);
+    auto region = QSharedPointer<TestRegion>::create(settings);
+    ORNL::Path path;
+    appendWall(path, ORNL::RegionType::kPerimeter);
+    auto travel = appendTravel(path);
+    region->getPaths().append(path);
+    auto stats =
+        processTravels(settings, region, ORNL::Plane(ORNL::Point(0, 0, 0), QVector3D(0, 0, 1)), ORNL::Point(0, 0, 900));
+    bool passed = ORNL::Testing::expect(stats.detours == 1 && !travel->waypoints().isEmpty(),
+                                        "A short detour must not reserve an unused lift above the ceiling.");
+    settings->setSetting(ORNL::PS::Layer::kBeadWidth, 300);
+    // The square-boundary detours measure about 5.7 mm with standoff and 5.1 mm without it.
+    settings->setSetting(ORNL::PS::Travel::kMinTravelForLift, 5400);
+    stats =
+        processTravels(settings, region, ORNL::Plane(ORNL::Point(0, 0, 0), QVector3D(0, 0, 1)), ORNL::Point(0, 0, 900));
+    passed &= ORNL::Testing::expect(
+        stats.reduced_clearance == 1 && !travel->waypoints().isEmpty() && travel->length() < ORNL::Distance(5400),
+        "A tighter route below the lift threshold must remain available near the ceiling.");
+    settings->setSetting(ORNL::PS::Travel::kMinTravelForLift, 0);
+    settings->setSetting(ORNL::PRS::MachineSetup::kSyntax, ORNL::GcodeSyntax::kWolf);
+    travel->setLiftType(ORNL::TravelLiftType::kNoLift);
+    stats =
+        processTravels(settings, region, ORNL::Plane(ORNL::Point(0, 0, 0), QVector3D(0, 0, 1)), ORNL::Point(0, 0, 900));
+    passed &= ORNL::Testing::expect(stats.detours == 1 && !travel->waypoints().isEmpty(),
+                                    "Wolf no-lift detours must not reserve lift clearance above the ceiling.");
+    settings->setSetting(ORNL::PRS::MachineSetup::kSyntax, ORNL::GcodeSyntax::kTormach);
+    stats =
+        processTravels(settings, region, ORNL::Plane(ORNL::Point(0, 0, 0), QVector3D(0, 0, 1)), ORNL::Point(0, 0, 900));
+    passed &= ORNL::Testing::expect(stats.travel_limit == 1 && travel->waypoints().isEmpty(),
+                                    "Legacy writers' lifted horizontal targets must still fit the envelope.");
+    return passed;
 }
 
 bool travelStandoffUsesResolvedDefaultBeadWidth() {
@@ -472,6 +629,11 @@ int main() {
     passed &= perimeterHistorySpansIslandsAndHonorsLocalSettings();
     passed &= curvedPerimetersObstructTravel();
     passed &= travelWaypointsFollowLayerTransforms();
+    passed &= travelLimitsAndOutcomes();
+    passed &= tiltedTravelLimits();
+    passed &= detourCannotNewlyLiftEndpointsBeyondTravelLimits();
+    passed &= unliftedDetoursRemainLegalNearCeiling();
+    passed &= cylindricalTravelLimitsIgnoreRectangularRanges();
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

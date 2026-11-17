@@ -136,6 +136,45 @@ bool wireArcAdjustsAlongSlicingNormal() {
     return ORNL::Testing::near3DPoint(start, lower_surface.x(), lower_surface.y(), lower_surface.z());
 }
 
+bool reorientationTransformMatchesPaths(ORNL::MachineType machine_type, const QVector3D& slicing_normal,
+                                        bool spiralize = false, bool printing = true) {
+    const QSharedPointer<ORNL::SettingsBase> settings = layerSettings(machine_type, 3.2 * ORNL::mm);
+    settings->setSetting(ORNL::PS::SpecialModes::kEnableSpiralize, spiralize);
+    settings->setSetting(ORNL::PRS::Dimensions::kXOffset, (12.5 * ORNL::mm)());
+    settings->setSetting(ORNL::PRS::Dimensions::kYOffset, (-24.0 * ORNL::mm)());
+
+    const ORNL::Point shift(1200.0 * ORNL::mm, -650.0 * ORNL::mm, 7.0 * ORNL::mm);
+    const ORNL::Point start(1230.0 * ORNL::mm, -670.0 * ORNL::mm, 0.0 * ORNL::mm);
+    const ORNL::Point end(1210.0 * ORNL::mm, -630.0 * ORNL::mm, 0.25 * ORNL::mm);
+    const QSharedPointer<ORNL::LineSegment> segment = QSharedPointer<ORNL::LineSegment>::create(start, end);
+    segment->setDepositionActive(printing);
+    ORNL::Path path;
+    path.append(segment);
+    const QSharedPointer<TestRegion> region = QSharedPointer<TestRegion>::create(settings);
+    region->addPath(path);
+    const QSharedPointer<TestIsland> island = QSharedPointer<TestIsland>::create(settings);
+    island->addRegion(region);
+    ORNL::Layer layer(1, settings);
+    layer.addIsland(ORNL::IslandType::kPolymer, island);
+    layer.setOrientation(ORNL::Plane(shift, slicing_normal), shift);
+
+    const QMatrix4x4 transform = layer.getReorientationTransform();
+    if (!ORNL::Testing::near3DPoint(segment->start(), start.x(), start.y(), start.z(), 0.0) ||
+        !ORNL::Testing::near3DPoint(segment->end(), end.x(), end.y(), end.z(), 0.0)) {
+        return false;
+    }
+    const QVector3D expected_start = transform.map(start.toQVector3D());
+    const QVector3D expected_end   = transform.map(end.toQVector3D());
+    layer.reorient();
+
+    // Matrix multiplication and successive float quaternion/point operations round differently at machine scale.
+    constexpr double kRoundoffMicrons = 1.0;
+    return ORNL::Testing::near3DPoint(segment->start(), expected_start.x(), expected_start.y(), expected_start.z(),
+                                      kRoundoffMicrons) &&
+           ORNL::Testing::near3DPoint(segment->end(), expected_end.x(), expected_end.y(), expected_end.z(),
+                                      kRoundoffMicrons);
+}
+
 QSharedPointer<ORNL::SettingsBase> wolfSettings() {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
     settings->setSetting(ORNL::PRS::Dimensions::kZOffset, 1.5 * ORNL::mm);
@@ -267,6 +306,22 @@ int main(int argc, char* argv[]) {
                                     "Wire Arc variable-height layer did not start on the preceding layer surface.");
     passed &= ORNL::Testing::expect(wireArcAdjustsAlongSlicingNormal(),
                                     "Wire Arc layer datum adjustment did not follow the slicing-plane normal.");
+    passed &= ORNL::Testing::expect(
+        reorientationTransformMatchesPaths(ORNL::MachineType::kPellet, QVector3D(0, 0, 1)),
+        "Planar restoration transform disagreed with reorient(), including layer shift and printer XY offsets.");
+    passed &= ORNL::Testing::expect(reorientationTransformMatchesPaths(ORNL::MachineType::kPellet, QVector3D(1, 2, 3)),
+                                    "Tilted restoration transform disagreed with reorient() and its minimum Z shift.");
+    passed &=
+        ORNL::Testing::expect(reorientationTransformMatchesPaths(ORNL::MachineType::kWire_Arc, QVector3D(1, 2, 3)),
+                              "Wire Arc restoration transform disagreed with reorient() and its surface reference.");
+    passed &=
+        ORNL::Testing::expect(reorientationTransformMatchesPaths(ORNL::MachineType::kPellet, QVector3D(1, 2, 3), true),
+                              "Spiral restoration transform disagreed with reorient() and its half-layer correction.");
+    passed &= ORNL::Testing::expect(
+        reorientationTransformMatchesPaths(ORNL::MachineType::kPellet, QVector3D(1, 2, 3), false, false),
+        "Non-deposition restoration transform added a minimum Z shift absent from reorient().");
+    passed &= ORNL::Testing::expect(reorientationTransformMatchesPaths(ORNL::MachineType::kPellet, QVector3D(1, 0, 0)),
+                                    "Vertical slicing-plane restoration transform disagreed with reorient().");
     passed &= ORNL::Testing::expect(wolfFirstApproachUsesTargetLiftAndOneOffset(),
                                     "Wolf first approach did not apply target lift and Z offset exactly once.");
     passed &= ORNL::Testing::expect(wolfShortFirstTravelDoesNotLift(),

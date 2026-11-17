@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QVector>
+#include <functional>
 
 #include "geometry/point.h"
 #include "units/unit.h"
@@ -9,11 +10,16 @@ namespace ORNL {
 //! \brief Routes planar travels around previously printed perimeter strokes.
 class TravelRouter {
    public:
+    enum class Outcome { kClear, kDetour, kReducedClearance, kUnroutable, kNonPlanar, kTravelLimit };
+
     void addObstacle(const Point& start, const Point& end, Distance width);
 
     //! \brief Returns interior waypoints, or an empty vector when direct travel is clear or no detour exists.
     //! \param standoff Preferred extra clearance beyond the printed bead edge.
-    QVector<Point> route(const Point& start, const Point& end, Distance standoff = 0) const;
+    //! \param allowed Convex travel-envelope constraint for inserted waypoints; original endpoints are preserved.
+    //! \param outcome Optional result classification, including the reason for direct-travel fallback.
+    QVector<Point> route(const Point& start, const Point& end, Distance standoff = 0,
+                         const std::function<bool(const Point&)>& allowed = {}, Outcome* outcome = nullptr) const;
 
    private:
     struct Obstacle {

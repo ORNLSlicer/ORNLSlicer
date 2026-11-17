@@ -745,6 +745,18 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_travel_router_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME travel_router_tests COMMAND ${PROJECT_NAME}_travel_router_tests)
 
+    if(WIN32)
+        set(TRAVEL_CLI_TARGET ${PROJECT_NAME}_cli)
+    else()
+        set(TRAVEL_CLI_TARGET ${PROJECT_NAME})
+    endif()
+    add_test(NAME travel_cli_regression
+        COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/travel_cli_regression.py
+            --slicer $<TARGET_FILE:${TRAVEL_CLI_TARGET}>
+            --template ${CMAKE_CURRENT_SOURCE_DIR}/templates/Desktop_04mm.s2c
+            --work-dir ${CMAKE_CURRENT_BINARY_DIR}/Testing/travel-cli-regression)
+    set_tests_properties(travel_cli_regression PROPERTIES TIMEOUT 200)
+
     add_executable(${PROJECT_NAME}_contour_connection_tests tests/contour_connection_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_contour_connection_tests

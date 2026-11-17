@@ -25,6 +25,8 @@ class TravelSegment : public SegmentBase {
     //! \brief Set the travel lift type
     void setLiftType(TravelLiftType newLiftType);
 
+    TravelLiftType liftType() const;
+
     //! \brief Set intermediate points of one logical travel, excluding its start and end.
     void setWaypoints(const QVector<Point>& waypoints);
 

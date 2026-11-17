@@ -108,10 +108,72 @@ TravelRouter routerFor(const QVector<Stroke>& strokes, double width = 200) {
     for (const auto& stroke : strokes) { router.addObstacle(stroke.start, stroke.end, ORNL::Distance(width)); }
     return router;
 }
+
+bool constrainedRoutesReportOutcomes() {
+    using Outcome   = TravelRouter::Outcome;
+    Outcome outcome = Outcome::kUnroutable;
+    bool passed     = true;
+    const Point start(-2000, 0, 20), end(2000, 0, 20);
+    const QVector<Stroke> asymmetric {{Point(0, -1500, 20), Point(0, 500, 20)}};
+    const auto lower_bed = [](const Point& point) { return point.y() >= -2000 && point.y() <= 400; };
+    const auto detour    = routerFor(asymmetric).route(start, end, 0, lower_bed, &outcome);
+    passed &= ORNL::Testing::expect(
+        outcome == Outcome::kDetour && !detour.isEmpty() && std::all_of(detour.begin(), detour.end(), lower_bed) &&
+            avoidsStrokes(start, end, detour, asymmetric) &&
+            std::any_of(detour.begin(), detour.end(), [](const Point& point) { return point.y() < -1500; }),
+        "A forbidden short detour must use the longer legal contour side.");
+
+    const QVector<Stroke> wall {{Point(0, -1000, 20), Point(0, 1000, 20)}};
+    const auto tight_bed = [](const Point& point) { return std::abs(point.y()) <= 1200; };
+    const auto tighter   = routerFor(wall).route(start, end, ORNL::Distance(350), tight_bed, &outcome);
+    passed &= ORNL::Testing::expect(
+        outcome == Outcome::kReducedClearance && !tighter.isEmpty() &&
+            std::all_of(tighter.begin(), tighter.end(), tight_bed) && avoidsStrokes(start, end, tighter, wall),
+        "A reduced-clearance retry must retain the travel limits and report the tighter route.");
+    const auto narrow_strip   = [](const Point& point) { return point.y() >= 1150 && point.y() <= 1250; };
+    const auto tighter_direct = routerFor(wall).route(Point(-2000, 1200, 20), Point(2000, 1200, 20),
+                                                      ORNL::Distance(350), narrow_strip, &outcome);
+    passed &= ORNL::Testing::expect(tighter_direct.isEmpty() && outcome == Outcome::kReducedClearance,
+                                    "A reduced-clearance direct retry must still report the spacing reduction.");
+    const auto blocked_bed = [](const Point& point) { return std::abs(point.y()) <= 1050; };
+    const auto blocked     = routerFor(wall).route(start, end, ORNL::Distance(350), blocked_bed, &outcome);
+    passed &= ORNL::Testing::expect(blocked.isEmpty() && outcome == Outcome::kTravelLimit,
+                                    "A route blocked by the bed must report a travel-limit fallback.");
+
+    // A tilted slicing plane maps planar y to printer z; the nearer bottom detour would go below the build volume.
+    const auto tilted_volume = [](const Point& point) {
+        const double printer_z = 250.0 + 0.5 * point.y();
+        return printer_z >= 0 && printer_z <= 1500;
+    };
+    const QVector<Stroke> tilted_wall {{Point(0, -500, 20), Point(0, 1500, 20)}};
+    const auto tilted = routerFor(tilted_wall).route(start, end, 0, tilted_volume, &outcome);
+    passed &= ORNL::Testing::expect(
+        outcome == Outcome::kDetour && !tilted.isEmpty() && std::all_of(tilted.begin(), tilted.end(), tilted_volume) &&
+            avoidsStrokes(start, end, tilted, tilted_wall),
+        "A tilted-frame constraint must reject the lower side and retain an in-volume detour.");
+
+    const auto square =
+        closedLoop({Point(-1000, -1000, 20), Point(1000, -1000, 20), Point(1000, 1000, 20), Point(-1000, 1000, 20)});
+    const auto impossible = routerFor(square).route(Point(0, 0, 20), end, 0, {}, &outcome);
+    passed &= ORNL::Testing::expect(impossible.isEmpty() && outcome == Outcome::kUnroutable,
+                                    "Closed-wall topology must be distinguished from a clear direct travel.");
+    const auto clear = routerFor(wall).route(Point(-2000, 2000, 20), Point(2000, 2000, 20), 0, {}, &outcome);
+    passed &= ORNL::Testing::expect(clear.isEmpty() && outcome == Outcome::kClear,
+                                    "Unobstructed direct travel must report clear.");
+    const auto non_planar = routerFor(wall).route(start, Point(2000, 0, 22), 0, {}, &outcome);
+    passed &= ORNL::Testing::expect(non_planar.isEmpty() && outcome == Outcome::kNonPlanar,
+                                    "A non-planar travel must report that it was not routed.");
+    const auto empty = TravelRouter().route(start, end, 0, [](const Point&) { return false; }, &outcome);
+    passed &=
+        ORNL::Testing::expect(empty.isEmpty() && outcome == Outcome::kClear && start.x() == -2000 && end.x() == 2000,
+                              "Existing direct-travel endpoints must not be moved or rejected by waypoint limits.");
+    return passed;
+}
 }  // namespace
 
 int main() {
     bool passed = true;
+    passed &= constrainedRoutesReportOutcomes();
     const Point start(-2000.0f, 0.0f, 20.0f), end(2000.0f, 0.0f, 20.0f);
     passed &= ORNL::Testing::expect(TravelRouter().route(start, end).isEmpty(),
                                     "An empty layer must leave direct travel unchanged.");
@@ -188,6 +250,16 @@ int main() {
     passed &= ORNL::Testing::expect(
         !to_rounded_wipe.isEmpty() && avoidsStrokes(other_island, wipe_end, to_rounded_wipe, translated_hex, 1.0),
         "A float-interpolated diagonal wipe endpoint must permit arrival around the completed perimeter.");
+    const auto bounded_left = [minimum_x = wipe_end.x() - 1000.0f](const Point& point) {
+        return point.x() >= minimum_x;
+    };
+    TravelRouter::Outcome projection_outcome;
+    const auto constrained_wipe = translated_router.route(wipe_end, other_island, 0, bounded_left, &projection_outcome);
+    passed &=
+        ORNL::Testing::expect(!constrained_wipe.isEmpty() && projection_outcome == TravelRouter::Outcome::kDetour &&
+                                  std::all_of(constrained_wipe.begin(), constrained_wipe.end(), bounded_left) &&
+                                  avoidsStrokes(wipe_end, other_island, constrained_wipe, translated_hex, 1.0),
+                              "A forbidden nearest endpoint projection must leave farther legal exits available.");
     const auto spaced_from_wipe = translated_router.route(wipe_end, other_island, ORNL::Distance(8636));
     passed &= ORNL::Testing::expect(
         !spaced_from_wipe.isEmpty() && avoidsStrokes(wipe_end, other_island, spaced_from_wipe, translated_hex, 1.0) &&

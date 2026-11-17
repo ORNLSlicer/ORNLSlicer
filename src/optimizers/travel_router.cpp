@@ -88,10 +88,27 @@ void TravelRouter::addObstacle(const Point& start, const Point& end, Distance wi
     m_obstacles.push_back({start, end, std::max(1.0, width() / 2.0), 1.0 + float_rounding});
 }
 
-QVector<Point> TravelRouter::route(const Point& start, const Point& end, Distance standoff) const {
-    if (std::abs(start.z() - end.z()) > kPlaneTolerance || (start.x() == end.x() && start.y() == end.y())) {
+QVector<Point> TravelRouter::route(const Point& start, const Point& end, Distance standoff,
+                                   const std::function<bool(const Point&)>& allowed, Outcome* outcome) const {
+    if (outcome) *outcome = Outcome::kClear;
+    if (std::abs(start.z() - end.z()) > kPlaneTolerance) {
+        if (outcome) *outcome = Outcome::kNonPlanar;
         return {};
     }
+    if (start.x() == end.x() && start.y() == end.y()) { return {}; }
+
+    bool rejected_by_limit = false;
+    auto pointAllowed      = [&](const Point& point) {
+        if (!allowed || (point.x() == start.x() && point.y() == start.y()) ||
+            (point.x() == end.x() && point.y() == end.y()) || allowed(point)) {
+            return true;
+        }
+        rejected_by_limit = true;
+        return false;
+    };
+    auto pathAllowed = [&](const QVector<Point>& points) {
+        return !allowed || std::all_of(points.begin(), points.end(), pointAllowed);
+    };
 
     const double extra_clearance = std::max(0.0, standoff());
     QVector<const Obstacle*> obstacles;
@@ -273,7 +290,7 @@ QVector<Point> TravelRouter::route(const Point& start, const Point& end, Distanc
                 continue;
             }
             if (freeComponent(projection.point) == projection.component &&
-                visible(original, projection.point, true, false)) {
+                visible(original, projection.point, true, false) && pointAllowed(projection.point)) {
                 result.push_back({projection.point, projection.component});
             }
         }
@@ -342,7 +359,12 @@ QVector<Point> TravelRouter::route(const Point& start, const Point& end, Distanc
                 for (int j = 1; j < points.size(); ++j) { distance += points[j - 1].distance(points[j])(); }
                 return distance;
             };
-            for (const auto& point : length(forward) < length(backward) ? forward : backward) { append(result, point); }
+            const bool forward_allowed  = pathAllowed(forward);
+            const bool backward_allowed = pathAllowed(backward);
+            if (!forward_allowed && !backward_allowed) { return QVector<Point>(); }
+            const auto& chosen =
+                forward_allowed && (!backward_allowed || length(forward) < length(backward)) ? forward : backward;
+            for (const auto& point : chosen) { append(result, point); }
             i = exit;
         }
         append(result, b.point);
@@ -356,7 +378,7 @@ QVector<Point> TravelRouter::route(const Point& start, const Point& end, Distanc
         for (const auto& b : ends) {
             if (a.component != b.component) { continue; }
             auto points = followBoundaries(a, b);
-            if (points.isEmpty()) { continue; }
+            if (points.isEmpty() || !pathAllowed(points)) { continue; }
             double length = start.distance(points.front())() + points.back().distance(end)();
             for (int i = 1; i < points.size(); ++i) { length += points[i - 1].distance(points[i])(); }
             if (length < best_length) {
@@ -365,7 +387,17 @@ QVector<Point> TravelRouter::route(const Point& start, const Point& end, Distanc
             }
         }
     }
-    if (best.isEmpty() && extra_clearance > 0) { return route(start, end); }
+    if (best.isEmpty() && extra_clearance > 0) {
+        Outcome retry_outcome;
+        auto tighter = route(start, end, 0, allowed, &retry_outcome);
+        if (outcome) {
+            *outcome = retry_outcome == Outcome::kDetour || retry_outcome == Outcome::kClear
+                           ? Outcome::kReducedClearance
+                           : retry_outcome;
+            if (retry_outcome == Outcome::kUnroutable && rejected_by_limit) *outcome = Outcome::kTravelLimit;
+        }
+        return tighter;
+    }
 
     QVector<Point> simplified;
     for (const auto& point : best) {
@@ -386,6 +418,11 @@ QVector<Point> TravelRouter::route(const Point& start, const Point& end, Distanc
     best = simplified;
     if (!best.isEmpty() && best.front().x() == start.x() && best.front().y() == start.y()) { best.removeFirst(); }
     if (!best.isEmpty() && best.back().x() == end.x() && best.back().y() == end.y()) { best.removeLast(); }
+    if (outcome) {
+        *outcome = !best.isEmpty()     ? Outcome::kDetour
+                   : rejected_by_limit ? Outcome::kTravelLimit
+                                       : Outcome::kUnroutable;
+    }
     return best;
 }
 }  // namespace ORNL

@@ -24,6 +24,16 @@ namespace ORNL {
  */
 class GlobalLayer {
    public:
+    struct TravelRoutingStatistics {
+        qsizetype clear             = 0;
+        qsizetype detours           = 0;
+        qsizetype reduced_clearance = 0;
+        qsizetype unroutable        = 0;
+        qsizetype non_planar        = 0;
+        qsizetype travel_limit      = 0;
+        qsizetype obstacle_segments = 0;
+    };
+
     //! \brief Constructor
     //! \param layer_number - the # in sequence the global layer should be printed
     GlobalLayer(int layer_number);
@@ -38,6 +48,9 @@ class GlobalLayer {
 
     //! \brief Creates path modifiers; must be called after connectPaths()
     void calculateModifiers(QSharedPointer<SettingsBase> global_sb, Point& current_location, int layer_num);
+
+    //! \brief Outcomes of the most recent travel planning pass; disabled travels are excluded.
+    const TravelRoutingStatistics& getTravelRoutingStatistics() const;
 
     //! \brief orders islands & paths, generates travels
     //! \param global_sb - a reference to the global settings base
@@ -72,6 +85,8 @@ class GlobalLayer {
     Distance getLayerHeight();
 
    private:
+    TravelRoutingStatistics m_travel_routing_statistics;
+
     //! \brief Creates tree-like structure if brims exist, otherwise, sorts islands into precendence order;
     //!        helper function for connectPaths()
     QList<QMap<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>> createSequence(
