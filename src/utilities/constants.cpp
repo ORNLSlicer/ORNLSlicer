@@ -1062,10 +1062,12 @@ const QString Constants::ExperimentalSettings::CrossSection::kLargestGap = "cros
 const QString Constants::ExperimentalSettings::CrossSection::kMaxStitch  = "cross_section_max_stitch_distance";
 
 // DLP Slicer
-const QString Constants::ExperimentalSettings::DlpSlicer::kOutputMode      = "dlp_output_mode";
-const QString Constants::ExperimentalSettings::DlpSlicer::kProjectionWidth = "dlp_projection_width";
-const QString Constants::ExperimentalSettings::DlpSlicer::kPixelWidth      = "dlp_pixel_width";
-const QString Constants::ExperimentalSettings::DlpSlicer::kBitDepth        = "dlp_bit_depth";
+const QString Constants::ExperimentalSettings::DlpSlicer::kOutputMode          = "dlp_output_mode";
+const QString Constants::ExperimentalSettings::DlpSlicer::kProjectionWidth     = "dlp_projection_width";
+const QString Constants::ExperimentalSettings::DlpSlicer::kPixelWidth          = "dlp_pixel_width";
+const QString Constants::ExperimentalSettings::DlpSlicer::kBitDepth            = "dlp_bit_depth";
+const QString Constants::ExperimentalSettings::DlpSlicer::kInterlacedStitching = "dlp_interlaced_stitching";
+const QString Constants::ExperimentalSettings::DlpSlicer::kStitchOverlap       = "dlp_stitch_overlap";
 
 //================================================================================
 // Settings

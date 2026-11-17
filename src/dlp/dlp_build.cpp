@@ -90,13 +90,32 @@ bool DlpRasterizer::layout(DlpBuild& build, const DlpSettings& settings, QString
     const double pitch  = settings.projection_width / settings.lane_pixel_width;
     const double width  = roundedCeil((settings.x_max - settings.x_min) / pitch);
     const double height = roundedCeil((settings.y_max - settings.y_min) / pitch);
-    const double lanes  = roundedCeil((settings.x_max - settings.x_min) / settings.projection_width);
+    double lanes        = roundedCeil((settings.x_max - settings.x_min) / settings.projection_width);
     const double lane_height =
         settings.output_mode == DlpOutputMode::kStatic ? 2160 : roundedCeil(height / 2176) * 2176;
     if (!std::isfinite(pitch) || pitch <= 0 || width < 1 || height < 1 || lanes < 1 ||
         width > std::numeric_limits<int>::max() || height > std::numeric_limits<int>::max() ||
         lanes > std::numeric_limits<int>::max() || lane_height > std::numeric_limits<int>::max())
         return fail(error, "DLP image dimensions exceed the supported range.");
+
+    int overlap_pixels = 0;
+    if (settings.interlaced_stitching) {
+        if (!std::isfinite(settings.stitch_overlap) || settings.stitch_overlap <= 0)
+            return fail(error, "DLP stitching overlap must be finite and greater than zero.");
+        const double overlap = roundedCeil(settings.stitch_overlap / pitch);
+        if (!std::isfinite(overlap) || overlap < 1 || overlap >= settings.lane_pixel_width)
+            return fail(
+                error,
+                "DLP stitching overlap must be less than one complete projector width after rounding to pixels.");
+        overlap_pixels = static_cast<int>(overlap);
+        if (width > settings.lane_pixel_width) {
+            const qint64 remaining = static_cast<qint64>(width) - settings.lane_pixel_width;
+            const qint64 advance   = settings.lane_pixel_width - overlap_pixels;
+            lanes                  = 1 + ((remaining + advance - 1) / advance);
+        }
+        else
+            lanes = 1;
+    }
 
     if (settings.output_mode == DlpOutputMode::kStatic && height > lane_height)
         return fail(error, QString("DLP static output is restricted to one 4096 x 2160 frame (%1 x %2 mm). "
@@ -114,6 +133,11 @@ bool DlpRasterizer::layout(DlpBuild& build, const DlpSettings& settings, QString
     const int allocation_limit = QImageReader::allocationLimit();
     const double raster_bytes  = std::ceil(width / 4.0) * 4.0 * height;
     const double lane_bytes    = settings.lane_pixel_width * lane_height * 4.0;
+    if (settings.interlaced_stitching && allocation_limit > 0 &&
+        ((2.0 * lanes - 1) * sizeof(int)) > allocation_limit * 1024.0 * 1024.0)
+        return fail(error, QString("DLP stitching lane layout exceeds the %1 MiB allocation limit. "
+                                   "Reduce the stitching overlap or printer X span.")
+                               .arg(allocation_limit));
     if (allocation_limit > 0 && std::max(raster_bytes, lane_bytes) > allocation_limit * 1024.0 * 1024.0)
         return fail(error, QString("DLP images exceed the %1 MiB image allocation limit. Full layer: %2 x %3 pixels; "
                                    "lane: %4 x %5 pixels. Full grayscale raster: %6 MiB; "
@@ -130,15 +154,29 @@ bool DlpRasterizer::layout(DlpBuild& build, const DlpSettings& settings, QString
     build          = DlpBuild();
     build.settings = settings;
     if (settings.output_mode == DlpOutputMode::kScrolling) build.settings.bit_depth = 1;
-    build.pixel_pitch       = pitch;
-    build.image_width       = static_cast<int>(width);
-    build.image_height      = static_cast<int>(height);
-    build.lane_count        = static_cast<int>(lanes);
-    build.lane_image_height = static_cast<int>(lane_height);
+    build.pixel_pitch           = pitch;
+    build.image_width           = static_cast<int>(width);
+    build.image_height          = static_cast<int>(height);
+    build.lane_count            = static_cast<int>(lanes);
+    build.lane_image_height     = static_cast<int>(lane_height);
+    build.stitch_overlap_pixels = overlap_pixels;
+    if (settings.interlaced_stitching) {
+        build.lane_starts.reserve(build.lane_count);
+        build.stitch_band_starts.reserve(std::max(0, build.lane_count - 1));
+    }
     for (int i = 0; i < build.lane_count; ++i) {
-        const int start = i * settings.lane_pixel_width;
+        const int start = settings.interlaced_stitching
+                              ? static_cast<int>(qint64(i) * (settings.lane_pixel_width - overlap_pixels))
+                              : i * settings.lane_pixel_width;
         build.lane_starts.append(i > 0 && i == build.lane_count - 1 ? build.image_width - settings.lane_pixel_width
                                                                     : start);
+    }
+    if (settings.interlaced_stitching) {
+        // Center the requested stitching band inside each pair's actual shared footprint.
+        for (int i = 1; i < build.lane_count; ++i)
+            build.stitch_band_starts.append(static_cast<int>(
+                (qint64(build.lane_starts[i - 1]) + settings.lane_pixel_width + build.lane_starts[i] - overlap_pixels) /
+                2));
     }
     return true;
 }
@@ -202,6 +240,11 @@ bool DlpRasterizer::writeLayer(DlpBuild& build, int number, double z, const QIma
     if (!build.storage || !build.storage->isValid() || image.isNull() || image.width() != build.image_width ||
         image.height() != build.image_height)
         return fail(error, "DLP layer image does not match the build layout.");
+    if (build.settings.interlaced_stitching &&
+        (number < 1 || build.stitch_overlap_pixels < 1 ||
+         build.stitch_overlap_pixels >= build.settings.lane_pixel_width ||
+         build.lane_starts.size() != build.lane_count || build.stitch_band_starts.size() != build.lane_count - 1))
+        return fail(error, "DLP stitching layer does not match the build layout.");
     const QImage mask = image.convertToFormat(QImage::Format_Grayscale8);
     QDir directory(build.storage->path());
     const QString folder = QString("Layer %1").arg(number);
@@ -219,13 +262,27 @@ bool DlpRasterizer::writeLayer(DlpBuild& build, int number, double z, const QIma
         QImage lane_image(build.settings.lane_pixel_width, build.lane_image_height, QImage::Format_Grayscale8);
         if (lane_image.isNull()) return fail(error, "Could not allocate DLP lane image.");
         lane_image.fill(0);
-        const qint64 start       = qint64(i) * build.settings.lane_pixel_width;
-        const int masked_columns = static_cast<int>(start - build.lane_starts[i]);
-        const int count = static_cast<int>(std::min<qint64>(build.settings.lane_pixel_width, mask.width() - start));
-        if (count > 0) {
+        if (build.settings.interlaced_stitching) {
+            // A common phase keeps ownership intervals ordered even when three footprints overlap.
             for (int y = 0; y < mask.height(); ++y) {
                 if (canceled && canceled()) return fail(error, "DLP slicing canceled.");
-                std::memcpy(lane_image.scanLine(y) + masked_columns, mask.constScanLine(y) + start, count);
+                const int shift =
+                    ((y / build.stitch_overlap_pixels + (number - 1) % 2) % 2) * build.stitch_overlap_pixels;
+                const int first = i == 0 ? 0 : build.stitch_band_starts[i - 1] + shift;
+                const int end   = i == build.lane_count - 1 ? mask.width() : build.stitch_band_starts[i] + shift;
+                std::memcpy(lane_image.scanLine(y) + (first - build.lane_starts[i]), mask.constScanLine(y) + first,
+                            end - first);
+            }
+        }
+        else {
+            const qint64 start       = qint64(i) * build.settings.lane_pixel_width;
+            const int masked_columns = static_cast<int>(start - build.lane_starts[i]);
+            const int count = static_cast<int>(std::min<qint64>(build.settings.lane_pixel_width, mask.width() - start));
+            if (count > 0) {
+                for (int y = 0; y < mask.height(); ++y) {
+                    if (canceled && canceled()) return fail(error, "DLP slicing canceled.");
+                    std::memcpy(lane_image.scanLine(y) + masked_columns, mask.constScanLine(y) + start, count);
+                }
             }
         }
         DlpLane lane;

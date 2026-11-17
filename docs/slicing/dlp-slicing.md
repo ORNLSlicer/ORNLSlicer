@@ -7,7 +7,7 @@ DLP is a separate slicing mode that exports BMP exposure masks. The existing Ima
 1. Configure a rectangular build volume under **Printer > Dimensions**, including minimum and maximum X, Y, and Z.
 2. Load and position the build models and any imported support models.
 3. Select **Profile > Slicing > Slicing Mode > DLP** and set **Profile > Layer > Layer Height**.
-4. Under **Experimental > DLP Slicer**, choose **Output Mode** and set **Projection Width**. **Projection Width in Pixels** is fixed at **4096**. Static output offers **1-bit** and **8-bit** BMPs; Scrolling output always uses **1-bit**.
+4. Under **Experimental > DLP Slicer**, choose **Output Mode** and set **Projection Width**. **Projection Width in Pixels** is fixed at **4096**. Static output offers **1-bit** and **8-bit** BMPs; Scrolling output always uses **1-bit**. Optionally enable **Interlaced Lane Stitching** and set **Stitching Overlap Width**.
 5. Click **Slice** to review pixel pitch, image dimensions, layer/lane counts, black padding, and estimated image memory and storage. Warnings identify models outside the printer bounds. The slicer checks available space on the temporary drive before generating images. Choose **Slice** in the summary to begin; the DLP progress window supports cancellation during layers. The **DLP Build Preview** opens when slicing finishes, with layer selection, lane selection, and a lane-border overlay. Reopen it through **View > DLP Preview**.
 6. Use **Export DLP Build** in the preview or Project menu, browse to the parent location, enter a **Folder name**, and click **Create Folder**. The export creates that folder and saves the build inside it.
 
@@ -31,13 +31,25 @@ Layers share one build-relative Z grid: `build_minimum_z + layer_height / 2`, fo
 
 Masks include build models and imported support models, preserve holes and disconnected regions, and combine overlapping models. Clipping and settings meshes do not contribute exposure geometry. Toolpath settings, such as infill and perimeter widths, do not alter DLP masks.
 
-Lanes span the full Y dimension, start at minimum X, and advance in +X. Their count is `ceil((maximum_x - minimum_x) / projection_width)`. Every lane has the full projector width. When the printer width is not an integer multiple of the projection width and there is more than one lane, the final footprint shifts left to end at maximum X. The overlap is black in that final lane, so the preceding lane exposes it once. For example, a 300 mm printer width and 204.8 mm projection width place lane 2 at X = 95.2 mm and mask its first 109.6 mm. A shifted final lane requires the printer width to be a whole number of pixels; adjust the X bounds or pixel pitch if necessary. A build narrower than one lane retains minimum-X placement and black padding on the right.
+Lanes span the full Y dimension, start at minimum X, and advance in +X. With stitching off, their count is `ceil((maximum_x - minimum_x) / projection_width)`. Every lane has the full projector width. When the printer width is not an integer multiple of the projection width and there is more than one lane, the final footprint shifts left to end at maximum X. With stitching off, the overlap is black in that final lane, so the preceding lane exposes it once. For example, a 300 mm printer width and 204.8 mm projection width place lane 2 at X = 95.2 mm and mask its first 109.6 mm. A shifted final lane requires the printer width to be a whole number of pixels; adjust the X bounds or pixel pitch if necessary. A build narrower than one lane retains minimum-X placement and black padding on the right.
 
 The full image covers the printer XY bounds, rounded up to whole pixels. Lane-frame padding and overlap masks do not change that diagnostic image.
 
 Images use +X to the right and +Y upward, with the top row at maximum Y. Pixel centers determine filled geometry. There is no added mirroring, rotation, or antialiasing. Static BMPs support 1-bit and 8-bit output; Scrolling BMPs are 1-bit. All currently contain white geometry on black. Grayscale stitching is not generated yet.
 
 Preview and export use the completed slice's settings and image files. Editing settings requires slicing again to produce different images.
+
+## Interlaced lane stitching
+
+**Interlaced Lane Stitching** is an optional checkbox under **Experimental > DLP Slicer**, off by default. Turning it off reproduces the existing lane layout and exposure images. When enabled, **Stitching Overlap Width** controls both the minimum physical overlap between neighboring projector footprints and the X width of the interlaced transition band. Its initial **1 mm** value is a test setting that requires printer calibration.
+
+The requested overlap rounds up to whole pixels. At the default 0.05 mm/pixel, 1 mm becomes 20 pixels. The slicer keeps each image 4096 pixels wide and preserves pixel pitch; normal lane advance becomes `projection_width - effective_overlap`. The last footprint still ends at maximum X, so its physical overlap may be larger. The transition band is centered within the actual shared footprint. Extra overlap can require an additional lane to cover the same build area. The controller must use each image's exported **x_min_mm** origin rather than assuming full-width steps.
+
+Within each transition band, complementary black-and-white fingers assign every intended model pixel to one lane. Finger height uses the same pixel count as the effective overlap width. The pattern flips on successive layers, moving the join within the band without moving the model geometry. Ownership remains unique even where more than two footprints overlap. Padding stays black, and the full-layer diagnostic image remains unchanged. Static 8-bit and Scrolling 1-bit output use the same binary interlacing; no grayscale or exposure-time adjustment is introduced.
+
+With stitching enabled, the full-layer preview can show **stitching bands** instead of straight exposure boundaries. Select a numbered lane and inspect its pixels at 1:1 to see the generated fingers. The slice summary reports the effective width and resulting lane count before work begins. A single-lane build has no stitching seam.
+
+The masks maintain one commanded exposure per intended pixel under ideal positioning. This does not establish physical bond strength: calibrate the overlap and verify printed seam-crossing samples with the actual resin, exposure sequence, and positioning accuracy before production use.
 
 ## Export contract
 
@@ -73,7 +85,7 @@ Before export, the slicer checks the destination drive for space for the additio
 
 ## Command line
 
-Use an `.s2c` configuration with `slicing_mode` set to `3`, or a project saved in DLP mode. The DLP setting keys are `dlp_output_mode` (`0` for Static, `1` for Scrolling), `dlp_projection_width` (internal distance units: micrometers), `dlp_pixel_width` (4096), and `dlp_bit_depth` (`0` for 1-bit, `1` for 8-bit; ignored in Scrolling mode).
+Use an `.s2c` configuration with `slicing_mode` set to `3`, or a project saved in DLP mode. The DLP setting keys are `dlp_output_mode` (`0` for Static, `1` for Scrolling), `dlp_projection_width` (internal distance units: micrometers), `dlp_pixel_width` (4096), `dlp_bit_depth` (`0` for 1-bit, `1` for 8-bit; ignored in Scrolling mode), `dlp_interlaced_stitching` (boolean, default `false`), and `dlp_stitch_overlap` (internal distance units, default `1000` = 1 mm; used only when stitching is enabled).
 
 ```sh
 ornlslicer --input_stl_files model.stl --input_global_settings dlp.s2c --output_location build

@@ -1053,6 +1053,8 @@ class Constants {
             static const QString kProjectionWidth;
             static const QString kPixelWidth;
             static const QString kBitDepth;
+            static const QString kInterlacedStitching;
+            static const QString kStitchOverlap;
         };
     };
 

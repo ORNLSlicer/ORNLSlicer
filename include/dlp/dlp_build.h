@@ -20,6 +20,8 @@ struct DlpSettings {
     int lane_pixel_width      = 0;
     int bit_depth             = 1;
     DlpOutputMode output_mode = DlpOutputMode::kStatic;
+    bool interlaced_stitching = false;
+    double stitch_overlap     = 0;
 };
 
 struct DlpLane {
@@ -46,6 +48,9 @@ struct DlpBuild {
     double pixel_pitch    = 0;
     //! X origins in full-layer pixel coordinates; the final footprint can overlap its predecessor.
     QVector<int> lane_starts;
+    int stitch_overlap_pixels = 0;
+    //! Left edges of shared stitching bands, in full-layer pixel coordinates.
+    QVector<int> stitch_band_starts;
     QVector<DlpLayer> layers;
     QSharedPointer<QTemporaryDir> storage;
 };

@@ -91,6 +91,25 @@ class DlpSettingTests(unittest.TestCase):
         self.assertEqual(master["slicing_mode"]["options"].split(", "), ["Planar", "Cylindrical", "Image", "DLP"])
         self.assertEqual(master["slicing_mode"]["default"], 0)
 
+    def test_dlp_stitching_is_optional_with_conditional_physical_overlap(self):
+        master, _ = generator.load_settings(ROOT / "resources/settings")
+        stitching = master["dlp_interlaced_stitching"]
+        self.assertEqual(stitching["type"], "boolean")
+        self.assertIs(stitching["default"], False)
+        self.assertEqual(stitching["depends"], {"slicing_mode": 3})
+        self.assertEqual(stitching["visible_if"], {"slicing_mode": 3})
+        self.assertFalse(stitching["local"])
+        overlap = master["dlp_stitch_overlap"]
+        self.assertEqual(overlap["type"], "distance")
+        self.assertEqual(overlap["default"], 1000)
+        enabled = {"AND": [{"slicing_mode": 3}, {"dlp_interlaced_stitching": True}]}
+        self.assertEqual(overlap["depends"], enabled)
+        self.assertEqual(overlap["visible_if"], enabled)
+        self.assertFalse(overlap["local"])
+        for setting in (stitching, overlap):
+            self.assertEqual(setting["major"], "Experimental")
+            self.assertEqual(setting["minor"], "DLP Slicer")
+
     def test_dlp_settings_are_global_and_only_visible_in_dlp_mode(self):
         master, _ = generator.load_settings(ROOT / "resources/settings")
         for name, default in (

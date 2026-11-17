@@ -58,3 +58,29 @@ settings:
     namespace: "Experimental::DlpSlicer"
     symbol: "kBitDepth"
     local: false
+  - name: "dlp_interlaced_stitching"
+    display: "Interlaced Lane Stitching"
+    type: "boolean"
+    tooltip: "Overlap projector footprints and divide each shared band into complementary black-and-white fingers. The pattern shifts between layers while each model pixel is assigned to one lane. Supports fixed exposure and 1-bit Scrolling output. Lane count and X origins can change; the controller must use the exported CSV positions. Printer calibration is required to establish bond strength."
+    depends: {"slicing_mode":3}
+    visible_if: {"slicing_mode":3}
+    options: []
+    default: false
+    minor: "DLP Slicer"
+    major: "Experimental"
+    namespace: "Experimental::DlpSlicer"
+    symbol: "kInterlacedStitching"
+    local: false
+  - name: "dlp_stitch_overlap"
+    display: "Stitching Overlap Width"
+    type: "distance"
+    tooltip: "Minimum physical X overlap and width of each interlaced band. Rounded up to whole pixels; the finger height uses the same pixel count, and the pattern alternates between layers. Must be greater than zero and smaller than Projection Width. The final anchored footprint can overlap more, with stitching confined to this band. The 1 mm default is a test value to calibrate on the printer."
+    depends: {"AND":[{"slicing_mode":3},{"dlp_interlaced_stitching":true}]}
+    visible_if: {"AND":[{"slicing_mode":3},{"dlp_interlaced_stitching":true}]}
+    options: []
+    default: 1000
+    minor: "DLP Slicer"
+    major: "Experimental"
+    namespace: "Experimental::DlpSlicer"
+    symbol: "kStitchOverlap"
+    local: false

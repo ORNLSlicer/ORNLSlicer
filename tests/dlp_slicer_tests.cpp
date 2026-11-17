@@ -4,11 +4,13 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QMap>
+#include <QScopeGuard>
 #include <QStandardPaths>
 #include <QStorageInfo>
 #include <QTemporaryDir>
 #include <QTimer>
 #include <QtEndian>
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 
@@ -87,6 +89,8 @@ bool sharedLayerGrid(const QString& output) {
     addBox("imported_support", ORNL::MeshType::kSupport, {4000, 2000, 2000}, {1000, 1000, 1000});
 
     const auto settings = ORNL::GSM->getGlobal();
+    settings->remove(ORNL::ES::DlpSlicer::kInterlacedStitching);
+    settings->remove(ORNL::ES::DlpSlicer::kStitchOverlap);
     settings->setSetting(ORNL::PRS::Dimensions::kEnableW, false);
     settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1000.0);
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kDlp));
@@ -112,6 +116,10 @@ bool sharedLayerGrid(const QString& output) {
     const auto& build = *result.build;
     if (!expect(build.layers.size() == 6 && build.image_width == 20 && build.image_height == 12,
                 "DLP slicing must use the printer bounds and one shared bed-relative layer grid."))
+        return false;
+    if (!expect(!build.settings.interlaced_stitching && build.stitch_overlap_pixels == 0 &&
+                    build.stitch_band_starts.isEmpty(),
+                "Projects without stitching settings must retain the original disabled lane layout."))
         return false;
 
     double actual_bytes = 0;
@@ -374,6 +382,107 @@ bool projectorFormats(const QString& output) {
     return passed;
 }
 
+bool interlacedStitching(const QString& output) {
+    const auto settings         = ORNL::GSM->getGlobal();
+    const auto saved_settings   = settings->json();
+    const auto restore_settings = qScopeGuard([&] { settings->json(saved_settings); });
+    ORNL::CSM->clearParts();
+    setBounds(0, 8129, 0, 128, 0, 2000);
+    addBox("stitching_rectangle", ORNL::MeshType::kBuild, {0, 0, 0}, {8129, 128, 2000});
+    settings->setSetting(ORNL::PRS::Dimensions::kEnableW, false);
+    settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1000.0);
+    settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kDlp));
+    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 4096.0);
+    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 4096);
+    settings->setSetting(ORNL::ES::DlpSlicer::kBitDepth, 1);
+    QTemporaryDir exported;
+    if (!expect(exported.isValid(), "Could not create the frozen stitched-export fixture.")) return false;
+    bool passed = true;
+    for (auto mode : {ORNL::DlpOutputMode::kStatic, ORNL::DlpOutputMode::kScrolling}) {
+        settings->setSetting(ORNL::ES::DlpSlicer::kOutputMode, static_cast<int>(mode));
+        settings->setSetting(ORNL::ES::DlpSlicer::kInterlacedStitching, true);
+        settings->setSetting(ORNL::ES::DlpSlicer::kStitchOverlap, 64.0);
+        ORNL::DlpPreflight summary;
+        QString error;
+        if (!expect(ORNL::DlpSlicer::preflight(summary, &error) && summary.layer_count == 2 &&
+                        summary.layout.lane_count == 3 && summary.file_count == 9 &&
+                        summary.layout.stitch_overlap_pixels == 64 &&
+                        summary.layout.lane_starts == QVector<int>({0, 4032, 4033}),
+                    "Stitched preflight must account for the extra lane and anchored final footprint."))
+            return false;
+        const auto result = sliceDlp(output);
+        if (!expect(result.completed == 1 && result.error.isEmpty() && result.build &&
+                        result.build->layers.size() == 2 && result.build->lane_count == 3,
+                    "The real DLP slicer must complete interlaced static and scrolling builds."))
+            return false;
+        const auto& build = *result.build;
+        const int depth   = mode == ORNL::DlpOutputMode::kStatic ? 8 : 1;
+        passed &= expect(build.settings.interlaced_stitching && near(build.settings.stitch_overlap, 64) &&
+                             build.stitch_overlap_pixels == 64 && build.settings.bit_depth == depth &&
+                             build.lane_starts == summary.layout.lane_starts && build.stitch_band_starts.size() == 2,
+                         "Stitched builds must cache physical placement, pattern settings, and the output depth.");
+        for (int layer_index = 0; layer_index < build.layers.size(); ++layer_index) {
+            const auto& layer = build.layers[layer_index];
+            const QImage full(layer.image_path);
+            QVector<QImage> lanes;
+            for (const auto& lane : layer.lanes) lanes.append(QImage(lane.image_path));
+            if (!expect(
+                    !full.isNull() && full.size() == QSize(8129, 128) && lanes.size() == 3 &&
+                        std::all_of(lanes.cbegin(), lanes.cend(), [](const QImage& image) { return !image.isNull(); }),
+                    "Stitched slicer output must contain readable full and lane images."))
+                return false;
+            bool once = true;
+            for (int y = 0; y < full.height() && once; ++y) {
+                for (int x = 0; x < full.width(); ++x) {
+                    int exposures = 0;
+                    for (int lane = 0; lane < lanes.size(); ++lane) {
+                        const int column = x - build.lane_starts[lane];
+                        if (column >= 0 && column < lanes[lane].width())
+                            exposures += qGray(lanes[lane].pixel(column, y)) > 0;
+                    }
+                    if (qGray(full.pixel(x, y)) != 255 || exposures != 1) {
+                        once = false;
+                        break;
+                    }
+                }
+            }
+            passed &= expect(
+                once,
+                "Actual stitched slices must reproduce the model exactly once, including triple footprint overlap.");
+            const int probe = build.stitch_band_starts[0] + 32;
+            const int first = qGray(lanes[0].pixel(probe, 0));
+            passed &= expect(first == (layer_index == 0 ? 0 : 255) && qGray(lanes[0].pixel(probe, 64)) == 255 - first,
+                             "Finger ownership must alternate along Y and swap between consecutive real layers.");
+            QFile encoded(layer.lanes.first().image_path);
+            if (!expect(encoded.open(QIODevice::ReadOnly), "Could not inspect stitched BMP depth.")) return false;
+            const auto header = encoded.read(30);
+            passed &= expect(header.size() == 30 && qFromLittleEndian<quint16>(header.constData() + 28) == depth &&
+                                 qGray(lanes[0].pixel(0, 128)) == 0 &&
+                                 qGray(lanes.last().pixel(4095, build.lane_image_height - 1)) == 0,
+                             "Interlacing must preserve static/scrolling depth and black frame padding.");
+        }
+
+        settings->setSetting(ORNL::ES::DlpSlicer::kInterlacedStitching, false);
+        settings->setSetting(ORNL::ES::DlpSlicer::kStitchOverlap, 1000.0);
+        const QString destination = exported.filePath(mode == ORNL::DlpOutputMode::kStatic ? "Static" : "Scrolling");
+        if (!expect(ORNL::DlpExporter::exportBuild(build, destination, &error), error.toStdString())) return false;
+        QFile cached(build.layers.first().lanes[1].image_path);
+        QFile copied(destination + "/Layer 1/Layer1_2.bmp");
+        QFile csv(destination + "/build.csv");
+        if (!expect(
+                cached.open(QIODevice::ReadOnly) && copied.open(QIODevice::ReadOnly) && csv.open(QIODevice::ReadOnly),
+                "Could not inspect frozen stitched export files."))
+            return false;
+        const auto metadata = csv.readAll();
+        passed &= expect(cached.readAll() == copied.readAll() && build.settings.interlaced_stitching &&
+                             near(build.settings.stitch_overlap, 64) &&
+                             metadata.contains(",2,Layer 1/Layer1_2.bmp,0,4.032,") &&
+                             metadata.contains(",3,Layer 1/Layer1_3.bmp,0,4.033,"),
+                         "Changing the checkbox after slicing must not change cached masks or exported lane origins.");
+    }
+    return passed;
+}
+
 QMap<QString, QByteArray> legacyImages(const QString& directory) {
     QDir().mkpath(directory);
     TestImageSlicer slicer(directory + "/unused.gcode");
@@ -488,6 +597,7 @@ int main(int argc, char* argv[]) {
     passed &= preflightBoundsWarnings();
     passed &= insufficientTemporarySpace(directory.path() + "/unused.gcode");
     passed &= projectorFormats(directory.path() + "/unused.gcode");
+    passed &= interlacedStitching(directory.path() + "/unused.gcode");
     passed &= preservesImageSlicer(directory.path());
     passed &= sessionRoutesDlpResults(directory.path());
     ORNL::CSM->clearParts();

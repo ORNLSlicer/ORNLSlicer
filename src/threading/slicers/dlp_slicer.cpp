@@ -40,12 +40,14 @@ bool preflightForSettings(const QSharedPointer<SettingsBase>& global, DlpPreflig
     if (global->setting<bool>(PRS::Dimensions::kEnableW))
         settings.z_max +=
             std::abs(global->setting<double>(PRS::Dimensions::kWMax) - global->setting<double>(PRS::Dimensions::kWMin));
-    settings.layer_height     = global->setting<double>(PS::Layer::kLayerHeight);
-    settings.output_mode      = static_cast<DlpOutputMode>(global->setting<int>(ES::DlpSlicer::kOutputMode));
-    settings.projection_width = global->setting<double>(ES::DlpSlicer::kProjectionWidth);
-    settings.lane_pixel_width = global->setting<int>(ES::DlpSlicer::kPixelWidth);
-    const int bit_depth       = global->setting<int>(ES::DlpSlicer::kBitDepth);
-    settings.bit_depth        = bit_depth == 0 ? 1 : bit_depth == 1 ? 8 : 0;
+    settings.layer_height         = global->setting<double>(PS::Layer::kLayerHeight);
+    settings.output_mode          = static_cast<DlpOutputMode>(global->setting<int>(ES::DlpSlicer::kOutputMode));
+    settings.projection_width     = global->setting<double>(ES::DlpSlicer::kProjectionWidth);
+    settings.lane_pixel_width     = global->setting<int>(ES::DlpSlicer::kPixelWidth);
+    settings.interlaced_stitching = global->setting<bool>(ES::DlpSlicer::kInterlacedStitching);
+    settings.stitch_overlap       = global->setting<double>(ES::DlpSlicer::kStitchOverlap);
+    const int bit_depth           = global->setting<int>(ES::DlpSlicer::kBitDepth);
+    settings.bit_depth            = bit_depth == 0 ? 1 : bit_depth == 1 ? 8 : 0;
 
     if (!DlpRasterizer::layout(result.layout, settings, error)) return false;
 

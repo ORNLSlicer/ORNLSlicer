@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QGraphicsLineItem>
 #include <QGraphicsPixmapItem>
+#include <QGraphicsRectItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QImage>
@@ -27,6 +28,7 @@
 
 #include "dlp/dlp_build.h"
 #include "managers/preferences_manager.h"
+#include "managers/settings/settings_manager.h"
 #include "test_utils.h"
 #include "units/unit.h"
 #include "utilities/theme_tool.h"
@@ -81,6 +83,17 @@ QVector<int> laneBorders(QGraphicsView* view, Qt::PenStyle style = Qt::SolidLine
     }
     std::sort(positions.begin(), positions.end());
     return positions;
+}
+
+QVector<QRectF> stitchingBands(QGraphicsView* view) {
+    QVector<QRectF> regions;
+    for (auto* item : view->scene()->items()) {
+        if (auto* band = qgraphicsitem_cast<QGraphicsRectItem*>(item);
+            band && band->brush().style() != Qt::NoBrush && band->pen().style() == Qt::DashLine)
+            regions.append(band->rect());
+    }
+    std::sort(regions.begin(), regions.end(), [](const QRectF& a, const QRectF& b) { return a.x() < b.x(); });
+    return regions;
 }
 
 QColor renderedColor(const QImage& capture, QGraphicsView* view, QWidget* preview, const QPointF& scene_point) {
@@ -178,6 +191,59 @@ int main(int argc, char* argv[]) {
             expect(saveFixture(QImage(lane.image_path), lane_path, 1), "Could not save 1-bit lane preview fixture.");
             lane.image_path = lane_path;
         }
+    }
+
+    auto stitched                           = QSharedPointer<ORNL::DlpBuild>::create(*build);
+    stitched->settings.interlaced_stitching = true;
+    stitched->settings.stitch_overlap       = 2000;
+    stitched->stitch_overlap_pixels         = 20;
+    stitched->image_width                   = 199;
+    stitched->stitch_band_starts            = {80, 129};
+    stitched->lane_starts                   = {0, 80, 99};
+    stitched->layers.clear();
+    const QImage stitched_source = QImage(build->layers.first().image_path).copy(0, 0, 199, 140);
+    for (int number = 1; number <= 2; ++number) {
+        ORNL::DlpLayer layer;
+        layer.number     = number;
+        layer.z          = number * 0.1 * ORNL::mm();
+        layer.empty      = false;
+        layer.image_path = build->storage->filePath(QString("stitched-layer%1.bmp").arg(number));
+        expect(saveFixture(stitched_source, layer.image_path, 8), "Could not save the stitched full-layer fixture.");
+        for (int lane = 0; lane < 3; ++lane) {
+            QImage image(100, 160, QImage::Format_RGB32);
+            image.fill(Qt::black);
+            QPainter painter(&image);
+            for (int row = 0; row < 140; ++row) {
+                const bool extended = ((row / 20) + number - 1) % 2 != 0;
+                const int first     = lane == 0 ? 0 : (lane == 1 ? 80 : 129) + (extended ? 20 : 0);
+                const int end       = lane == 2 ? 199 : (lane == 0 ? 80 : 129) + (extended ? 20 : 0);
+                painter.drawImage(first - stitched->lane_starts[lane], row,
+                                  stitched_source.copy(first, row, end - first, 1));
+            }
+            painter.end();
+            const QString path =
+                build->storage->filePath(QString("stitched-layer%1-lane%2.bmp").arg(number).arg(lane + 1));
+            expect(saveFixture(image, path, 8), "Could not save the stitched lane fixture.");
+            layer.lanes.append({lane + 1, path, false});
+        }
+        stitched->layers.append(layer);
+    }
+    auto single_stitched                       = QSharedPointer<ORNL::DlpBuild>::create(*stitched);
+    single_stitched->lane_count                = 1;
+    single_stitched->settings.lane_pixel_width = 199;
+    single_stitched->settings.projection_width = 19900;
+    single_stitched->lane_starts               = {0};
+    single_stitched->stitch_band_starts.clear();
+    single_stitched->layers.resize(1);
+    {
+        QImage image(199, 160, QImage::Format_RGB32);
+        image.fill(Qt::black);
+        QPainter painter(&image);
+        painter.drawImage(0, 0, stitched_source);
+        painter.end();
+        const QString path = build->storage->filePath("single-stitched-lane.bmp");
+        expect(saveFixture(image, path, 8), "Could not save the single stitched lane fixture.");
+        single_stitched->layers[0].lanes = {{1, path, false}};
     }
 
     auto large                       = QSharedPointer<ORNL::DlpBuild>::create();
@@ -444,6 +510,54 @@ int main(int argc, char* argv[]) {
                    view->sceneRect() == QRectF(0, 0, 16384, 12288),
                "Selecting the diagnostic image must leave inspection and restore the full overview.");
         expect(QImageReader::allocationLimit() == 256, "DLP previews must not raise the global image reader limit.");
+
+        const auto global             = ORNL::GSM->getGlobal();
+        const bool previous_stitching = global->setting<bool>("dlp_interlaced_stitching");
+        const double previous_overlap = global->setting<double>("dlp_stitch_overlap");
+        global->setSetting("dlp_interlaced_stitching", false);
+        global->setSetting("dlp_stitch_overlap", 999000.0);
+        preview->setBuild(stitched);
+        app.processEvents();
+        expect(stitchingBands(view) == QVector<QRectF>({QRectF(80, 0, 20, 140), QRectF(129, 0, 20, 140)}) &&
+                   laneBorders(view).isEmpty() && laneBorders(view, Qt::DashLine).isEmpty() &&
+                   view->scene()->items().size() == 4 && borders->text() == "Show stitching bands",
+               "Interlaced previews must show bounded cached bands even when three projector footprints overlap.");
+        expect(status->text().contains("20 px (2 mm)") && status->text().contains("alternates each layer") &&
+                   status->text().contains("inspect numbered lanes at 1:1") &&
+                   !status->text().contains("Left overlap masked"),
+               "Stitching status must use the completed build's effective width even after current settings change.");
+        screenshot(prefix + "stitched-whole-layer");
+        borders->setChecked(false);
+        expect(stitchingBands(view).isEmpty(), "Disabling stitching overlays must hide their complete bands.");
+        borders->setChecked(true);
+        expect(stitchingBands(view).size() == 2, "Enabling stitching overlays must restore the cached bands.");
+        lanes->setCurrentIndex(3);
+        inspection->setChecked(true);
+        app.processEvents();
+        expect(stitchingBands(view).isEmpty() && view->transform().isIdentity() &&
+                   displayedImage(view).pixelColor(40, 30) == QColor(Qt::black) &&
+                   displayedImage(view).pixelColor(40, 40) == QColor(Qt::white) &&
+                   status->text().contains("Left footprint overlap = 81 px (8.100 mm)") &&
+                   !status->text().contains("Left overlap masked"),
+               "Native lane inspection must display the actual finger pixels and distinguish footprint overlap from "
+               "stitching width.");
+        screenshot(prefix + "stitched-lane-inspection");
+        layers->setCurrentIndex(1);
+        expect(inspection->isChecked() && displayedImage(view).pixelColor(40, 30) == QColor(Qt::white) &&
+                   displayedImage(view).pixelColor(40, 40) == QColor(Qt::black),
+               "Changing layers must display the complementary finger phase from the cached image files.");
+        screenshot(prefix + "stitched-next-layer-inspection");
+        preview->setBuild(single_stitched);
+        expect(stitchingBands(view).isEmpty() && !borders->isEnabled() &&
+                   status->text().contains("single-lane build has no seam"),
+               "A single-lane build with stitching enabled must clearly report that it has no seam.");
+        global->setSetting("dlp_interlaced_stitching", true);
+        preview->setBuild(build);
+        expect(stitchingBands(view).isEmpty() && borders->text() == "Show lane borders" &&
+                   laneBorders(view) == QVector<int>({100, 200}) && !status->text().contains("Interlaced"),
+               "A cached build sliced with stitching disabled must preserve its original borders and status.");
+        global->setSetting("dlp_interlaced_stitching", previous_stitching);
+        global->setSetting("dlp_stitch_overlap", previous_overlap);
 
         auto broken_lane     = QSharedPointer<ORNL::DlpBuild>::create(*large);
         auto missing_layer   = broken_lane->layers.first();

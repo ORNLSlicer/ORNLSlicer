@@ -207,4 +207,5 @@ When the user corrects your approach, append a one-line rule here before ending 
 - Budget DLP full-layer grayscale storage separately from lane previews, and avoid full-size ARGB conversions when encoding or previewing monochrome BMPs.
 - Ask for a new DLP export folder name and remember its parent directory as the next export location.
 - Recover missing Unix temporary roots from raw `TMPDIR`; `QDir::tempPath()` can return an empty canonical path after the directory disappears.
+- Compare resolved pixel colors in monochrome image tests; Qt may invert decoded palettes, and unused BMP row padding is not image content.
 - Limit builds on this workstation to eight compiler jobs and one build at a time inside the memory-limited scope above; after an OOM kill or desktop loss, stop and inspect memory before retrying, and never repeat the same resource settings automatically.

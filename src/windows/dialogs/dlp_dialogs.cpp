@@ -98,6 +98,17 @@ void configureDlpSummaryDialog(QMessageBox& dialog, const DlpPreflight& summary)
                           .arg(build.lane_image_height - build.image_height)
                           .arg(summary.working_bytes / (1024.0 * 1024.0), 0, 'f', 1)
                           .arg(summary.output_bytes / (1024.0 * 1024.0 * 1024.0), 0, 'f', 2);
+    if (build.settings.interlaced_stitching) {
+        if (build.lane_count == 1)
+            details += QObject::tr("\nInterlaced stitching: enabled (single lane; no seam).");
+        else
+            details += QObject::tr(
+                           "\nInterlaced stitching: enabled\n"
+                           "Band width / finger height: %1 px (%2 mm)\n"
+                           "Pattern alternates each layer; use exported lane X origins.")
+                           .arg(build.stitch_overlap_pixels)
+                           .arg(Distance(build.stitch_overlap_pixels * build.pixel_pitch).to(mm), 0, 'g', 6);
+    }
     if (!summary.warnings.isEmpty()) details += "\n\n" + summary.warnings.join("\n\n");
     dialog.setInformativeText(details);
     dialog.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);

@@ -193,15 +193,55 @@ bool testSummary(QWidget& root, const QString& screenshots, const QString& prefi
     dialog.show();
     QApplication::processEvents();
     const auto details = dialog.informativeText();
-    return Testing::expect(
+    bool passed        = Testing::expect(
         dialog.text().contains("53 layers") && dialog.text().contains("4 lanes per layer") &&
             dialog.text().contains("265 image files") && details.contains("Scrolling output · 1-bit BMP") &&
             details.contains("0.0310059 mm/pixel") && details.contains("16384 × 12288 pixels") &&
             details.contains("4096 × 13056 pixels") && details.contains("768 rows") && details.contains("192.0 MiB") &&
             details.contains("2.50 GiB temporary + 2.50 GiB exported") && details.contains(summary.warnings.first()) &&
             dialog.icon() == QMessageBox::Warning && dialog.button(QMessageBox::Ok)->text() == "Slice" &&
-            dialog.button(QMessageBox::Cancel) && capture(dialog, screenshots, prefix + "-summary"),
+            dialog.button(QMessageBox::Cancel) && !details.contains("Interlaced") &&
+            capture(dialog, screenshots, prefix + "-summary"),
         "DLP summary must show dimensions, pitch, layers, storage, padding, and clipping warnings");
+    dialog.hide();
+    summary.layout.settings.interlaced_stitching = true;
+    summary.layout.settings.stitch_overlap       = 1000;
+    summary.layout.stitch_overlap_pixels         = 33;
+    summary.layout.lane_count                    = 5;
+    summary.file_count                           = 319;
+    summary.working_bytes                        = 249.375 * 1024 * 1024;
+    summary.output_bytes                         = 53.0 * ((62 + 2048 * 12288) + 5.0 * (62 + 512 * 13056));
+    QMessageBox stitching(&root);
+    configureDlpSummaryDialog(stitching, summary);
+    stitching.show();
+    QApplication::processEvents();
+    passed &= Testing::expect(
+        stitching.text().contains("5 lanes per layer") && stitching.text().contains("318 image files") &&
+            stitching.informativeText().contains("Interlaced stitching: enabled") &&
+            stitching.informativeText().contains("33 px (1.02319 mm)") &&
+            stitching.informativeText().contains("alternates each layer") &&
+            stitching.informativeText().contains("exported lane X origins") &&
+            capture(stitching, screenshots, prefix + "-stitching-summary"),
+        "Stitching summaries must expose quantized width, alternating patterns, and the increased lane count");
+    stitching.hide();
+    summary.layout.lane_count   = 1;
+    summary.layout.image_width  = 4096;
+    summary.layout.image_height = summary.layout.lane_image_height = 2160;
+    summary.layout.pixel_pitch                                     = 50;
+    summary.layout.stitch_overlap_pixels                           = 20;
+    summary.layout.settings.output_mode                            = DlpOutputMode::kStatic;
+    summary.file_count                                             = 107;
+    summary.working_bytes                                          = 4096.0 * 2160 + 4096.0 * 2160 + 512.0 * 2160;
+    summary.output_bytes                                           = 53.0 * 2 * (62 + 512 * 2160);
+    QMessageBox single_lane(&root);
+    configureDlpSummaryDialog(single_lane, summary);
+    single_lane.show();
+    QApplication::processEvents();
+    passed &= Testing::expect(single_lane.informativeText().contains("enabled (single lane; no seam)") &&
+                                  !single_lane.informativeText().contains("Pattern alternates") &&
+                                  capture(single_lane, screenshots, prefix + "-single-lane-stitching-summary"),
+                              "A single-lane stitching summary must not imply that a joining seam will be generated");
+    return passed;
 }
 
 bool testProgress(QWidget& root, QSharedPointer<const DlpBuild> build, const QString& screenshots,

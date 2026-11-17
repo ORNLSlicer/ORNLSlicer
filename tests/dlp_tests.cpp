@@ -7,6 +7,8 @@
 #include <QProcessEnvironment>
 #include <QTemporaryDir>
 #include <QtEndian>
+#include <algorithm>
+#include <cstring>
 #include <limits>
 
 #include "dlp/dlp_build.h"
@@ -456,6 +458,208 @@ bool testLaneCoverage() {
     return passed;
 }
 
+QByteArray imageBytes(const QString& path) {
+    QFile file(path);
+    return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray();
+}
+
+bool testStitchingLayout() {
+    auto stitched                 = settings();
+    stitched.interlaced_stitching = true;
+    stitched.stitch_overlap       = 64;
+    stitched.x_min                = 0;
+    stitched.x_max                = 8129;
+    DlpBuild build;
+    QString error;
+    bool passed = Testing::expect(
+        DlpRasterizer::layout(build, stitched, &error) && build.lane_starts == QVector<int>({0, 4032, 4033}) &&
+            build.stitch_band_starts == QVector<int>({4032, 6048}) && build.stitch_overlap_pixels == 64 &&
+            !build.storage,
+        "Stitching must handle three overlapping footprints and anchor the last at maximum X");
+    stitched.x_max          = 8192;
+    stitched.stitch_overlap = 7.2;
+    passed &= Testing::expect(DlpRasterizer::layout(build, stitched, &error) && build.stitch_overlap_pixels == 8 &&
+                                  build.lane_count == 3 && build.lane_starts == QVector<int>({0, 4088, 4096}),
+                              "Stitching must round physical overlap upward and add lanes to preserve full coverage");
+    stitched.x_max          = 4097;
+    stitched.stitch_overlap = 4095;
+    passed &= Testing::expect(DlpRasterizer::layout(build, stitched, &error) && build.lane_count == 2 &&
+                                  build.stitch_band_starts == QVector<int>({1}),
+                              "A valid overlap one pixel below projector width must remain supported");
+    stitched.stitch_overlap = 0.2;
+    passed &= Testing::expect(DlpRasterizer::layout(build, stitched, &error) && build.stitch_overlap_pixels == 1,
+                              "A positive subpixel overlap must be rounded up to one pixel");
+    for (double invalid : {0.0, -1.0, 4095.2, 4096.0, std::numeric_limits<double>::infinity(),
+                           std::numeric_limits<double>::quiet_NaN()}) {
+        stitched.stitch_overlap = invalid;
+        passed &= Testing::expect(!DlpRasterizer::layout(build, stitched, &error) && error.contains("overlap"),
+                                  "Invalid or full-width stitching overlap must be rejected before raster allocation");
+    }
+    auto entered = settings();
+    Distance distance;
+    entered.x_min                = 0;
+    entered.x_max                = distance.from(409.6, mm);
+    entered.y_min                = 0;
+    entered.y_max                = distance.from(108, mm);
+    entered.projection_width     = distance.from(204.8, mm);
+    entered.interlaced_stitching = true;
+    entered.stitch_overlap       = distance.from(1, mm);
+    passed &= Testing::expect(DlpRasterizer::layout(build, entered, &error) && build.stitch_overlap_pixels == 20,
+                              "Distance-conversion noise must not turn a twenty-pixel overlap into twenty-one pixels");
+    const int previous_limit = QImageReader::allocationLimit();
+    QImageReader::setAllocationLimit(64);
+    stitched.x_max          = 16777216;
+    stitched.y_min          = 0;
+    stitched.y_max          = 1;
+    stitched.stitch_overlap = 4095;
+    DlpBuild dense;
+    passed &= Testing::expect(!DlpRasterizer::layout(dense, stitched, &error) && error.contains("lane layout") &&
+                                  dense.lane_starts.isEmpty() && dense.stitch_band_starts.isEmpty() && !dense.storage,
+                              "Dense stitching metadata must honor the allocation budget before allocating arrays");
+    QImageReader::setAllocationLimit(previous_limit);
+    stitched.x_max          = 3.2;
+    stitched.y_max          = 4;
+    stitched.stitch_overlap = 64;
+    if (!Testing::expect(DlpRasterizer::initialize(build, stitched, &error), error.toStdString())) return false;
+    const QImage narrow = DlpRasterizer::rasterize({PolygonList {rectangle(-20, 0, 20, 20)}}, build);
+    passed &= Testing::expect(!DlpRasterizer::writeLayer(build, 0, 500, narrow, &error) && build.layers.isEmpty(),
+                              "Interlaced layers must use positive layer numbers for their alternating phase");
+    if (!Testing::expect(DlpRasterizer::writeLayer(build, 1, 500, narrow, &error), error.toStdString())) return false;
+    const QImage lane(build.layers[0].lanes[0].image_path);
+    passed &=
+        Testing::expect(build.lane_count == 1 && build.lane_starts == QVector<int>({0}) &&
+                            build.stitch_band_starts.isEmpty() && white(lane, 0, 0) && white(lane, 2, 0) &&
+                            !white(lane, 3, 0) && !white(lane, 4095, 0) && !white(lane, 0, 2159),
+                        "A single stitched footprint must retain geometry and black padding without inventing a seam");
+    return passed;
+}
+
+bool testInterlacedCoverage(int bit_depth, DlpOutputMode mode, int width, int overlap) {
+    auto stitched                 = settings(bit_depth);
+    stitched.interlaced_stitching = true;
+    stitched.stitch_overlap       = overlap;
+    stitched.x_max                = stitched.x_min + width;
+    stitched.y_min                = 0;
+    stitched.y_max                = 2 * overlap + 2;
+    stitched.output_mode          = mode;
+    DlpBuild build;
+    QString error;
+    if (!Testing::expect(DlpRasterizer::initialize(build, stitched, &error), error.toStdString())) return false;
+    QImage input(build.image_width, build.image_height, QImage::Format_Grayscale8);
+    input.fill(255);
+    for (int y = 2; y < std::min(5, input.height()); ++y)
+        std::memset(input.scanLine(y) + build.stitch_band_starts.first() - 2, 0, overlap + 4);
+    std::memset(input.scanLine(1), 0, input.width());
+    for (int seam : build.stitch_band_starts) {
+        input.scanLine(1)[seam]               = 255;
+        input.scanLine(1)[seam + overlap - 1] = 255;
+    }
+    input.scanLine(1)[0] = input.scanLine(1)[input.width() - 1]       = 255;
+    input.scanLine(0)[build.stitch_band_starts.first() + overlap / 2] = 192;
+    for (int number : {1, 2})
+        if (!Testing::expect(DlpRasterizer::writeLayer(build, number, (number - 0.5) * 1000, input, &error),
+                             error.toStdString()))
+            return false;
+
+    bool passed = true;
+    for (const auto& layer : build.layers) {
+        const QImage full(layer.image_path);
+        if (!Testing::expect(full.size() == input.size(), "Could not read the interlaced full-layer diagnostic"))
+            return false;
+        QVector<int> exposures(input.width() * input.height(), 0);
+        QVector<int> accumulated(input.width() * input.height(), 0);
+        bool padding_black = true;
+        for (int lane_index = 0; lane_index < layer.lanes.size(); ++lane_index) {
+            const QImage lane(layer.lanes[lane_index].image_path);
+            if (!Testing::expect(lane.size() == QSize(4096, build.lane_image_height),
+                                 "Interlacing must preserve fixed projector image dimensions"))
+                return false;
+            const QImage resolved = lane.convertToFormat(QImage::Format_Grayscale8);
+            if (!Testing::expect(!resolved.isNull(), "Could not resolve stitched lane colors")) return false;
+            for (int y = 0; y < input.height(); ++y) {
+                for (int x = 0; x < lane.width(); ++x) {
+                    const int value = resolved.constScanLine(y)[x];
+                    if (!value) continue;
+                    const int global_x = build.lane_starts[lane_index] + x;
+                    if (global_x >= input.width()) {
+                        padding_black = false;
+                        continue;
+                    }
+                    ++exposures[y * input.width() + global_x];
+                    accumulated[y * input.width() + global_x] += value;
+                }
+            }
+            for (int y = input.height(); y < lane.height(); ++y)
+                padding_black &= std::all_of(resolved.constScanLine(y), resolved.constScanLine(y) + resolved.width(),
+                                             [](uchar value) { return value == 0; });
+        }
+        bool exact = true;
+        for (int y = 0; y < input.height(); ++y) {
+            for (int x = 0; x < input.width(); ++x) {
+                const int value = qGray(full.pixel(x, y));
+                exact &= exposures[y * input.width() + x] == (value > 0 ? 1 : 0) &&
+                         accumulated[y * input.width() + x] == value;
+            }
+        }
+        passed &= Testing::expect(exact && padding_black,
+                                  "Every intended stitched pixel, including holes and narrow features, must appear "
+                                  "once with its encoded value");
+    }
+    const int sample = build.stitch_band_starts.first() + overlap / 2;
+    const QImage first(build.layers[0].lanes[0].image_path), second(build.layers[1].lanes[0].image_path);
+    passed &= Testing::expect(qGray(first.pixel(sample, 0)) == 0 && qGray(second.pixel(sample, 0)) > 0 &&
+                                  qGray(first.pixel(sample, overlap)) > 0 && qGray(second.pixel(sample, overlap)) == 0,
+                              "Finger ownership must alternate by row group and reverse on the next layer");
+    const QImage first_diagnostic = QImage(build.layers[0].image_path).convertToFormat(QImage::Format_Grayscale8);
+    const QImage next_diagnostic  = QImage(build.layers[1].image_path).convertToFormat(QImage::Format_Grayscale8);
+    bool same_diagnostic          = !first_diagnostic.isNull() && first_diagnostic.size() == next_diagnostic.size();
+    if (same_diagnostic)
+        for (int y = 0; y < first_diagnostic.height(); ++y)
+            same_diagnostic &= std::memcmp(first_diagnostic.constScanLine(y), next_diagnostic.constScanLine(y),
+                                           first_diagnostic.width()) == 0;
+    passed &=
+        Testing::expect(same_diagnostic, "Changing stitching phase must leave every diagnostic image pixel unchanged");
+    QImage blank(input.size(), QImage::Format_Grayscale8);
+    blank.fill(0);
+    passed &= Testing::expect(DlpRasterizer::writeLayer(build, 3, 2500, blank, &error) && build.layers.last().empty &&
+                                  std::all_of(build.layers.last().lanes.cbegin(), build.layers.last().lanes.cend(),
+                                              [](const DlpLane& lane) { return lane.empty; }),
+                              "Blank interlaced layers must retain their complete set of empty exposure images");
+    return passed;
+}
+
+bool testDisabledStitching() {
+    bool passed = true;
+    for (int bit_depth : {1, 8}) {
+        DlpBuild original, disabled;
+        QString error;
+        auto configured = settings(bit_depth);
+        if (!Testing::expect(DlpRasterizer::initialize(original, configured, &error), error.toStdString()))
+            return false;
+        configured.stitch_overlap = std::numeric_limits<double>::quiet_NaN();
+        if (!Testing::expect(DlpRasterizer::initialize(disabled, configured, &error), error.toStdString()))
+            return false;
+        const QImage image =
+            DlpRasterizer::rasterize({PolygonList {rectangle(-2, 10, 8, 14), rectangle(0, 11, 2, 13)}}, original);
+        if (!Testing::expect(DlpRasterizer::writeLayer(original, 1, 500, image, &error) &&
+                                 DlpRasterizer::writeLayer(disabled, 1, 500, image, &error),
+                             error.toStdString()))
+            return false;
+        passed &= Testing::expect(
+            original.lane_starts == disabled.lane_starts && disabled.stitch_overlap_pixels == 0 &&
+                disabled.stitch_band_starts.isEmpty() &&
+                imageBytes(original.layers[0].image_path) == imageBytes(disabled.layers[0].image_path),
+            "Disabled stitching must ignore its unused overlap and retain the original layout and diagnostic");
+        for (int i = 0; i < original.lane_count; ++i) {
+            const QByteArray expected = imageBytes(original.layers[0].lanes[i].image_path);
+            passed &=
+                Testing::expect(!expected.isEmpty() && expected == imageBytes(disabled.layers[0].lanes[i].image_path),
+                                "Disabled stitching must preserve every encoded lane byte");
+        }
+    }
+    return passed;
+}
+
 bool testFormats() {
     bool passed                = true;
     auto projector             = settings(8);
@@ -708,6 +912,11 @@ int main(int argc, char* argv[]) {
     passed &= testExportPermissions();
     passed &= testGrayscaleEncoding();
     passed &= testLaneCoverage();
+    passed &= testStitchingLayout();
+    passed &= testInterlacedCoverage(1, DlpOutputMode::kStatic, 8129, 64);
+    passed &= testInterlacedCoverage(8, DlpOutputMode::kStatic, 10243, 7);
+    passed &= testInterlacedCoverage(1, DlpOutputMode::kScrolling, 8129, 64);
+    passed &= testDisabledStitching();
     passed &= testFormats();
     passed &= testInvalid();
     passed &= testImageAllocationLimit();

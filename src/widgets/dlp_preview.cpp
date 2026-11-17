@@ -1,5 +1,6 @@
 #include "widgets/dlp_preview.h"
 
+#include <QBrush>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGraphicsPixmapItem>
@@ -192,6 +193,11 @@ void DlpPreview::setBuild(QSharedPointer<const DlpBuild> build) {
     if (!build || build->layers.isEmpty()) return;
 
     m_build = std::move(build);
+    if (m_build->settings.interlaced_stitching) {
+        m_lane_borders->setText(tr("Show stitching bands"));
+        m_lane_borders->setToolTip(
+            tr("Shaded bands mark interlacing areas. Inspect numbered lanes at 1:1 for the exact finger pattern."));
+    }
     const QSignalBlocker layer_blocker(m_layer_selector);
     const QSignalBlocker lane_blocker(m_lane_selector);
     for (const auto& layer : m_build->layers) { m_layer_selector->addItem(QString::number(layer.number)); }
@@ -213,6 +219,9 @@ void DlpPreview::clear() {
     m_layer_selector->setEnabled(false);
     m_lane_selector->setEnabled(false);
     m_lane_borders->setEnabled(false);
+    m_lane_borders->setText(tr("Show lane borders"));
+    m_lane_borders->setToolTip(
+        tr("Solid lines mark exposure boundaries. A dashed line marks the shifted final-lane footprint."));
     m_export->setEnabled(false);
     const QSignalBlocker inspection_blocker(m_inspect);
     m_inspect->setChecked(false);
@@ -235,7 +244,7 @@ void DlpPreview::updateImage() {
     const bool full   = lane < 0;
     const auto path   = full ? layer.image_path : layer.lanes[lane].image_path;
     const bool empty  = full ? layer.empty : layer.lanes[lane].empty;
-    m_lane_borders->setEnabled(full);
+    m_lane_borders->setEnabled(full && (!m_build->settings.interlaced_stitching || m_build->lane_count > 1));
     m_inspect->setEnabled(false);
     if (full) {
         const QSignalBlocker blocker(m_inspect);
@@ -294,15 +303,31 @@ void DlpPreview::updateImage() {
                   .arg(Distance(m_build->pixel_pitch).to(mm), 0, 'g', 8)
                   .arg(m_build->settings.bit_depth);
     if (!full) {
-        const int start   = m_build->lane_starts[lane];
-        const int overlap = lane * m_build->settings.lane_pixel_width - start;
-        status += tr("\nX origin = %1 mm | Left overlap masked = %2 px (%3 mm)")
-                      .arg(Distance(m_build->settings.x_min + start * m_build->pixel_pitch).to(mm), 0, 'f', 3)
-                      .arg(overlap)
-                      .arg(Distance(overlap * m_build->pixel_pitch).to(mm), 0, 'f', 3);
+        const int start = m_build->lane_starts[lane];
+        const int overlap =
+            m_build->settings.interlaced_stitching
+                ? (lane == 0 ? 0 : m_build->lane_starts[lane - 1] + m_build->settings.lane_pixel_width - start)
+                : lane * m_build->settings.lane_pixel_width - start;
+        status +=
+            (m_build->settings.interlaced_stitching ? tr("\nX origin = %1 mm | Left footprint overlap = %2 px (%3 mm)")
+                                                    : tr("\nX origin = %1 mm | Left overlap masked = %2 px (%3 mm)"))
+                .arg(Distance(m_build->settings.x_min + start * m_build->pixel_pitch).to(mm), 0, 'f', 3)
+                .arg(overlap)
+                .arg(Distance(overlap * m_build->pixel_pitch).to(mm), 0, 'f', 3);
     }
-    else if (m_build->lane_starts.last() != (m_build->lane_count - 1) * m_build->settings.lane_pixel_width) {
+    else if (!m_build->settings.interlaced_stitching &&
+             m_build->lane_starts.last() != (m_build->lane_count - 1) * m_build->settings.lane_pixel_width) {
         status += tr("\nSolid: exposure boundaries; dashed: shifted final-lane footprint.");
+    }
+    if (m_build->settings.interlaced_stitching) {
+        if (m_build->lane_count == 1)
+            status += tr("\nInterlaced stitching enabled; this single-lane build has no seam.");
+        else {
+            status += tr("\nInterlaced band and finger height: %1 px (%2 mm); pattern alternates each layer.")
+                          .arg(m_build->stitch_overlap_pixels)
+                          .arg(Distance(m_build->stitch_overlap_pixels * m_build->pixel_pitch).to(mm), 0, 'g', 6);
+            if (full) status += tr("\nShaded: interlacing bands; inspect numbered lanes at 1:1 for the exact pattern.");
+        }
     }
     m_image_status = status;
     if (m_inspect->isChecked())
@@ -330,14 +355,23 @@ void DlpPreview::showOverview() {
     if (full && m_lane_borders->isChecked()) {
         QPen border(QColor(255, 140, 0), 2);
         border.setCosmetic(true);
-        for (int i = 1; i < m_build->lane_count; ++i) {
-            const int x = i * m_build->settings.lane_pixel_width;
-            m_scene->addLine(x, 0, x, size.height(), border);
-        }
-        const int final_start = m_build->lane_starts.last();
-        if (final_start != (m_build->lane_count - 1) * m_build->settings.lane_pixel_width) {
+        if (m_build->settings.interlaced_stitching) {
             border.setStyle(Qt::DashLine);
-            m_scene->addLine(final_start, 0, final_start, size.height(), border);
+            for (int start : m_build->stitch_band_starts) {
+                m_scene->addRect(QRectF(start, 0, m_build->stitch_overlap_pixels, size.height()), border,
+                                 QBrush(QColor(255, 140, 0, 35)));
+            }
+        }
+        else {
+            for (int i = 1; i < m_build->lane_count; ++i) {
+                const int x = i * m_build->settings.lane_pixel_width;
+                m_scene->addLine(x, 0, x, size.height(), border);
+            }
+            const int final_start = m_build->lane_starts.last();
+            if (final_start != (m_build->lane_count - 1) * m_build->settings.lane_pixel_width) {
+                border.setStyle(Qt::DashLine);
+                m_scene->addLine(final_start, 0, final_start, size.height(), border);
+            }
         }
     }
     m_scene->setSceneRect(image_rect);

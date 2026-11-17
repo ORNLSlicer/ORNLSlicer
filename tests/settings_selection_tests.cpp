@@ -306,6 +306,38 @@ int main(int argc, char* argv[]) {
                fixed_width->isReadOnly() && fixed_width->text().contains("fixed"),
            "Reloading supported settings and toggling enablement must preserve fixed width behavior.");
 
+    QCheckBox* stitching           = nullptr;
+    QDoubleSpinBox* stitch_overlap = nullptr;
+    QSharedPointer<ORNL::SettingRowBase> overlap_row;
+    for (auto* pane : bar.getPanes()) {
+        for (auto* tab : pane->getTabs()) {
+            if (auto row = tab->getRow("dlp_interlaced_stitching")) stitching = dynamic_cast<QCheckBox*>(row.get());
+            if (auto row = tab->getRow("dlp_stitch_overlap")) {
+                overlap_row    = row;
+                stitch_overlap = dynamic_cast<QDoubleSpinBox*>(row.get());
+            }
+        }
+    }
+    auto* search = bar.findChild<QLineEdit*>(QString(), Qt::FindDirectChildrenOnly);
+    expect(stitching && stitch_overlap && overlap_row && search,
+           "DLP stitching must expose a checkbox and physical overlap control.");
+    if (!stitching || !stitch_overlap || !overlap_row || !search) return EXIT_FAILURE;
+    search->setText("Stitch");
+    app.processEvents();
+    expect(!stitching->isChecked() && !global->setting<bool>("dlp_interlaced_stitching") && !overlap_row->isShown(),
+           "Interlaced stitching must default off and hide its overlap field.");
+    const double original_overlap = global->setting<double>("dlp_stitch_overlap");
+    stitching->click();
+    app.processEvents();
+    expect(global->setting<bool>("dlp_interlaced_stitching") && overlap_row->isShown() && stitch_overlap->isVisible() &&
+               stitch_overlap->isEnabled() && !stitch_overlap->isReadOnly(),
+           "Checking stitching must enable its editable physical overlap field.");
+    stitching->click();
+    app.processEvents();
+    expect(!global->setting<bool>("dlp_interlaced_stitching") && !overlap_row->isShown() &&
+               global->setting<double>("dlp_stitch_overlap") == original_overlap,
+           "Disabling stitching must hide its overlap field without changing the chosen width.");
+
     QApplication::setStyle(QStyleFactory::create("fusion"));
     expect(ORNL::Theme::initializeFonts(), "Could not initialize application fonts for DLP settings.");
     for (auto theme : {ORNL::ThemeName::kLightMode, ORNL::ThemeName::kDarkMode}) {
@@ -316,6 +348,26 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         const QString stylesheet = style.readAll();
         const QString prefix     = theme == ORNL::ThemeName::kLightMode ? "light-" : "dark-";
+        bar.setStyleSheet(stylesheet);
+        bar.resize(700, 600);
+        bar.show();
+        select_category(3);
+        search->setText("Stitch");
+        for (bool enabled : {false, true}) {
+            if (stitching->isChecked() != enabled) stitching->click();
+            app.processEvents();
+            expect(stitching->isVisible() && stitching->isChecked() == enabled &&
+                       global->setting<bool>("dlp_interlaced_stitching") == enabled &&
+                       overlap_row->isShown() == enabled && QFontInfo(stitching->font()).family() == "Noto Sans",
+                   "Stitching controls must retain their state, visibility, and application font in both themes.");
+            if (argc > 1)
+                expect(bar.grab().save(
+                           QDir(QString::fromUtf8(argv[1]))
+                               .filePath(prefix + (enabled ? "stitching-enabled.png" : "stitching-disabled.png"))),
+                       "Could not save the DLP stitching settings screenshot.");
+        }
+        stitching->click();
+        app.processEvents();
         for (bool fixed : {false, true}) {
             QWidget root;
             root.setStyleSheet(stylesheet);
