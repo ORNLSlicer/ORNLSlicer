@@ -1,6 +1,7 @@
 #include "step/global_layer.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <optional>
 
@@ -18,8 +19,11 @@
 #include "geometry/path.h"
 #include "geometry/path_modifier.h"
 #include "geometry/point.h"
+#include "geometry/segments/arc.h"
+#include "geometry/segments/travel.h"
 #include "optimizers/island_order_optimizer.h"
 #include "optimizers/optimization_anchor.h"
+#include "optimizers/travel_router.h"
 #include "part/part.h"
 #include "step/layer/layer.h"
 #include "step/layer/regions/region_base.h"
@@ -27,9 +31,223 @@
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
+#include "utilities/runtime_diagnostics.h"
 
 namespace ORNL {
 namespace {
+void addPerimeterObstacle(TravelRouter& router, TravelRouter& island_router, const QSharedPointer<SegmentBase>& segment,
+                          Distance width) {
+    const auto arc = segment.dynamicCast<ArcSegment>();
+    if (arc.isNull()) {
+        router.addObstacle(segment->start(), segment->end(), width);
+        island_router.addObstacle(segment->start(), segment->end(), width);
+        return;
+    }
+
+    const Point start     = arc->start();
+    const Point center    = arc->center();
+    const double radius   = std::hypot(start.x() - center.x(), start.y() - center.y());
+    const double sweep    = std::abs(arc->angle()());
+    const double error    = std::max(1.0, width() * 0.01);
+    const double max_step = radius > error ? 2.0 * std::acos(1.0 - error / radius) : M_PI / 12.0;
+    const int samples     = std::max(1, static_cast<int>(std::ceil(sweep / std::min(max_step, M_PI / 12.0))));
+    const double step     = sweep / samples;
+    const double sagitta  = radius * (1.0 - std::cos(step / 2.0));
+    const double angle    = std::atan2(start.y() - center.y(), start.x() - center.x());
+    Point previous        = start;
+    for (int sample = 1; sample <= samples; ++sample) {
+        const double fraction = static_cast<double>(sample) / samples;
+        const double theta    = angle + (arc->counterclockwise() ? sweep : -sweep) * fraction;
+        const Point next = sample == samples
+                               ? arc->end()
+                               : Point(center.x() + radius * std::cos(theta), center.y() + radius * std::sin(theta),
+                                       start.z() + (arc->end().z() - start.z()) * fraction);
+        // Expand the chord's obstacle by its maximum deviation from the emitted arc.
+        router.addObstacle(previous, next, width + Distance(2.0 * sagitta));
+        island_router.addObstacle(previous, next, width + Distance(2.0 * sagitta));
+        previous = next;
+    }
+}
+
+std::function<bool(const Point&)> travelEnvelope(const QSharedPointer<SettingsBase>& settings,
+                                                 const QMatrix4x4& build_frame, bool include_lift = false) {
+    const double xmin   = settings->setting<double>(PRS::Dimensions::kXMin);
+    const double xmax   = settings->setting<double>(PRS::Dimensions::kXMax);
+    const double ymin   = settings->setting<double>(PRS::Dimensions::kYMin);
+    const double ymax   = settings->setting<double>(PRS::Dimensions::kYMax);
+    const double radius = settings->setting<double>(PRS::Dimensions::kOuterRadius);
+    const bool cylindrical =
+        settings->setting<BuildVolumeType>(PRS::Dimensions::kBuildVolumeType) == BuildVolumeType::kCylindrical;
+    double height = std::max(
+        0.0, settings->setting<double>(PRS::Dimensions::kZMax) - settings->setting<double>(PRS::Dimensions::kZMin));
+    if (settings->setting<bool>(PRS::Dimensions::kEnableW)) {
+        height += std::abs(settings->setting<double>(PRS::Dimensions::kWMax) -
+                           settings->setting<double>(PRS::Dimensions::kWMin));
+    }
+    if (height == 0 && (cylindrical ? radius <= 0 : xmin >= xmax && ymin >= ymax)) return {};
+    QVector3D lift(settings->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                   settings->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                   settings->setting<float>(PS::Slicing::kSlicePlaneNormalZ));
+    lift = include_lift ? lift.normalized() * std::max(0.0, settings->setting<double>(PS::Travel::kLiftHeight))
+                        : QVector3D();
+    return [=](const Point& point) {
+        const auto restored = build_frame.map(point.toQVector3D());
+        auto inside         = [&](const QVector3D& p) {
+            const double tolerance = 1.0 + std::max({std::abs(p.x()), std::abs(p.y()), std::abs(p.z())}) *
+                                               std::numeric_limits<float>::epsilon();
+            if (height > 0 && (p.z() < -tolerance || p.z() > height + tolerance)) return false;
+            if (cylindrical) return radius <= 0 || std::hypot(p.x(), p.y()) <= radius + tolerance;
+            return (xmin >= xmax || (p.x() >= xmin - tolerance && p.x() <= xmax + tolerance)) &&
+                   (ymin >= ymax || (p.y() >= ymin - tolerance && p.y() <= ymax + tolerance));
+        };
+        return inside(restored) && inside(restored + lift);
+    };
+}
+
+GlobalLayer::TravelRoutingStatistics routeLayerTravels(const QList<QSharedPointer<IslandBase>>& islands,
+                                                       const QSharedPointer<SettingsBase>& global_settings,
+                                                       const QMap<QUuid, QSharedPointer<Part::StepPair>>& step_pairs) {
+    GlobalLayer::TravelRoutingStatistics statistics;
+    auto enabled = [&](const QSharedPointer<RegionBase>& region) {
+        return region->getSb()->contains(PS::Travel::kAvoidCrossingPerimeters)
+                   ? region->getSb()->setting<bool>(PS::Travel::kAvoidCrossingPerimeters)
+                   : global_settings->setting<bool>(PS::Travel::kAvoidCrossingPerimeters);
+    };
+    bool any_enabled = false;
+    for (const auto& island : islands) {
+        for (const auto& region : island->getRegions()) any_enabled |= enabled(region);
+    }
+    if (!any_enabled) {
+        for (const auto& island : islands) {
+            for (const auto& region : island->getRegions()) {
+                for (Path& path : region->getPaths()) {
+                    for (const auto& segment : path) {
+                        const auto travel = segment.dynamicCast<TravelSegment>();
+                        if (!travel.isNull()) travel->setWaypoints({});
+                    }
+                }
+            }
+        }
+        return statistics;
+    }
+    QHash<IslandBase*, QMatrix4x4> build_frames;
+    for (const auto& pair : step_pairs) {
+        if (pair.isNull() || pair->printing_layer.isNull()) continue;
+        const auto layer = pair->printing_layer;
+        QMatrix4x4 frame;
+        // Restore the PartView origin; writer Z offsets and W coordinates are not build-volume coordinates.
+        frame.translate(layer->getSb()->setting<float>(PRS::Dimensions::kXOffset),
+                        layer->getSb()->setting<float>(PRS::Dimensions::kYOffset), 0);
+        frame *= layer->getReorientationTransform();
+        for (const auto& island : layer->getIslands()) build_frames.insert(island.data(), frame);
+    }
+    TravelRouter router;
+    const auto syntax             = global_settings->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+    const bool suppresses_no_lift = syntax == GcodeSyntax::kWolf || syntax == GcodeSyntax::kArcSpecialties;
+    for (const auto& island : islands) {
+        TravelRouter island_router;
+        RegionType previous_printing_region = RegionType::kUnknown;
+        const auto allowed                  = travelEnvelope(global_settings, build_frames.value(island.data()));
+        const auto lifted_allowed           = travelEnvelope(global_settings, build_frames.value(island.data()), true);
+        for (const auto& region : island->getRegions()) {
+            const auto settings       = region->getSb();
+            const bool avoid_crossing = enabled(region);
+            const Distance standoff   = settings->contains(PS::Layer::kBeadWidth)
+                                            ? settings->setting<Distance>(PS::Layer::kBeadWidth)
+                                            : global_settings->setting<Distance>(PS::Layer::kBeadWidth);
+            for (Path& path : region->getPaths()) {
+                for (const auto& segment : path) {
+                    const auto travel = segment.dynamicCast<TravelSegment>();
+                    if (!travel.isNull()) {
+                        if (!avoid_crossing) {
+                            travel->setWaypoints({});
+                            continue;
+                        }
+                        TravelRouter::Outcome outcome;
+                        const bool follow_perimeter = previous_printing_region == RegionType::kPerimeter &&
+                                                      region->getRegionType() == RegionType::kInset;
+                        auto route = [&](Distance clearance, const std::function<bool(const Point&)>& bounds,
+                                         TravelRouter::Outcome* result) {
+                            if (follow_perimeter) {
+                                const Distance inset_width =
+                                    settings->contains(PS::Inset::kBeadWidth)
+                                        ? settings->setting<Distance>(PS::Inset::kBeadWidth)
+                                        : global_settings->setting<Distance>(PS::Inset::kBeadWidth);
+                                if (auto supported = island_router.routeOnPerimeter(travel->start(), travel->end(),
+                                                                                    inset_width, bounds)) {
+                                    *result = supported->isEmpty() ? TravelRouter::Outcome::kClear
+                                                                   : TravelRouter::Outcome::kDetour;
+                                    return *supported;
+                                }
+                            }
+                            return router.route(travel->start(), travel->end(), clearance, bounds, result);
+                        };
+                        const Distance lift_threshold =
+                            global_settings->setting<Distance>(PS::Travel::kMinTravelForLift);
+                        // Legacy writers can offset horizontal targets even for a logical no-lift travel.
+                        const bool can_lift = (!suppresses_no_lift || travel->liftType() != TravelLiftType::kNoLift) &&
+                                              global_settings->setting<Distance>(PS::Travel::kLiftHeight) > 0;
+                        const bool already_lifts =
+                            can_lift && travel->start().distance(travel->end()) >= lift_threshold;
+                        travel->setWaypoints(route(standoff, already_lifts ? lifted_allowed : allowed, &outcome));
+                        if (lifted_allowed && can_lift && !already_lifts && !travel->waypoints().isEmpty() &&
+                            travel->length() >= lift_threshold) {
+                            travel->setWaypoints(route(standoff, lifted_allowed, &outcome));
+                            if (!travel->waypoints().isEmpty() && travel->length() >= lift_threshold &&
+                                (!lifted_allowed(travel->start()) || !lifted_allowed(travel->end()))) {
+                                // Do not newly enable an out-of-envelope lift at an unchanged endpoint.
+                                travel->setWaypoints({});
+                                outcome = TravelRouter::Outcome::kTravelLimit;
+                            }
+                            if (travel->waypoints().isEmpty() && outcome == TravelRouter::Outcome::kTravelLimit &&
+                                standoff > 0) {
+                                TravelRouter::Outcome tighter_outcome;
+                                travel->setWaypoints(route(0, allowed, &tighter_outcome));
+                                if ((tighter_outcome == TravelRouter::Outcome::kClear ||
+                                     tighter_outcome == TravelRouter::Outcome::kDetour) &&
+                                    travel->length() < lift_threshold) {
+                                    outcome = TravelRouter::Outcome::kReducedClearance;
+                                }
+                                else { travel->setWaypoints({}); }
+                            }
+                        }
+                        switch (outcome) {
+                            case TravelRouter::Outcome::kClear:
+                                ++statistics.clear;
+                                break;
+                            case TravelRouter::Outcome::kDetour:
+                                ++statistics.detours;
+                                break;
+                            case TravelRouter::Outcome::kReducedClearance:
+                                ++statistics.reduced_clearance;
+                                break;
+                            case TravelRouter::Outcome::kUnroutable:
+                                ++statistics.unroutable;
+                                break;
+                            case TravelRouter::Outcome::kNonPlanar:
+                                ++statistics.non_planar;
+                                break;
+                            case TravelRouter::Outcome::kTravelLimit:
+                                ++statistics.travel_limit;
+                                break;
+                        }
+                    }
+                    else if (segment->isPrintingSegment()) {
+                        previous_printing_region = segment->getSb()->setting<RegionType>(SS::kRegionType);
+                        if (previous_printing_region != RegionType::kPerimeter) continue;
+                        const Distance width = segment->getSb()->contains(SS::kWidth)
+                                                   ? segment->getSb()->setting<Distance>(SS::kWidth)
+                                                   : settings->setting<Distance>(PS::Perimeter::kBeadWidth);
+                        addPerimeterObstacle(router, island_router, segment, width);
+                        ++statistics.obstacle_segments;
+                    }
+                }
+            }
+        }
+    }
+    return statistics;
+}
+
 struct IslandOrderSelection {
     QSharedPointer<Layer> settings_layer;
     QSharedPointer<Layer> anchor_layer;
@@ -179,6 +397,27 @@ void GlobalLayer::calculateModifiers(QSharedPointer<SettingsBase> global_sb, Poi
     for (QSharedPointer<IslandBase> island : m_island_order) {
         if (!island.isNull()) island->fitCircularArcs(global_sb);
     }
+
+    m_travel_routing_statistics = routeLayerTravels(m_island_order, global_sb, m_step_pairs);
+    const auto& stats           = m_travel_routing_statistics;
+    if (stats.clear + stats.detours + stats.reduced_clearance + stats.unroutable + stats.non_planar +
+            stats.travel_limit >
+        0) {
+        Diagnostics::logLine(QString("Perimeter avoidance layer %1: clear=%2 detours=%3 reduced_clearance=%4 "
+                                     "unroutable=%5 non_planar=%6 travel_limit=%7 obstacles=%8")
+                                 .arg(m_layer_number + 1)
+                                 .arg(stats.clear)
+                                 .arg(stats.detours)
+                                 .arg(stats.reduced_clearance)
+                                 .arg(stats.unroutable)
+                                 .arg(stats.non_planar)
+                                 .arg(stats.travel_limit)
+                                 .arg(stats.obstacle_segments));
+    }
+}
+
+const GlobalLayer::TravelRoutingStatistics& GlobalLayer::getTravelRoutingStatistics() const {
+    return m_travel_routing_statistics;
 }
 
 void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& start, int& start_index,

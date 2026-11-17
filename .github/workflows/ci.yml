@@ -75,6 +75,12 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: Compile Linux Build
         run: nix build -L .#${{ env.ci_derivation }} --accept-flake-config -o ${{ env.package_out_link }}
+      - name: Check Perimeter Avoidance G-Code
+        run: |
+          python3 tests/travel_cli_regression.py \
+            --slicer "${{ env.package_out_link }}/bin/ornlslicer" \
+            --template templates/Desktop_04mm.s2c \
+            --work-dir "${{ runner.temp }}/travel-cli-regression"
       - name: Bundle Output
         run: |
           nix bundle -L \

@@ -5,7 +5,9 @@
 #include <QStringBuilder>
 #include <QTextStream>
 #include <QVector3D>
+#include <QVector>
 #include <functional>
+#include <optional>
 
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
@@ -132,8 +134,9 @@ class WriterBase {
     QString writeStandaloneEntry(const Point& start, const QSharedPointer<SettingsBase>& params);
 
     //! \brief Emits a travel, making the first standalone travel a complete approach.
-    QString writeLayerTravel(Point start, Point target, TravelLiftType type,
-                             const QSharedPointer<SettingsBase>& params);
+    //! \param waypoints Interior points of one logical travel, sharing lift and distance thresholds.
+    QString writeLayerTravel(Point start, Point target, TravelLiftType type, const QSharedPointer<SettingsBase>& params,
+                             const QVector<Point>& waypoints = {});
 
     //! \brief Writes a list of all settings with the raw value to the footer as comments
     virtual QString writeSettingsFooter();
@@ -177,6 +180,16 @@ class WriterBase {
     QString writeCommentLine(QString comment);
 
    protected:
+    //! \brief Returns the complete routed distance while emitting one leg of a travel.
+    Distance travelDistance(const Point& start, const Point& target) const;
+
+    //! \brief Returns whether this is the first or last leg of a logical travel.
+    bool isFirstTravelMove() const;
+    bool isLastTravelMove() const;
+
+    //! \brief Returns the original lift type while emitting one leg of a routed travel.
+    TravelLiftType travelLiftType(TravelLiftType type) const;
+
     //! \brief Whether this travel must establish the standalone layer's printing height.
     bool isStandaloneEntryPending() const {
         return m_standalone_entry_pending;
@@ -267,6 +280,14 @@ class WriterBase {
     bool m_has_build_maximum_z;
 
    private:
+    struct RoutedTravel {
+        Distance distance;
+        TravelLiftType lift_type;
+        bool first = true;
+        bool last  = false;
+    };
+
+    std::optional<RoutedTravel> m_routed_travel;
     bool m_standalone_entry_pending = false;
 };  // class WriterBase
 }  // namespace ORNL

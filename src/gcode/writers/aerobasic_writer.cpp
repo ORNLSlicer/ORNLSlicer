@@ -128,7 +128,7 @@ QString AeroBasicWriter::writeTravel(Point start_location, Point target_location
     QString rv;
 
     // Disable extruder for travels
-    if (m_deposition_active) rv += "$DO[0].X=0" % commentLine("Extruder Off for travel");
+    if (m_deposition_active && isFirstTravelMove()) rv += "$DO[0].X=0" % commentLine("Extruder Off for travel");
 
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
 
@@ -145,7 +145,7 @@ QString AeroBasicWriter::writeTravel(Point start_location, Point target_location
     bool travel_lift_required = lift_height > 0;
 
     // Don't lift for short travel moves
-    if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
+    if (travelDistance(start_location, target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
 
@@ -154,7 +154,7 @@ QString AeroBasicWriter::writeTravel(Point start_location, Point target_location
     QVector3D travel_lift = getTravelLift();
 
     // write the lift
-    if (travel_lift_required) {
+    if (travel_lift_required && (isFirstTravelMove() || lType == TravelLiftType::kLiftUpOnly)) {
         Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
         rv += m_G1 % writeCoordinates(lift_destination) % m_f %
               QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
@@ -183,9 +183,9 @@ QString AeroBasicWriter::writeTravel(Point start_location, Point target_location
     }
 
     // Enable extruder after travel
-    if (m_deposition_active) rv += "$DO[0].X=1" % commentLine("Extruder On after travel");
+    if (m_deposition_active && isLastTravelMove()) rv += "$DO[0].X=1" % commentLine("Extruder On after travel");
 
-    m_first_travel = false;
+    if (isLastTravelMove()) { m_first_travel = false; }
     return rv;
 }
 

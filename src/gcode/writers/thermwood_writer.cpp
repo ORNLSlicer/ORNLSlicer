@@ -140,7 +140,7 @@ QString ThermwoodWriter::writeTravel(Point start_location, Point target_location
     bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
-    if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
+    if (travelDistance(start_location, target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
 
@@ -177,8 +177,7 @@ QString ThermwoodWriter::writeTravel(Point start_location, Point target_location
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
-    if (m_first_travel)          // if this is the first travel
-        m_first_travel = false;  // update for next one
+    if (isLastTravelMove()) { m_first_travel = false; }
 
     return rv;
 }

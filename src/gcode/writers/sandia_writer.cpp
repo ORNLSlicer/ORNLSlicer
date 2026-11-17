@@ -133,7 +133,7 @@ QString SandiaWriter::writeTravel(Point start_location, Point target_location, T
     bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
-    if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
+    if (travelDistance(start_location, target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
 
@@ -163,8 +163,7 @@ QString SandiaWriter::writeTravel(Point start_location, Point target_location, T
           commentSpaceLine("TRAVEL");
     setFeedrate(speed);
 
-    if (m_first_travel)          // if this is the first travel
-        m_first_travel = false;  // update for next one
+    if (isLastTravelMove()) { m_first_travel = false; }
 
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {

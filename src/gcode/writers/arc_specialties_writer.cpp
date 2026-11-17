@@ -573,23 +573,26 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     if (lift_speed <= 0) { lift_speed = speed; }
 
     // Determine if travel length is short enough to keep welder on
-    Distance travel_distance = start_location.distance(target_location);
-    if (m_deposition_active && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+    Distance travel_distance = travelDistance(start_location, target_location);
+    if (isFirstTravelMove() && m_deposition_active &&
+        travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         layer_rv += writeWelderOff();
     }
-    else if (!m_first_travel && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+    else if (isFirstTravelMove() && !m_first_travel &&
+             travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         layer_rv += writeWelderOn();
     }
 
     const Distance lift_height = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
-    bool travel_lift_required  = lift_height > 0 && lType != TravelLiftType::kNoLift;
-    if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
+    bool travel_lift_required  = lift_height > 0 && travelLiftType(lType) != TravelLiftType::kNoLift;
+    if (travelDistance(start_location, target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
 
     const bool cylindrical_mode = isCylindricalSlicingMode();
 
     auto writeBeginningBead = [this]() -> QString {
+        if (!isLastTravelMove()) { return {}; }
         QString rv;
         rv += commentLine(QString("BEGINNING BEAD: ") % QString::number(m_current_layer) % "." %
                           QString::number(m_current_bead));
@@ -671,8 +674,11 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
         travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly);
 
     if (m_first_travel && !m_startup_kinematics_written) {
+        const TravelLiftType logical_type = travelLiftType(lType);
+        const bool initial_lower_required = travel_lift_required && (logical_type == TravelLiftType::kBoth ||
+                                                                     logical_type == TravelLiftType::kLiftLowerOnly);
         const Point first_travel_destination =
-            travel_lower_required
+            initial_lower_required
                 ? firstTravelPointAboveTravelLowerDestination(travel_destination, target_location, lift_height)
                 : travel_destination;
         const Point first_travel_cp_reference =
@@ -699,7 +705,7 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
         layer_rv += writeMotion("G01", target_location, lift_speed, params, "TRAVEL LOWER");
     }
 
-    m_first_travel = false;
+    if (isLastTravelMove()) { m_first_travel = false; }
     if (shouldBufferHelicalLayerPrefix(params)) {
         m_pending_layer_prefix += layer_rv;
         return rv;

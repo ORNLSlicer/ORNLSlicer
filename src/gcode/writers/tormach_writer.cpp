@@ -148,7 +148,7 @@ QString TormachWriter::writeTravel(Point start_location, Point target_location, 
     RegionType rType = params->setting<RegionType>(SS::kRegionType);
 
     m_tip_wipe = false;
-    m_bead_number++;
+    if (isFirstTravelMove()) { m_bead_number++; }
 
     // Use updated start location if this is the first travel
     if (m_first_travel)
@@ -162,7 +162,7 @@ QString TormachWriter::writeTravel(Point start_location, Point target_location, 
     bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
-    if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
+    if (travelDistance(start_location, target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
 
@@ -183,7 +183,7 @@ QString TormachWriter::writeTravel(Point start_location, Point target_location, 
     // if cnetroid move is enabled
     // centroid move
     // issue pause
-    if (m_sb->setting<bool>(PS::Travel::kEnableTravelPause) && !m_first_travel) {
+    if (isFirstTravelMove() && m_sb->setting<bool>(PS::Travel::kEnableTravelPause) && !m_first_travel) {
         if (m_sb->setting<bool>(PS::Travel::kEnableTravelCentroidMove)) {
             Distance average_x, average_y;
             average_x = (m_minimum_x + m_maximum_x) / 2;
@@ -202,8 +202,7 @@ QString TormachWriter::writeTravel(Point start_location, Point target_location, 
     rv += m_G0 % writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
-    if (m_first_travel)          // if this is the first travel
-        m_first_travel = false;  // update for next one
+    if (isLastTravelMove()) { m_first_travel = false; }
 
     // Write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {

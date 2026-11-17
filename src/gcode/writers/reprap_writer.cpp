@@ -205,12 +205,13 @@ QString RepRapWriter::writeTravel(Point start_location, Point target_location, T
     bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
-    if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
+    if (travelDistance(start_location, target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
 
     // Retract on long travel moves
-    if (start_location.distance(target_location) > m_sb->setting<Distance>(MS::Retraction::kMinTravel) &&
+    if (isFirstTravelMove() &&
+        travelDistance(start_location, target_location) > m_sb->setting<Distance>(MS::Retraction::kMinTravel) &&
         (params->setting<bool>(SS::kIsRegionStartSegment) || !m_sb->setting<bool>(MS::Retraction::kOpenSpacesOnly))) {
         rv += writeRetraction();
     }
@@ -245,7 +246,7 @@ QString RepRapWriter::writeTravel(Point start_location, Point target_location, T
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
-    m_first_travel = false;
+    if (isLastTravelMove()) { m_first_travel = false; }
     return rv;
 }
 
