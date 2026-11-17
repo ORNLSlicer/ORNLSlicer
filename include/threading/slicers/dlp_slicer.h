@@ -19,7 +19,7 @@ class DlpSlicer : public TraditionalAST {
    public:
     explicit DlpSlicer(QString outputLocation);
 
-    //! Calculates dimensions and image-only resource estimates without allocating images or temporary storage.
+    //! Checks layout and temporary disk capacity without allocating images or temporary storage.
     static bool preflight(DlpPreflight& result, QString* error = nullptr);
 
     QSharedPointer<const DlpBuild> build() const {

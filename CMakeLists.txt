@@ -247,7 +247,7 @@ if(ORNLSLICER_BUILD_TESTS)
             "-DVALIDATOR=${CMAKE_CURRENT_SOURCE_DIR}/cmake/validate_resources.cmake"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/resource_validation_tests.cmake"
     )
-    foreach(DLP_TEST dlp_tests dlp_slicer_tests dlp_preview_tests dlp_dialog_tests)
+    foreach(DLP_TEST dlp_tests dlp_slicer_tests dlp_preview_tests dlp_dialog_tests dlp_storage_tests)
         add_executable(${PROJECT_NAME}_${DLP_TEST} tests/${DLP_TEST}.cpp)
         target_include_directories(${PROJECT_NAME}_${DLP_TEST} PRIVATE
             ${CMAKE_CURRENT_LIST_DIR}/include

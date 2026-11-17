@@ -8,7 +8,7 @@ DLP is a separate slicing mode that exports BMP exposure masks. The existing Ima
 2. Load and position the build models and any imported support models.
 3. Select **Profile > Slicing > Slicing Mode > DLP** and set **Profile > Layer > Layer Height**.
 4. Under **Experimental > DLP Slicer**, choose **Output Mode** and set **Projection Width**. **Projection Width in Pixels** is fixed at **4096**. Static output offers **1-bit** and **8-bit** BMPs; Scrolling output always uses **1-bit**.
-5. Click **Slice** to review pixel pitch, image dimensions, layer/lane counts, black padding, and estimated image memory and storage. Warnings identify models outside the printer bounds. Choose **Slice** in the summary to begin; the DLP progress window supports cancellation during layers. The **DLP Build Preview** opens when slicing finishes, with layer selection, lane selection, and a lane-border overlay. Reopen it through **View > DLP Preview**.
+5. Click **Slice** to review pixel pitch, image dimensions, layer/lane counts, black padding, and estimated image memory and storage. Warnings identify models outside the printer bounds. The slicer checks available space on the temporary drive before generating images. Choose **Slice** in the summary to begin; the DLP progress window supports cancellation during layers. The **DLP Build Preview** opens when slicing finishes, with layer selection, lane selection, and a lane-border overlay. Reopen it through **View > DLP Preview**.
 6. Use **Export DLP Build** in the preview or Project menu, browse to the parent location, enter a **Folder name**, and click **Create Folder**. The export creates that folder and saves the build inside it.
 
 Projection width is the physical X width of one projector lane. It uses the configured distance units, including inches. Dividing this width by the 4096-pixel lane width defines the physical size of each square pixel. The default width of **204.8 mm** gives a **0.05 mm/pixel** pitch.
@@ -22,6 +22,8 @@ Scrolling lane images remain **4096 pixels wide**. Their height is rounded up to
 The full-layer diagnostic image covers the entire configured printer XY area without lane-frame padding. Before slicing, DLP checks its actual grayscale working-buffer size, including scanline padding, against Qt's image allocation limit. Padded lane images retain their 32-bit memory budget under the same limit. Large printers may require a wider physical projection lane or a smaller build area if either allocation exceeds the limit.
 
 Preview images are reduced to fit within 2048 × 2048 pixels before display. The preview retains the full-resolution coordinates, lane borders, and physical-size readouts and identifies its reduced display dimensions. Exported BMPs and CSV dimensions remain at full resolution. This allows, for example, a 16384 × 12288 full layer with a 192 MiB grayscale buffer even though a full-size 32-bit display image would require 768 MiB. The global image-loading limit remains unchanged.
+
+To inspect fine features or seam masks, select a lane and click a point in its overview, or enable **Inspect pixels (1:1)**. Inspection displays a native-pixel region no larger than 1024 × 1024 pixels. Drag to move through the image or use the arrow keys to move one image pixel at a time; the status shows the inspected source coordinates. Turn inspection off to return to the overview. Full-layer images are labeled **diagnostic only** and are not projector frames.
 
 ## Geometry and images
 
@@ -66,6 +68,8 @@ layer,z_mm,lane,file,empty,x_min_mm,y_max_mm,pixel_pitch_mm,width_px,height_px
 `z_mm` is the slice-plane height in millimeters regardless of display units. Lane `0` identifies the full-layer image. `file` is relative to the export root. `empty` is `1` when the image contains no exposed pixels and `0` otherwise. `x_min_mm` and `y_max_mm` locate the image's left and top edges, including the final lane's shifted footprint. `pixel_pitch_mm` gives both physical pixel dimensions; `width_px` and `height_px` include black padding. These physical values always use millimeters. Export requires a new or empty directory to avoid mixing builds.
 
 Export runs in the background with progress and **Cancel Export**. Images and CSV are first written to a temporary folder beside the destination; the completed folder is published only after all files succeed. A failed or canceled export removes its temporary output, so the same folder name can be retried. Slicing's temporary image cache remains available for another export.
+
+Before export, the slicer checks the destination drive for space for the additional image copy and CSV. The existing cache is already included in the drive's used space. New export folders use normal folder-creation permissions; an existing empty destination retains its access-permission bits when the completed build replaces it.
 
 ## Command line
 

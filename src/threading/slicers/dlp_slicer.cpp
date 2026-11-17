@@ -5,6 +5,7 @@
 #include <limits>
 
 #include "cross_section/cross_section.h"
+#include "dlp/dlp_storage.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/open_mesh.h"
 #include "managers/session_manager.h"
@@ -93,6 +94,10 @@ bool preflightForSettings(const QSharedPointer<SettingsBase>& global, DlpPreflig
     const double header       = 54 + (depth == 1 ? 8 : 1024);
     result.working_bytes      = full_gray + std::max(full_encoded, lane_gray + lane_encoded);
     result.output_bytes = result.layer_count * (header + full_encoded + layout.lane_count * (header + lane_encoded));
+    QString temporary_root;
+    if (!DlpStorage::temporaryRoot(temporary_root, error) ||
+        !DlpStorage::checkSpace(temporary_root, std::ceil(result.output_bytes), error))
+        return false;
     if (!clipped_parts.isEmpty())
         result.warnings.append("Geometry outside the printer bounds will be clipped: " + clipped_parts.join(", "));
     if (!intersects)

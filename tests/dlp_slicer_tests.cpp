@@ -5,12 +5,15 @@
 #include <QFileInfo>
 #include <QMap>
 #include <QStandardPaths>
+#include <QStorageInfo>
 #include <QTemporaryDir>
 #include <QTimer>
 #include <QtEndian>
+#include <cmath>
 #include <cstdlib>
 
 #include "dlp/dlp_build.h"
+#include "dlp/dlp_storage.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_factory.h"
 #include "managers/session_manager.h"
@@ -254,6 +257,47 @@ bool preflightBoundsWarnings() {
     return passed;
 }
 
+bool insufficientTemporarySpace(const QString& output) {
+    QString temporary_root, error;
+    if (!expect(ORNL::DlpStorage::temporaryRoot(temporary_root, &error), error.toStdString())) return false;
+    QStorageInfo storage(temporary_root);
+    storage.refresh();
+    if (!expect(storage.isValid() && storage.isReady() && storage.bytesAvailable() >= 0,
+                "Could not inspect temporary-volume capacity for the disk-space regression."))
+        return false;
+
+    // This layout has over 8 GiB of padded BMPs per layer, without allocating any raster images.
+    // Even the largest signed 64-bit capacity can therefore be exceeded within the supported layer count.
+    constexpr double width           = 4096.0 * 8192;
+    constexpr double bytes_per_layer = 62 + width / 8 + 8192.0 * (62 + 512.0 * 2160);
+    const double height              = std::floor(storage.bytesAvailable() / bytes_per_layer) + 1024;
+    ORNL::CSM->clearParts();
+    setBounds(0, width, 0, 1, 0, height);
+    addBox("exceeds_temporary_capacity", ORNL::MeshType::kBuild, {0, 0, 0}, {1, 1, float(height)});
+    const auto settings = ORNL::GSM->getGlobal();
+    settings->setSetting(ORNL::PRS::Dimensions::kEnableW, false);
+    settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1.0);
+    settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kDlp));
+    settings->setSetting(ORNL::ES::DlpSlicer::kProjectionWidth, 4096.0);
+    settings->setSetting(ORNL::ES::DlpSlicer::kPixelWidth, 4096);
+    settings->setSetting(ORNL::ES::DlpSlicer::kOutputMode, static_cast<int>(ORNL::DlpOutputMode::kStatic));
+    settings->setSetting(ORNL::ES::DlpSlicer::kBitDepth, 0);
+
+    const auto images_before = QDir(temporary_root).entryList({"ornlslicer-dlp-*"}, QDir::Dirs | QDir::NoDotAndDotDot);
+    ORNL::DlpPreflight summary;
+    if (!expect(!ORNL::DlpSlicer::preflight(summary, &error) && error.contains("space", Qt::CaseInsensitive) &&
+                    summary.output_bytes > storage.bytesAvailable() && !summary.layout.storage &&
+                    summary.layout.layers.isEmpty(),
+                "Preflight must reject a cache larger than available disk space before creating output."))
+        return false;  // Never attempt this deliberately oversized build if the preflight guard regresses.
+    const auto result = sliceDlp(output);
+    return expect(
+        result.completed == 0 && result.started_layers == 0 && !result.build &&
+            result.error.contains("space", Qt::CaseInsensitive) &&
+            QDir(temporary_root).entryList({"ornlslicer-dlp-*"}, QDir::Dirs | QDir::NoDotAndDotDot) == images_before,
+        "The slicing worker must recheck capacity and fail before images or temporary build directories.");
+}
+
 bool projectorFormats(const QString& output) {
     ORNL::CSM->clearParts();
     setBounds(0, 409600, 0, 108000, 0, 1000);
@@ -442,6 +486,7 @@ int main(int argc, char* argv[]) {
     bool passed = sharedLayerGrid(directory.path() + "/unused.gcode");
     passed &= machineZCoordinates(directory.path() + "/unused.gcode");
     passed &= preflightBoundsWarnings();
+    passed &= insufficientTemporarySpace(directory.path() + "/unused.gcode");
     passed &= projectorFormats(directory.path() + "/unused.gcode");
     passed &= preservesImageSlicer(directory.path());
     passed &= sessionRoutesDlpResults(directory.path());

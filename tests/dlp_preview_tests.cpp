@@ -10,7 +10,9 @@
 #include <QGraphicsView>
 #include <QImage>
 #include <QImageReader>
+#include <QKeyEvent>
 #include <QLabel>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QPushButton>
 #include <QStandardPaths>
@@ -36,6 +38,38 @@ QImage displayedImage(QGraphicsView* view) {
         if (auto* pixmap = qgraphicsitem_cast<QGraphicsPixmapItem*>(item)) { return pixmap->pixmap().toImage(); }
     }
     return {};
+}
+
+QRect displayedRegion(QGraphicsView* view) {
+    for (auto* item : view->scene()->items()) {
+        if (auto* pixels = qgraphicsitem_cast<QGraphicsPixmapItem*>(item)) return pixels->sceneBoundingRect().toRect();
+    }
+    return {};
+}
+
+void clickImage(QGraphicsView* view, const QPointF& point) {
+    const QPoint position = view->mapFromScene(point);
+    const QPoint global   = view->viewport()->mapToGlobal(position);
+    QMouseEvent press(QEvent::MouseButtonPress, position, global, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(view->viewport(), &press);
+    QMouseEvent release(QEvent::MouseButtonRelease, position, global, Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+    QApplication::sendEvent(view->viewport(), &release);
+    QApplication::processEvents();
+}
+
+void dragImage(QGraphicsView* view, const QPoint& offset) {
+    const QPoint position = view->viewport()->rect().center();
+    const QPoint target   = position - offset;
+    QMouseEvent press(QEvent::MouseButtonPress, position, view->viewport()->mapToGlobal(position), Qt::LeftButton,
+                      Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(view->viewport(), &press);
+    QMouseEvent move(QEvent::MouseMove, target, view->viewport()->mapToGlobal(target), Qt::NoButton, Qt::LeftButton,
+                     Qt::NoModifier);
+    QApplication::sendEvent(view->viewport(), &move);
+    QMouseEvent release(QEvent::MouseButtonRelease, target, view->viewport()->mapToGlobal(target), Qt::LeftButton,
+                        Qt::NoButton, Qt::NoModifier);
+    QApplication::sendEvent(view->viewport(), &release);
+    QApplication::processEvents();
 }
 
 QVector<int> laneBorders(QGraphicsView* view, Qt::PenStyle style = Qt::SolidLine) {
@@ -107,6 +141,7 @@ int main(int argc, char* argv[]) {
         painter.fillRect(30, 20, 180, 100, Qt::white);
         painter.fillRect(70, 50, 70, 40, Qt::black);
     }
+    full.setPixelColor(210, 60, QColor(96, 96, 96));
     for (int number = 1; number <= 2; ++number) {
         ORNL::DlpLayer layer;
         layer.number     = number;
@@ -168,6 +203,8 @@ int main(int argc, char* argv[]) {
         image.fill(0);
         for (int y = 1024; y < 11264; ++y) std::memset(image.scanLine(y) + 128, 255, 1792);
         for (int y = 4096; y < 8192; ++y) std::memset(image.scanLine(y) + 768, 0, 512);
+        image.setPixel(13313, 2049, 0);
+        image.setPixel(15789, 513, 1);
         expect(image.save(large_layer.image_path, "BMP"), "Could not save full-resolution 1-bit preview fixture.");
         for (int lane = 0; lane < 4; ++lane) {
             QImage lane_image(4096, 13056, QImage::Format_Mono);
@@ -190,10 +227,11 @@ int main(int argc, char* argv[]) {
     auto* layers        = preview->findChild<QComboBox*>("dlpLayerSelector");
     auto* lanes         = preview->findChild<QComboBox*>("dlpLaneSelector");
     auto* borders       = preview->findChild<QCheckBox*>("dlpLaneBorders");
+    auto* inspection    = preview->findChild<QCheckBox*>("dlpPixelInspection");
     auto* export_button = preview->findChild<QPushButton*>("dlpExport");
     auto* view          = preview->findChild<QGraphicsView*>("dlpImageView");
     auto* status        = preview->findChild<QLabel*>("dlpStatus");
-    if (!ORNL::Testing::expect(layers && lanes && borders && export_button && view && status,
+    if (!ORNL::Testing::expect(layers && lanes && borders && inspection && export_button && view && status,
                                "DLP preview controls must be available."))
         return EXIT_FAILURE;
     int export_requests = 0;
@@ -218,7 +256,7 @@ int main(int argc, char* argv[]) {
         preview->clear();
         preview->show();
         app.processEvents();
-        expect(!layers->isEnabled() && !lanes->isEnabled() && !export_button->isEnabled() &&
+        expect(!layers->isEnabled() && !lanes->isEnabled() && !inspection->isEnabled() && !export_button->isEnabled() &&
                    view->scene()->items().isEmpty(),
                "Clearing the preview must disable selection/export and remove previous images.");
         screenshot(prefix + "before");
@@ -227,6 +265,9 @@ int main(int argc, char* argv[]) {
         app.processEvents();
         expect(layers->count() == 2 && lanes->count() == 4 && export_button->isEnabled(),
                "Completed builds must expose every layer and lane and enable export.");
+        expect(lanes->currentText().contains("diagnostic only") && !inspection->isEnabled() &&
+                   status->text().contains("do not project"),
+               "Full-layer images must be marked diagnostic and cannot enter lane pixel inspection.");
         QStyleOptionComboBox lane_style;
         lane_style.initFrom(lanes);
         lane_style.currentText = lanes->currentText();
@@ -253,10 +294,18 @@ int main(int argc, char* argv[]) {
                    renderedColor(whole_capture, view, preview, QPointF(110.5, 70.5)) == QColor(Qt::black) &&
                    renderedColor(whole_capture, view, preview, QPointF(10.5, 10.5)) == QColor(Qt::black),
                "The rendered whole layer must show solid geometry, its hole, and the empty background in both themes.");
+        const QString hidden_full = build->layers[0].image_path + ".hidden";
+        const bool hidden         = QFile::rename(build->layers[0].image_path, hidden_full);
+        expect(hidden, "Could not temporarily hide the image for cached-overlay verification.");
         borders->setChecked(false);
         expect(laneBorders(view).isEmpty() && laneBorders(view, Qt::DashLine).isEmpty(),
                "The lane-border toggle must hide both exposure and footprint borders.");
         borders->setChecked(true);
+        expect(!displayedImage(view).isNull() && laneBorders(view) == QVector<int>({100, 200}) &&
+                   !status->text().contains("Could not load"),
+               "Changing border visibility must use the bounded cached overview without reopening the BMP.");
+        if (hidden)
+            expect(QFile::rename(hidden_full, build->layers[0].image_path), "Could not restore the preview fixture.");
 
         lanes->setCurrentIndex(3);
         app.processEvents();
@@ -277,6 +326,23 @@ int main(int argc, char* argv[]) {
                    renderedColor(lane_capture, view, preview, QPointF(55.5, 150.5)) == QColor(Qt::black),
                "The rendered final lane must show a masked left overlap, right-hand exposure, and black padding in "
                "both themes.");
+        inspection->setChecked(true);
+        app.processEvents();
+        expect(inspection->isEnabled() && view->transform().isIdentity() &&
+                   displayedRegion(view) == QRect(0, 0, 100, 160) &&
+                   displayedImage(view).pixelColor(60, 60) == QColor(96, 96, 96) &&
+                   status->text().contains("1:1 image pixels (from top-left)") && !status->text().contains("Preview:"),
+               "Native 8-bit inspection must retain single-pixel grayscale values without scaling or overlays.");
+        const auto small_inspection = screenshot(prefix + "last-lane-inspection");
+        expect(renderedColor(small_inspection, view, preview, QPointF(60, 60)) == QColor(96, 96, 96),
+               "The actual 1:1 view must render its single-pixel grayscale value unchanged in both themes.");
+        layers->setCurrentIndex(1);
+        expect(inspection->isChecked() && status->text().contains("Empty") &&
+                   displayedImage(view).pixelColor(60, 60) == QColor(Qt::black),
+               "Changing layers in inspection must replace the native pixels and retain the inspection mode.");
+        layers->setCurrentIndex(0);
+        inspection->setChecked(false);
+        app.processEvents();
         layers->setCurrentIndex(1);
         expect(lanes->currentIndex() == 3 && status->text().contains("Empty") &&
                    displayedImage(view).convertToFormat(QImage::Format_RGB32) ==
@@ -326,13 +392,79 @@ int main(int argc, char* argv[]) {
                        renderedColor(large_lane_capture, view, preview, QPointF(3500.5, 2048.5)) == QColor(Qt::black) &&
                        renderedColor(large_lane_capture, view, preview, QPointF(1024.5, 12500.5)) == QColor(Qt::black),
                    "Reduced lane previews must retain geometry, background, and scrolling padding.");
+        clickImage(view, QPointF(1025, 2049));
+        const QRect native_region = displayedRegion(view);
+        const QImage native_image = displayedImage(view);
+        expect(inspection->isChecked() && view->transform().isIdentity() &&
+                   native_region.contains(QPoint(1025, 2049)) && native_region.width() <= 1024 &&
+                   native_region.height() <= 1024 &&
+                   native_image.convertToFormat(QImage::Format_RGB32) == QImage(large_layer.lanes.last().image_path)
+                                                                             .copy(native_region)
+                                                                             .convertToFormat(QImage::Format_RGB32),
+               "Clicking a lane overview must show an unscaled bounded crop of the original encoded pixels.");
+        expect(native_image.pixelColor(QPoint(1025, 2049) - native_region.topLeft()) == QColor(Qt::black) &&
+                   native_image.pixelColor(QPoint(1026, 2049) - native_region.topLeft()) == QColor(Qt::white),
+               "Native inspection must preserve an isolated one-pixel hole and its neighboring exposure pixel.");
+        const auto native_capture = screenshot(prefix + "four-lane-inspection");
+        expect(renderedColor(native_capture, view, preview, QPointF(1025, 2049)) == QColor(Qt::black) &&
+                   renderedColor(native_capture, view, preview, QPointF(1026, 2049)) == QColor(Qt::white),
+               "One-pixel hole boundaries must remain distinguishable in the rendered native view.");
+        QKeyEvent right(QEvent::KeyPress, Qt::Key_Right, Qt::NoModifier);
+        QApplication::sendEvent(view, &right);
+        expect(displayedRegion(view).topLeft() == native_region.topLeft() + QPoint(1, 0),
+               "Arrow keys must move inspection by exactly one original image pixel.");
+        const QRect before_drag = displayedRegion(view);
+        dragImage(view, QPoint(17, 11));
+        expect(displayedRegion(view).topLeft() == before_drag.topLeft() + QPoint(17, 11),
+               "Dragging must pan the native crop by the corresponding source pixels.");
+        preview->resize(1500, 1400);
+        app.processEvents();
+        expect(displayedImage(view).width() <= 1024 && displayedImage(view).height() <= 1024 &&
+                   view->transform().isIdentity(),
+               "Even a large window must cap its native display bitmap at 1024 by 1024 pixels.");
+        preview->resize(900, 650);
+        app.processEvents();
+        dragImage(view, QPoint(50000, 50000));
+        expect(displayedRegion(view).right() == 4095 && displayedRegion(view).bottom() == 13055,
+               "Inspection panning must clamp at the original image edges, including black padded rows.");
+        inspection->setChecked(false);
+        app.processEvents();
+        expect(view->sceneRect() == QRectF(0, 0, 4096, 13056) && !view->transform().isIdentity() &&
+                   displayedImage(view).width() <= 2048 && displayedImage(view).height() <= 2048,
+               "Leaving native inspection must restore the bounded fitted lane overview.");
+        clickImage(view, QPointF(3501, 513));
+        const QRect speck_region = displayedRegion(view);
+        expect(inspection->isChecked() && speck_region.contains(QPoint(3501, 513)) &&
+                   displayedImage(view).pixelColor(QPoint(3501, 513) - speck_region.topLeft()) == QColor(Qt::white) &&
+                   displayedImage(view).pixelColor(QPoint(3500, 513) - speck_region.topLeft()) == QColor(Qt::black),
+               "Native inspection must preserve an isolated single-pixel exposure in a black region.");
+        screenshot(prefix + "single-pixel-inspection");
+        lanes->setCurrentIndex(0);
+        expect(!inspection->isChecked() && !inspection->isEnabled() && status->text().contains("diagnostic only") &&
+                   view->sceneRect() == QRectF(0, 0, 16384, 12288),
+               "Selecting the diagnostic image must leave inspection and restore the full overview.");
         expect(QImageReader::allocationLimit() == 256, "DLP previews must not raise the global image reader limit.");
+
+        auto broken_lane     = QSharedPointer<ORNL::DlpBuild>::create(*large);
+        auto missing_layer   = broken_lane->layers.first();
+        missing_layer.number = 2;
+        missing_layer.lanes.last().image_path += ".missing";
+        broken_lane->layers.append(missing_layer);
+        preview->setBuild(broken_lane);
+        lanes->setCurrentIndex(4);
+        inspection->setChecked(true);
+        layers->setCurrentIndex(1);
+        expect(view->scene()->items().isEmpty() && status->text().contains("Could not load DLP image") &&
+                   !inspection->isEnabled() && !inspection->isChecked(),
+               "A failed lane read must discard the previous native image and disable inspection.");
 
         auto mismatched = QSharedPointer<ORNL::DlpBuild>::create(*build);
         mismatched->image_width += 1;
         preview->setBuild(mismatched);
         expect(view->scene()->items().isEmpty() && status->text().contains("Could not load DLP image"),
                "A BMP whose dimensions differ from its cached build must be rejected before allocating its raster.");
+        expect(!inspection->isEnabled() && !inspection->isChecked(),
+               "An invalid image must never enable native pixel inspection.");
         mismatched                     = QSharedPointer<ORNL::DlpBuild>::create(*build);
         mismatched->settings.bit_depth = 1;
         preview->setBuild(mismatched);

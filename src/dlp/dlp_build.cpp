@@ -5,12 +5,15 @@
 #include <QFileInfo>
 #include <QImageReader>
 #include <QSaveFile>
+#include <QScopeGuard>
+#include <QStorageInfo>
 #include <QTextStream>
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <limits>
 
+#include "dlp/dlp_storage.h"
 #include "units/unit.h"
 
 namespace ORNL {
@@ -142,16 +145,8 @@ bool DlpRasterizer::layout(DlpBuild& build, const DlpSettings& settings, QString
 
 bool DlpRasterizer::initialize(DlpBuild& build, const DlpSettings& settings, QString* error) {
     if (!layout(build, settings, error)) return false;
-    // Qt canonicalizes Unix temp paths, yielding an empty path if a launch environment's root disappears.
-    QString temporary_root = QDir::tempPath();
-#ifdef Q_OS_UNIX
-    if (temporary_root.isEmpty()) temporary_root = QFile::decodeName(qgetenv("TMPDIR"));
-#endif
-    if (temporary_root.isEmpty())
-        return fail(error,
-                    "Could not resolve the DLP temporary output directory. "
-                    "Check the application's temporary-directory environment and restart it.");
-    temporary_root = QDir(temporary_root).absolutePath();
+    QString temporary_root;
+    if (!DlpStorage::temporaryRoot(temporary_root, error)) return false;
     QDir().mkpath(temporary_root);
     build.storage = QSharedPointer<QTemporaryDir>::create(temporary_root + "/ornlslicer-dlp-XXXXXX");
     if (!build.storage->isValid())
@@ -252,6 +247,12 @@ bool DlpExporter::exportBuild(const DlpBuild& build, const QString& destination,
         return fail(error, "No completed DLP build is available to export.");
     const QString output = QDir(destination).absolutePath();
     const QFileInfo output_info(output);
+    if (output_info.isDir()) {
+        const QStorageInfo volume(output);
+        if (QDir(output).isRoot() ||
+            (volume.isValid() && output_info.canonicalFilePath() == QFileInfo(volume.rootPath()).canonicalFilePath()))
+            return fail(error, "A DLP export cannot replace a filesystem root. Create a build subfolder in: " + output);
+    }
     const auto available = [&]() {
         return !QFileInfo::exists(output) ||
                (!QFileInfo(output).isSymLink() && QFileInfo(output).isDir() &&
@@ -260,18 +261,31 @@ bool DlpExporter::exportBuild(const DlpBuild& build, const QString& destination,
                     .isEmpty());
     };
     if (!available()) return fail(error, "Select a new or empty directory for the DLP export.");
+    qint64 total = 0, completed = 0, image_count = 0;
+    for (const auto& layer : build.layers) {
+        total += QFileInfo(layer.image_path).size();
+        ++image_count;
+        for (const auto& lane : layer.lanes) {
+            total += QFileInfo(lane.image_path).size();
+            ++image_count;
+        }
+    }
+    // Cached files already occupy space; reserve only the additional copy and estimated CSV rows.
     const QString parent = output_info.absolutePath();
+    if (!DlpStorage::checkSpace(parent, double(total) + 256.0 * image_count + 128, error)) return false;
     if (!QDir().mkpath(parent)) return fail(error, "Could not create DLP export parent directory: " + parent);
     QTemporaryDir staging(parent + "/.ornlslicer-dlp-export-XXXXXX");
     if (!staging.isValid())
         return fail(error, "Could not create temporary DLP export directory: " + staging.errorString());
-    QDir directory(staging.path());
-    qint64 total = 0, completed = 0;
-    for (const auto& layer : build.layers) {
-        total += QFileInfo(layer.image_path).size();
-        for (const auto& lane : layer.lanes) total += QFileInfo(lane.image_path).size();
-    }
-    const auto keep_going = [&]() {
+    // The private staging container protects partial files; the published child inherits normal mkdir defaults.
+    const QString staged_output = staging.filePath("build");
+    if (!QDir().mkdir(staged_output)) return fail(error, "Could not create staged DLP export directory.");
+    QDir directory(staged_output);
+    const auto cleanup_permissions = qScopeGuard([&] {
+        if (QFileInfo::exists(staged_output))
+            QFile::setPermissions(staged_output, QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+    });
+    const auto keep_going          = [&]() {
         if (!progress || progress(completed, total)) return true;
         if (canceled) *canceled = true;
         return fail(error, "DLP export canceled.");
@@ -329,14 +343,17 @@ bool DlpExporter::exportBuild(const DlpBuild& build, const QString& destination,
     if (stream.status() != QTextStream::Ok || !csv.commit()) return fail(error, "Could not finish DLP build.csv.");
     if (!keep_going()) return false;
     if (!available()) return fail(error, "The DLP export destination is no longer an empty directory: " + output);
-    const bool existing = QFileInfo::exists(output);
+    const QFileInfo current_output(output);
+    const bool existing    = current_output.exists();
+    const auto permissions = current_output.permissions();
+    if (existing && !QFile::setPermissions(staged_output, permissions))
+        return fail(error, "Could not preserve DLP export folder permissions: " + output);
     if (existing && !QDir().rmdir(output))
         return fail(error, "Could not prepare the empty DLP export directory: " + output);
-    if (!QDir().rename(staging.path(), output)) {
-        if (existing) QDir().mkpath(output);
+    if (!QDir().rename(staged_output, output)) {
+        if (existing && QDir().mkdir(output)) QFile::setPermissions(output, permissions);
         return fail(error, "Could not publish the completed DLP export directory: " + output);
     }
-    staging.setAutoRemove(false);
     return true;
 }
 }  // namespace ORNL

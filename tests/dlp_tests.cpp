@@ -339,7 +339,75 @@ bool testExportRecovery() {
     QFile blocker(raced_destination + "/keep.txt");
     passed &= Testing::expect(blocker.open(QIODevice::ReadOnly) && blocker.readAll() == "keep",
                               "A destination changed during export must retain the newly created user file");
+    bool root_progress = false;
+    passed &=
+        Testing::expect(!DlpExporter::exportBuild(build, QDir::rootPath(), &error,
+                                                  [&](qint64, qint64) {
+                                                      root_progress = true;
+                                                      return false;
+                                                  }) &&
+                            !root_progress && error.contains("filesystem root") && error.contains("subfolder"),
+                        "A filesystem root must be rejected before copying with guidance to create a build subfolder");
     return passed;
+}
+
+bool testExportPermissions() {
+#ifdef Q_OS_UNIX
+    DlpBuild build;
+    QString error;
+    if (!Testing::expect(DlpRasterizer::initialize(build, settings(), &error), error.toStdString())) return false;
+    const QImage image = DlpRasterizer::rasterize({}, build);
+    if (!Testing::expect(DlpRasterizer::writeLayer(build, 1, 500, image, &error), error.toStdString())) return false;
+    QTemporaryDir directory;
+    if (!Testing::expect(directory.isValid() && QDir(directory.path()).mkdir("Normal Folder"),
+                         "Could not create the export-permissions fixture"))
+        return false;
+
+    const auto normal_permissions = QFileInfo(directory.filePath("Normal Folder")).permissions();
+    const QString fresh           = directory.filePath("New Build");
+    bool passed                   = Testing::expect(
+        DlpExporter::exportBuild(build, fresh, &error) && QFileInfo(fresh).permissions() == normal_permissions,
+        "New export folders must use normal directory permissions rather than private staging permissions");
+
+    const QString existing = directory.filePath("Existing Build");
+    const auto requested = QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner | QFile::ReadGroup | QFile::ExeGroup;
+    if (!Testing::expect(QDir().mkdir(existing) && QFile::setPermissions(existing, requested),
+                         "Could not set custom permissions on the empty export folder"))
+        return false;
+    const auto existing_permissions = QFileInfo(existing).permissions();
+    bool canceled                   = false;
+    passed &=
+        Testing::expect(!DlpExporter::exportBuild(
+                            build, existing, &error, [](qint64, qint64) { return false; }, &canceled) &&
+                            canceled && QFileInfo(existing).permissions() == existing_permissions &&
+                            QDir(existing).entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden).isEmpty(),
+                        "Canceling export must leave the existing empty folder and its custom permissions intact");
+    passed &= Testing::expect(DlpExporter::exportBuild(build, existing, &error) &&
+                                  QFileInfo(existing).permissions() == existing_permissions &&
+                                  QFile::exists(existing + "/build.csv"),
+                              "Publishing into an existing empty folder must preserve its custom permissions");
+    const QString changed = directory.filePath("Changed Build");
+    if (!Testing::expect(QDir().mkdir(changed) && QFile::setPermissions(changed, requested),
+                         "Could not create the late permission-change fixture"))
+        return false;
+    bool changed_permissions = false;
+    QFile::Permissions latest_permissions;
+    passed &= Testing::expect(DlpExporter::exportBuild(build, changed, &error,
+                                                       [&](qint64 completed, qint64 total) {
+                                                           if (completed == total && !changed_permissions) {
+                                                               changed_permissions = QFile::setPermissions(
+                                                                   changed, QFile::ReadOwner | QFile::WriteOwner |
+                                                                                QFile::ExeOwner | QFile::ExeGroup);
+                                                               latest_permissions = QFileInfo(changed).permissions();
+                                                           }
+                                                           return true;
+                                                       }) &&
+                                  changed_permissions && QFileInfo(changed).permissions() == latest_permissions,
+                              "Publication must preserve permissions changed while the export was being staged");
+    return passed;
+#else
+    return true;
+#endif
 }
 
 bool testLaneCoverage() {
@@ -637,6 +705,7 @@ int main(int argc, char* argv[]) {
     passed &= testExport(1);
     passed &= testExport(8);
     passed &= testExportRecovery();
+    passed &= testExportPermissions();
     passed &= testGrayscaleEncoding();
     passed &= testLaneCoverage();
     passed &= testFormats();
