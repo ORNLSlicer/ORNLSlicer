@@ -205,3 +205,4 @@ When the user corrects your approach, append a one-line rule here before ending 
 - Preserve configured Tormach pause-centroid moves when perimeter avoidance is enabled; those explicit centroid travels may cross perimeters.
 - Test travel avoidance after float-interpolated wipes on diagonal walls at machine-scale coordinates; bound endpoint contacts in spatial units, not fractions of travel length.
 - Use joined contour offsets to avoid travel corner jogs; retain segment caps for Clipper's near-reversal cutoff, and measure default-width standoff outside the printed bead edge.
+- For perimeter-to-inset travel within an island, follow completed perimeter material before the short inset connection instead of crossing a hollow interior.

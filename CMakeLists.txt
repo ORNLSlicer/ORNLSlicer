@@ -755,7 +755,7 @@ if(ORNLSLICER_BUILD_TESTS)
             --slicer $<TARGET_FILE:${TRAVEL_CLI_TARGET}>
             --template ${CMAKE_CURRENT_SOURCE_DIR}/templates/Desktop_04mm.s2c
             --work-dir ${CMAKE_CURRENT_BINARY_DIR}/Testing/travel-cli-regression)
-    set_tests_properties(travel_cli_regression PROPERTIES TIMEOUT 200)
+    set_tests_properties(travel_cli_regression PROPERTIES TIMEOUT 380)
 
     add_executable(${PROJECT_NAME}_contour_connection_tests tests/contour_connection_tests.cpp)
     target_include_directories(

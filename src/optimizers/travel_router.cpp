@@ -88,6 +88,115 @@ void TravelRouter::addObstacle(const Point& start, const Point& end, Distance wi
     m_obstacles.push_back({start, end, std::max(1.0, width() / 2.0), 1.0 + float_rounding});
 }
 
+std::optional<QVector<Point>> TravelRouter::routeOnPerimeter(const Point& start, const Point& end, Distance inset_width,
+                                                             const std::function<bool(const Point&)>& allowed) const {
+    if (std::abs(start.z() - end.z()) > kPlaneTolerance) return std::nullopt;
+    auto pointAllowed = [&](const Point& p) {
+        return !allowed || (p.x() == start.x() && p.y() == start.y()) || (p.x() == end.x() && p.y() == end.y()) ||
+               allowed(p);
+    };
+    auto connectorClear = [&](const Point& a, const Point& b) {
+        const double length = std::hypot(b.x() - a.x(), b.y() - a.y());
+        if (length <= kTolerance) return true;
+        for (const auto& obstacle : m_obstacles) {
+            if (std::abs(obstacle.start.z() - start.z()) > kPlaneTolerance) continue;
+            std::vector<double> hits;
+            intersections(a, b, obstacle.start, obstacle.end, hits);
+            for (double t : hits) {
+                if (t * length > endpointTolerance(a) && (1 - t) * length > endpointTolerance(b)) return false;
+            }
+        }
+        return true;
+    };
+    struct Attachment {
+        Point point;
+        qsizetype segment;
+        double fraction;
+        double distance;
+    };
+    std::optional<QVector<Point>> best;
+    double best_length = std::numeric_limits<double>::infinity();
+    for (qsizetype first = 0; first < m_obstacles.size();) {
+        if (std::abs(m_obstacles[first].start.z() - start.z()) > kPlaneTolerance) {
+            ++first;
+            continue;
+        }
+        qsizetype last = first + 1;
+        // Physical continuity survives bead-width changes; only deposited segments belong to these chains.
+        while (last < m_obstacles.size() && m_obstacles[last - 1].end.x() == m_obstacles[last].start.x() &&
+               m_obstacles[last - 1].end.y() == m_obstacles[last].start.y() &&
+               std::abs(m_obstacles[last].start.z() - start.z()) <= kPlaneTolerance &&
+               !(m_obstacles[last - 1].end.x() == m_obstacles[first].start.x() &&
+                 m_obstacles[last - 1].end.y() == m_obstacles[first].start.y()))
+            ++last;
+        const bool closed = m_obstacles[last - 1].end.x() == m_obstacles[first].start.x() &&
+                            m_obstacles[last - 1].end.y() == m_obstacles[first].start.y();
+        auto attach       = [&](const Point& original, bool departing) {
+            QVector<Attachment> attachments;
+            for (qsizetype i = first; i < last; ++i) {
+                const auto& stroke = m_obstacles[i];
+                const double dx = stroke.end.x() - stroke.start.x(), dy = stroke.end.y() - stroke.start.y();
+                const double t =
+                    std::clamp(((original.x() - stroke.start.x()) * dx + (original.y() - stroke.start.y()) * dy) /
+                                   (dx * dx + dy * dy),
+                               0.0, 1.0);
+                const Point point(stroke.start.x() + t * dx, stroke.start.y() + t * dy, start.z());
+                const double distance = original.distance(point)();
+                // Inset miters can be one bead spacing away in both axes at a contour corner.
+                const double reach = departing ? stroke.half_width
+                                               : (stroke.half_width + std::max(0.0, inset_width()) / 2.0) *
+                                                     ((t == 0 || t == 1) ? std::sqrt(2.0) : 1.0);
+                if (distance <= reach + stroke.rounding && pointAllowed(point) && connectorClear(original, point))
+                    attachments.push_back({point, i, t, distance});
+            }
+            std::sort(attachments.begin(), attachments.end(),
+                      [](const Attachment& a, const Attachment& b) { return a.distance < b.distance; });
+            if (departing && attachments.size() > 1) attachments.resize(1);
+            return attachments;
+        };
+        const auto starts = attach(start, true), ends = attach(end, false);
+        for (const auto& a : starts) {
+            for (const auto& b : ends) {
+                for (bool forward : {true, false}) {
+                    QVector<Point> points {a.point};
+                    auto append = [&](const Point& p) {
+                        const Point flat(p.x(), p.y(), start.z());
+                        if (points.back() != flat) points.push_back(flat);
+                        while (points.size() >= 3 &&
+                               distanceSquared(points[points.size() - 2], points[points.size() - 3], points.back()) <=
+                                   kTolerance * kTolerance)
+                            points.removeAt(points.size() - 2);
+                    };
+                    bool reached =
+                        a.segment == b.segment && (forward ? a.fraction <= b.fraction : a.fraction >= b.fraction);
+                    qsizetype index = a.segment;
+                    for (qsizetype count = 0; !reached && count < last - first; ++count) {
+                        append(forward ? m_obstacles[index].end : m_obstacles[index].start);
+                        if (!closed && (forward ? index == last - 1 : index == first)) break;
+                        index =
+                            forward ? (index + 1 == last ? first : index + 1) : (index == first ? last - 1 : index - 1);
+                        reached = index == b.segment;
+                    }
+                    if (!reached) continue;
+                    append(b.point);
+                    if (!std::all_of(points.begin(), points.end(), pointAllowed)) continue;
+                    double length = start.distance(points.front())() + points.back().distance(end)();
+                    for (qsizetype i = 1; i < points.size(); ++i) length += points[i - 1].distance(points[i])();
+                    if (length >= best_length) continue;
+                    best_length = length;
+                    if (!points.isEmpty() && points.front().distance(start)() <= endpointTolerance(start))
+                        points.removeFirst();
+                    if (!points.isEmpty() && points.back().distance(end)() <= endpointTolerance(end))
+                        points.removeLast();
+                    best = points;
+                }
+            }
+        }
+        first = last;
+    }
+    return best;
+}
+
 QVector<Point> TravelRouter::route(const Point& start, const Point& end, Distance standoff,
                                    const std::function<bool(const Point&)>& allowed, Outcome* outcome) const {
     if (outcome) *outcome = Outcome::kClear;

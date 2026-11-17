@@ -35,10 +35,12 @@
 
 namespace ORNL {
 namespace {
-void addPerimeterObstacle(TravelRouter& router, const QSharedPointer<SegmentBase>& segment, Distance width) {
+void addPerimeterObstacle(TravelRouter& router, TravelRouter& island_router, const QSharedPointer<SegmentBase>& segment,
+                          Distance width) {
     const auto arc = segment.dynamicCast<ArcSegment>();
     if (arc.isNull()) {
         router.addObstacle(segment->start(), segment->end(), width);
+        island_router.addObstacle(segment->start(), segment->end(), width);
         return;
     }
 
@@ -62,6 +64,7 @@ void addPerimeterObstacle(TravelRouter& router, const QSharedPointer<SegmentBase
                                        start.z() + (arc->end().z() - start.z()) * fraction);
         // Expand the chord's obstacle by its maximum deviation from the emitted arc.
         router.addObstacle(previous, next, width + Distance(2.0 * sagitta));
+        island_router.addObstacle(previous, next, width + Distance(2.0 * sagitta));
         previous = next;
     }
 }
@@ -142,8 +145,10 @@ GlobalLayer::TravelRoutingStatistics routeLayerTravels(const QList<QSharedPointe
     const auto syntax             = global_settings->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
     const bool suppresses_no_lift = syntax == GcodeSyntax::kWolf || syntax == GcodeSyntax::kArcSpecialties;
     for (const auto& island : islands) {
-        const auto allowed        = travelEnvelope(global_settings, build_frames.value(island.data()));
-        const auto lifted_allowed = travelEnvelope(global_settings, build_frames.value(island.data()), true);
+        TravelRouter island_router;
+        RegionType previous_printing_region = RegionType::kUnknown;
+        const auto allowed                  = travelEnvelope(global_settings, build_frames.value(island.data()));
+        const auto lifted_allowed           = travelEnvelope(global_settings, build_frames.value(island.data()), true);
         for (const auto& region : island->getRegions()) {
             const auto settings       = region->getSb();
             const bool avoid_crossing = enabled(region);
@@ -159,6 +164,24 @@ GlobalLayer::TravelRoutingStatistics routeLayerTravels(const QList<QSharedPointe
                             continue;
                         }
                         TravelRouter::Outcome outcome;
+                        const bool follow_perimeter = previous_printing_region == RegionType::kPerimeter &&
+                                                      region->getRegionType() == RegionType::kInset;
+                        auto route = [&](Distance clearance, const std::function<bool(const Point&)>& bounds,
+                                         TravelRouter::Outcome* result) {
+                            if (follow_perimeter) {
+                                const Distance inset_width =
+                                    settings->contains(PS::Inset::kBeadWidth)
+                                        ? settings->setting<Distance>(PS::Inset::kBeadWidth)
+                                        : global_settings->setting<Distance>(PS::Inset::kBeadWidth);
+                                if (auto supported = island_router.routeOnPerimeter(travel->start(), travel->end(),
+                                                                                    inset_width, bounds)) {
+                                    *result = supported->isEmpty() ? TravelRouter::Outcome::kClear
+                                                                   : TravelRouter::Outcome::kDetour;
+                                    return *supported;
+                                }
+                            }
+                            return router.route(travel->start(), travel->end(), clearance, bounds, result);
+                        };
                         const Distance lift_threshold =
                             global_settings->setting<Distance>(PS::Travel::kMinTravelForLift);
                         // Legacy writers can offset horizontal targets even for a logical no-lift travel.
@@ -166,12 +189,10 @@ GlobalLayer::TravelRoutingStatistics routeLayerTravels(const QList<QSharedPointe
                                               global_settings->setting<Distance>(PS::Travel::kLiftHeight) > 0;
                         const bool already_lifts =
                             can_lift && travel->start().distance(travel->end()) >= lift_threshold;
-                        travel->setWaypoints(router.route(travel->start(), travel->end(), standoff,
-                                                          already_lifts ? lifted_allowed : allowed, &outcome));
+                        travel->setWaypoints(route(standoff, already_lifts ? lifted_allowed : allowed, &outcome));
                         if (lifted_allowed && can_lift && !already_lifts && !travel->waypoints().isEmpty() &&
                             travel->length() >= lift_threshold) {
-                            travel->setWaypoints(
-                                router.route(travel->start(), travel->end(), standoff, lifted_allowed, &outcome));
+                            travel->setWaypoints(route(standoff, lifted_allowed, &outcome));
                             if (!travel->waypoints().isEmpty() && travel->length() >= lift_threshold &&
                                 (!lifted_allowed(travel->start()) || !lifted_allowed(travel->end()))) {
                                 // Do not newly enable an out-of-envelope lift at an unchanged endpoint.
@@ -181,8 +202,7 @@ GlobalLayer::TravelRoutingStatistics routeLayerTravels(const QList<QSharedPointe
                             if (travel->waypoints().isEmpty() && outcome == TravelRouter::Outcome::kTravelLimit &&
                                 standoff > 0) {
                                 TravelRouter::Outcome tighter_outcome;
-                                travel->setWaypoints(
-                                    router.route(travel->start(), travel->end(), 0, allowed, &tighter_outcome));
+                                travel->setWaypoints(route(0, allowed, &tighter_outcome));
                                 if ((tighter_outcome == TravelRouter::Outcome::kClear ||
                                      tighter_outcome == TravelRouter::Outcome::kDetour) &&
                                     travel->length() < lift_threshold) {
@@ -212,12 +232,13 @@ GlobalLayer::TravelRoutingStatistics routeLayerTravels(const QList<QSharedPointe
                                 break;
                         }
                     }
-                    else if (segment->isPrintingSegment() &&
-                             segment->getSb()->setting<RegionType>(SS::kRegionType) == RegionType::kPerimeter) {
+                    else if (segment->isPrintingSegment()) {
+                        previous_printing_region = segment->getSb()->setting<RegionType>(SS::kRegionType);
+                        if (previous_printing_region != RegionType::kPerimeter) continue;
                         const Distance width = segment->getSb()->contains(SS::kWidth)
                                                    ? segment->getSb()->setting<Distance>(SS::kWidth)
                                                    : settings->setting<Distance>(PS::Perimeter::kBeadWidth);
-                        addPerimeterObstacle(router, segment, width);
+                        addPerimeterObstacle(router, island_router, segment, width);
                         ++statistics.obstacle_segments;
                     }
                 }

@@ -109,6 +109,65 @@ TravelRouter routerFor(const QVector<Stroke>& strokes, double width = 200) {
     return router;
 }
 
+bool followsCompletedPerimeterToInset() {
+    const QVector<Stroke> hole {{{0, 0, 20}, {12000, 0, 20}},
+                                {{12000, 0, 20}, {12000, 10000, 20}},
+                                {{12000, 10000, 20}, {0, 10000, 20}},
+                                {{0, 10000, 20}, {0, 0, 20}}};
+    const Point start(0, 3000, 20), end(12400, 0, 20);
+    auto router      = routerFor(hole, 400);
+    const auto route = router.routeOnPerimeter(start, end, 400);
+    bool passed      = ORNL::Testing::expect(
+        route && route->size() == 2 && route->at(0) == Point(0, 0, 20) && route->at(1) == Point(12000, 0, 20),
+        "Perimeter-to-inset travel must follow the printed hole walls before attaching.");
+    const auto longer = router.routeOnPerimeter(start, end, 400, [](const Point& p) { return p.x() + p.y() >= 1000; });
+    passed &=
+        ORNL::Testing::expect(longer && longer->contains(Point(0, 10000, 20)) && !longer->contains(Point(0, 0, 20)),
+                              "A supported route must try the legal direction around the contour.");
+    passed &=
+        ORNL::Testing::expect(!router.routeOnPerimeter(start, end, 400, [](const Point& p) { return p.y() >= 1000; }),
+                              "A supported route must respect limits on its inserted points.");
+    passed &=
+        ORNL::Testing::expect(!router.routeOnPerimeter(Point(1000, 3000, 20), end, 400) &&
+                                  !router.routeOnPerimeter(start, Point(14000, 0, 20), 400) &&
+                                  !router.routeOnPerimeter(start, Point(12400, 0, 22), 400),
+                              "Supported routing needs a start on printed material and a nearby planar destination.");
+    const auto straight = router.routeOnPerimeter(Point(0, 8000, 20), start, 400);
+    passed &= ORNL::Testing::expect(straight && straight->isEmpty(),
+                                    "Travel already over a straight printed wall must remain direct.");
+    passed &= ORNL::Testing::expect(router.routeOnPerimeter(start, Point(12400, -400, 20), 400).has_value(),
+                                    "A mitered inset corner can lie one bead spacing away in both axes.");
+    QVector<Stroke> reversed;
+    for (auto i = hole.crbegin(); i != hole.crend(); ++i) reversed.push_back({i->end, i->start});
+    passed &= ORNL::Testing::expect(routerFor(reversed, 400).routeOnPerimeter(start, end, 400) == route,
+                                    "Contour traversal must work with either print direction.");
+    const auto open = routerFor(hole.mid(1), 400).routeOnPerimeter(start, end, 400);
+    passed &=
+        ORNL::Testing::expect(open && open->contains(Point(0, 10000, 20)) && open->contains(Point(12000, 10000, 20)) &&
+                                  !open->contains(Point(0, 0, 20)),
+                              "An unfinished contour must follow its deposited side without closing an open gap.");
+    TravelRouter varying_width;
+    for (int i = 0; i < hole.size(); ++i) varying_width.addObstacle(hole[i].start, hole[i].end, i == 0 ? 400 : 300);
+    passed &= ORNL::Testing::expect(varying_width.routeOnPerimeter(start, end, 400).has_value(),
+                                    "Width changes must not disconnect a printed contour.");
+    passed &= ORNL::Testing::expect(router.routeOnPerimeter(start, Point(12600, 5000, 20), 800).has_value() &&
+                                        !router.routeOnPerimeter(start, Point(12700, 5000, 20), 800),
+                                    "Inset attachment spacing must use half of each actual bead width.");
+    const QVector<Stroke> open_u {{{-1000, 1000, 20}, {-1000, -1000, 20}},
+                                  {{-1000, -1000, 20}, {1000, -1000, 20}},
+                                  {{1000, -1000, 20}, {1000, 1000, 20}}};
+    const auto alternative =
+        routerFor(open_u, 200).routeOnPerimeter(Point(-1000, 1000, 20), Point(100, 500, 20), 2400, [](const Point& p) {
+            return p.y() >= 0;
+        });
+    passed &= ORNL::Testing::expect(alternative && alternative->contains(Point(-1000, 500, 20)),
+                                    "Try another inset attachment when the nearest requires an illegal contour walk.");
+    router.addObstacle(Point(12200, -1000, 20), Point(12200, 1000, 20), 100);
+    passed &= ORNL::Testing::expect(!router.routeOnPerimeter(start, end, 400),
+                                    "The short inset attachment must not cut through another completed wall.");
+    return passed;
+}
+
 bool constrainedRoutesReportOutcomes() {
     using Outcome   = TravelRouter::Outcome;
     Outcome outcome = Outcome::kUnroutable;
@@ -173,6 +232,7 @@ bool constrainedRoutesReportOutcomes() {
 
 int main() {
     bool passed = true;
+    passed &= followsCompletedPerimeterToInset();
     passed &= constrainedRoutesReportOutcomes();
     const Point start(-2000.0f, 0.0f, 20.0f), end(2000.0f, 0.0f, 20.0f);
     passed &= ORNL::Testing::expect(TravelRouter().route(start, end).isEmpty(),

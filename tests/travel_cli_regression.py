@@ -201,6 +201,144 @@ def run(args):
     assert avoided["clearance"] is not None and avoided["clearance"] >= 12.954 - 0.04, "Detour lost bead-edge standoff"
     print(f"CLI regression passed: {direct['crossings']} -> 0 crossings; printing/wipes/endpoints unchanged; "
           f"interior clearance {avoided['clearance']:.3f} mm")
+    run_supported_travel(args)
+
+
+def write_box_hole(path):
+    """A narrow frame around a rectangular hole, joined to a solid area for insets."""
+    outer = [(2734.564, 927.1), (3648.964, 927.1), (3648.964, 1231.9), (2734.564, 1231.9)]
+    inner = [(2751.836, 944.372), (3056.636, 944.372), (3056.636, 1214.628), (2751.836, 1214.628)]
+    triangles = []
+
+    def quad(points):
+        triangles.extend(((points[0], points[1], points[2]), (points[0], points[2], points[3])))
+
+    for i in range(4):
+        j = (i + 1) % 4
+        for z in (0, 7.62):
+            points = [(*outer[i], z), (*outer[j], z), (*inner[j], z), (*inner[i], z)]
+            quad(points if z else list(reversed(points)))
+        quad([(*outer[i], 0), (*outer[j], 0), (*outer[j], 7.62), (*outer[i], 7.62)])
+        quad([(*inner[j], 0), (*inner[i], 0), (*inner[i], 7.62), (*inner[j], 7.62)])
+    with path.open("w") as output:
+        output.write("solid box_hole\n")
+        for triangle in triangles:
+            output.write("facet normal 0 0 0\nouter loop\n")
+            for point in triangle:
+                output.write("vertex " + " ".join(format(value, ".12g") for value in point) + "\n")
+            output.write("endloop\nendfacet\n")
+        output.write("endsolid box_hole\n")
+
+
+def supported_fraction(a, b, perimeters):
+    # Independently clip the travel to deposited bead rectangles, then union the
+    # covered intervals. Fixture walls are axis aligned; 0.001in covers export rounding.
+    intervals = []
+    for c, d in perimeters:
+        assert c[0] == d[0] or c[1] == d[1], "Box fixture must have axis-aligned walls"
+        lower, upper = 0.0, 1.0
+        for i in (0, 1):
+            low, high = min(c[i], d[i]) - 0.171, max(c[i], d[i]) + 0.171
+            delta = b[i] - a[i]
+            if abs(delta) < 1e-12:
+                if not low <= a[i] <= high:
+                    upper = -1
+                    break
+            else:
+                enter, leave = sorted(((low - a[i]) / delta, (high - a[i]) / delta))
+                lower, upper = max(lower, enter), min(upper, leave)
+        if lower <= upper:
+            intervals.append((lower, upper))
+    covered, end = 0.0, 0.0
+    for low, high in sorted(intervals):
+        if high > end:
+            covered += high - max(end, low)
+            end = high
+    return covered
+
+
+def inspect_supported_travel(path):
+    assert path.is_file() and path.stat().st_size, f"Expected nonempty regular G-code: {path}"
+    position, layer, previous_region = (0, 0, 0), 0, None
+    perimeters, active, material, endpoints, transitions = [], [], [], [], []
+    for line in path.read_text().splitlines():
+        command = line.split("(", 1)[0].strip()
+        comments = re.findall(r"\(([^)]*)\)", line)
+        comment = comments[-1].strip() if comments else ""
+        if comment.startswith("BEGINNING LAYER:"):
+            layer = int(comment.split(":", 1)[1])
+            perimeters, active, previous_region = [], [], None
+        if not re.match(r"^G0?[01](?:\s|$)", command):
+            continue
+        axes = {axis: float(value) for axis, value in re.findall(r"([XYZ])([-+]?(?:\d+(?:\.\d*)?|\.\d+))", command)}
+        target = tuple(axes.get(axis, position[i]) for i, axis in enumerate("XYZ"))
+        start, position = position, target
+        if start[:2] == target[:2]:
+            continue
+        if comment == "TRAVEL":
+            active.append((start, target))
+        elif comment.startswith(("PERIMETER", "INSET")):
+            region = comment.split()[0]
+            if active:
+                endpoints.append((layer, active[0][0], active[-1][1]))
+                if previous_region == "PERIMETER" and region == "INSET":
+                    fractions = [supported_fraction(a, b, perimeters) for a, b in active]
+                    unsupported = sum(math.dist(a[:2], b[:2]) * (1 - fraction) * 25.4
+                                      for (a, b), fraction in zip(active, fractions))
+                    transitions.append((layer, unsupported, all(f >= 1 - 1e-8 for f in fractions[:-1])))
+                active.clear()
+            material.append((layer, comment, start, target))
+            previous_region = region
+            if region == "PERIMETER" and "TIP WIPE" not in comment:
+                perimeters.append((start, target))
+    return material, endpoints, transitions
+
+
+def run_supported_travel(args):
+    model = args.work_dir / "box_hole.stl"
+    write_box_hole(model)
+    template = fixture_settings(args.template)
+    template["settings"][0].update({
+        "perimeter_count": 1, "path_order_optimization": 0, "custom_point_order_y_location": 0,
+        "inset": True, "inset_count": 2, "inset_width": 8636, "inset_speed": 60000,
+        "inset_extruder_speed": 400, "inset_path_order_optimization": 0,
+        "inset_minimum_path_length": 0, "inset_minimum_segment_length": 0, "connect_insets": False,
+        "inset_wipe": True, "inset_wipe_direction": 0, "inset_wipe_distance": 76200,
+        "inset_wipe_speed": 100000, "inset_wipe_extruder_speed": 0, "inset_wipe_lift_height": 0,
+    })
+    results = []
+    for name, enabled in (("box_direct", False), ("box_avoided", True)):
+        settings = copy.deepcopy(template)
+        settings["settings"][0]["avoid_crossing_perimeters"] = enabled
+        settings_path = args.work_dir / f"{name}.s2c"
+        settings_path.write_text(json.dumps(settings))
+        prefix = args.work_dir / name
+        environment = dict(os.environ, QT_QPA_PLATFORM="offscreen",
+                           XDG_DATA_HOME=str(args.work_dir / name / "data"),
+                           XDG_CONFIG_HOME=str(args.work_dir / name / "config"))
+        command = [str(args.slicer), "--input_stl_files", str(model), "--input_global_settings", str(settings_path),
+                   "--output_location", str(prefix), "--shift_parts_on_load", "false", "--align_parts", "false",
+                   "--use_implicit_transforms", "true"]
+        stdout_path, stderr_path = args.work_dir / f"{name}.stdout.log", args.work_dir / f"{name}.stderr.log"
+        prefix.with_suffix(".nc").unlink(missing_ok=True)
+        try:
+            with stdout_path.open("w") as stdout, stderr_path.open("w") as stderr:
+                subprocess.run(command, env=environment, stdout=stdout, stderr=stderr, timeout=90, check=True)
+            results.append(inspect_supported_travel(prefix.with_suffix(".nc")))
+        except (subprocess.SubprocessError, AssertionError):
+            for log in (stdout_path, stderr_path):
+                print(f"{log}:\n{log.read_text()}", file=sys.stderr)
+            raise
+    direct, avoided = results
+    assert direct[0] == avoided[0], "Supported travel changed printing or wipe motions"
+    assert direct[1] == avoided[1], "Supported travel changed original travel endpoint pairs"
+    assert len(direct[0]) == 40 and sum("TIP WIPE" in row[1] for row in direct[0]) == 8, "Box fixture lost walls/wipes"
+    assert [row[0] for row in direct[2]] == [1, 2], "Fixture must reproduce both perimeter-to-inset transitions"
+    assert max(row[1] for row in direct[2]) > 300, "Fixture did not reproduce the unsupported gap"
+    assert [row[0] for row in avoided[2]] == [1, 2], "Supported transitions must retain their layers"
+    assert all(row[1] <= 8.636 + 0.04 and row[2] for row in avoided[2]), f"Travel left the perimeter across the open gap: {avoided[2]}"
+    print(f"Supported-travel regression passed: maximum unsupported span "
+          f"{max(row[1] for row in direct[2]):.3f} -> {max(row[1] for row in avoided[2]):.3f} mm")
 
 
 if __name__ == "__main__":

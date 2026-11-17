@@ -28,8 +28,8 @@
 namespace {
 class TestRegion : public ORNL::RegionBase {
    public:
-    TestRegion(const QSharedPointer<ORNL::SettingsBase>& settings)
-        : RegionBase(settings, 0, {}, {}, ORNL::RegionType::kPerimeter) {}
+    TestRegion(const QSharedPointer<ORNL::SettingsBase>& settings, ORNL::RegionType type = ORNL::RegionType::kPerimeter)
+        : RegionBase(settings, 0, {}, {}, type) {}
 
     QString writeGCode(QSharedPointer<ORNL::WriterBase>) override {
         return {};
@@ -259,6 +259,57 @@ ORNL::GlobalLayer::TravelRoutingStatistics processTravels(const QSharedPointer<O
     ORNL::Point location;
     layer.calculateModifiers(settings, location, 0);
     return layer.getTravelRoutingStatistics();
+}
+
+bool followsPerimeterOnlyIntoSameIslandInset() {
+    auto settings = settingsWithIslandOrder(ORNL::IslandOrderOptimization::kNextClosest);
+    settings->setSetting(ORNL::PS::Travel::kAvoidCrossingPerimeters, true);
+    settings->setSetting(ORNL::PS::Layer::kBeadWidth, 100);
+    settings->setSetting(ORNL::PS::Inset::kBeadWidth, 100);
+    bool passed = true;
+    for (bool separate_islands : {false, true}) {
+        auto perimeter = QSharedPointer<TestRegion>::create(settings);
+        auto inset     = QSharedPointer<TestRegion>::create(settings, ORNL::RegionType::kInset);
+        ORNL::Path walls;
+        appendWall(walls, ORNL::RegionType::kPerimeter);
+        const ORNL::Point start(-500, 200, 0), end(600, -500, 0);
+        auto wipe = QSharedPointer<ORNL::LineSegment>::create(walls.back()->end(), start);
+        wipe->setDepositionActive(false);
+        walls.append(wipe);
+        perimeter->getPaths().append(walls);
+        ORNL::Path inset_path;
+        auto travel = QSharedPointer<ORNL::TravelSegment>::create(start, end);
+        inset_path.append(travel);
+        auto line = QSharedPointer<ORNL::LineSegment>::create(end, ORNL::Point(600, 500, 0));
+        line->getSb()->setSetting(ORNL::SS::kRegionType, ORNL::RegionType::kInset);
+        inset_path.append(line);
+        inset->getPaths().append(inset_path);
+        QVector<const TestIsland*> order;
+        auto source = QSharedPointer<TestIsland>::create(squareAt(0), settings, &order);
+        source->addRegion(perimeter);
+        ORNL::GlobalLayer layer(0);
+        addLayer(layer, "{00000000-0000-0000-0000-000000000001}", layerWithIsland(settings, source));
+        if (separate_islands) {
+            auto target = QSharedPointer<TestIsland>::create(squareAt(1000), settings, &order);
+            target->addRegion(inset);
+            addLayer(layer, "{00000000-0000-0000-0000-000000000002}", layerWithIsland(settings, target));
+        }
+        else { source->addRegion(inset); }
+        optimizeGlobalLayer(layer, settings, order);
+        ORNL::Point location;
+        layer.calculateModifiers(settings, location, 0);
+        const bool follows_wall = travel->waypoints().contains(ORNL::Point(-500, -500, 0)) &&
+                                  travel->waypoints().contains(ORNL::Point(500, -500, 0));
+        passed &=
+            ORNL::Testing::expect(follows_wall != separate_islands && travel->start() == start && travel->end() == end,
+                                  "Follow printed walls into an adjacent inset only within the same island.");
+        settings->setSetting(ORNL::PS::Travel::kAvoidCrossingPerimeters, false);
+        layer.calculateModifiers(settings, location, 0);
+        passed &= ORNL::Testing::expect(travel->waypoints().isEmpty(),
+                                        "Disabling avoidance must clear supported-perimeter waypoints too.");
+        settings->setSetting(ORNL::PS::Travel::kAvoidCrossingPerimeters, true);
+    }
+    return passed;
 }
 
 bool travelLimitsAndOutcomes() {
@@ -630,6 +681,7 @@ int main() {
     passed &= curvedPerimetersObstructTravel();
     passed &= travelWaypointsFollowLayerTransforms();
     passed &= travelLimitsAndOutcomes();
+    passed &= followsPerimeterOnlyIntoSameIslandInset();
     passed &= tiltedTravelLimits();
     passed &= detourCannotNewlyLiftEndpointsBeyondTravelLimits();
     passed &= unliftedDetoursRemainLegalNearCeiling();
