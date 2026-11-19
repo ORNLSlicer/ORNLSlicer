@@ -3,6 +3,7 @@
 #include <QByteArray>
 #include <QDataStream>
 #include <QSaveFile>
+#include <QSet>
 #include <QTextStream>
 #include <QVector3D>
 #include <algorithm>
@@ -12,23 +13,19 @@
 #include <limits>
 #include <vector>
 
-#include "geometry/segments/arc.h"
-#include "geometry/segments/bezier.h"
-#include "geometry/segments/line.h"
+#include "gcode/gcode_segment_filter.h"
 #include "managers/settings/settings_manager.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
 namespace {
-constexpr float kPi                        = 3.14159265358979323846f;
-constexpr float kTwoPi                     = 2.0f * kPi;
-constexpr float kVectorEpsilon             = 1.0e-6f;
-constexpr float kVectorEpsilonSquared      = kVectorEpsilon * kVectorEpsilon;
-constexpr int kCornerBlendSegments         = 24;
-constexpr int kCenterlineTubeSides         = 8;
-constexpr int kCenterlineCurveSegments     = 32;
-constexpr float kCenterlineArcSegmentAngle = kTwoPi / 48.0f;
+constexpr float kPi                   = 3.14159265358979323846f;
+constexpr float kTwoPi                = 2.0f * kPi;
+constexpr float kVectorEpsilon        = 1.0e-6f;
+constexpr float kVectorEpsilonSquared = kVectorEpsilon * kVectorEpsilon;
+constexpr int kCornerBlendSegments    = 24;
+constexpr int kCenterlineTubeSides    = 8;
 
 QString formatFloat(float value) {
     return QString::number(value, 'g', 9);
@@ -72,10 +69,6 @@ std::array<QVector3D, 2> planeBasis(const QVector3D& normal) {
     return {u, v};
 }
 
-bool pointsConnected(const Point& a, const Point& b) {
-    return (a.toQVector3D() - b.toQVector3D()).lengthSquared() <= kVectorEpsilonSquared;
-}
-
 float viewToOutputScale(const Distance& output_unit) {
     return static_cast<float>(Constants::OpenGL::kViewToObject / output_unit());
 }
@@ -87,12 +80,6 @@ QVector3D viewToOutput(const QVector3D& vertex, float output_scale) {
 void appendOutputTriangle(std::vector<AsPrintedModelExporter::Triangle>& triangles, const QVector3D& a,
                           const QVector3D& b, const QVector3D& c, float output_scale) {
     triangles.push_back({viewToOutput(a, output_scale), viewToOutput(b, output_scale), viewToOutput(c, output_scale)});
-}
-
-bool isDegenerateSegment(const QSharedPointer<SegmentBase>& segment) {
-    if (dynamic_cast<LineSegment*>(segment.data()) == nullptr) { return false; }
-
-    return (segment->end().toQVector3D() - segment->start().toQVector3D()).lengthSquared() <= kVectorEpsilonSquared;
 }
 
 bool isCorner(const QSharedPointer<SegmentBase>& previous, const QSharedPointer<SegmentBase>& current) {
@@ -111,7 +98,9 @@ bool isCorner(const QSharedPointer<SegmentBase>& previous, const QSharedPointer<
 void appendCornerBlend(std::vector<AsPrintedModelExporter::Triangle>& triangles,
                        const QSharedPointer<SegmentBase>& previous, const QSharedPointer<SegmentBase>& current,
                        float output_scale) {
-    if (!pointsConnected(previous->end(), current->start()) || !isCorner(previous, current)) { return; }
+    if (!GCodeSegmentFilter::pointsConnected(previous->end(), current->start()) || !isCorner(previous, current)) {
+        return;
+    }
 
     const float radius = std::max(previous->displayWidth(), current->displayWidth()) / 2.0f;
     const float height = std::max(previous->displayHeight(), current->displayHeight());
@@ -134,17 +123,10 @@ void appendCornerBlend(std::vector<AsPrintedModelExporter::Triangle>& triangles,
 
     for (int i = 0; i < kCornerBlendSegments; ++i) {
         const int next = (i + 1) % kCornerBlendSegments;
-        triangles.push_back({viewToOutput(top_center, output_scale), viewToOutput(top_vertices[i], output_scale),
-                             viewToOutput(top_vertices[next], output_scale)});
-        triangles.push_back({viewToOutput(bottom_center, output_scale),
-                             viewToOutput(bottom_vertices[next], output_scale),
-                             viewToOutput(bottom_vertices[i], output_scale)});
-        triangles.push_back({viewToOutput(bottom_vertices[i], output_scale),
-                             viewToOutput(bottom_vertices[next], output_scale),
-                             viewToOutput(top_vertices[i], output_scale)});
-        triangles.push_back({viewToOutput(top_vertices[i], output_scale),
-                             viewToOutput(bottom_vertices[next], output_scale),
-                             viewToOutput(top_vertices[next], output_scale)});
+        appendOutputTriangle(triangles, top_center, top_vertices[i], top_vertices[next], output_scale);
+        appendOutputTriangle(triangles, bottom_center, bottom_vertices[next], bottom_vertices[i], output_scale);
+        appendOutputTriangle(triangles, bottom_vertices[i], bottom_vertices[next], top_vertices[i], output_scale);
+        appendOutputTriangle(triangles, top_vertices[i], bottom_vertices[next], top_vertices[next], output_scale);
     }
 }
 
@@ -177,58 +159,6 @@ bool centerlineFrameForTangent(QVector3D tangent, QVector3D& u, QVector3D& v) {
     v.normalize();
 
     return true;
-}
-
-std::vector<QVector3D> centerlinePointsForLine(const SegmentBase& segment) {
-    return {segment.start().toQVector3D(), segment.end().toQVector3D()};
-}
-
-std::vector<QVector3D> centerlinePointsForArc(const ArcSegment& arc) {
-    const Point start   = arc.start();
-    const Point center  = arc.center();
-    const Point end     = arc.end();
-    const double radius = std::hypot(start.x() - center.x(), start.y() - center.y());
-    const double sweep  = arc.angle()();
-
-    if (!std::isfinite(radius) || !std::isfinite(sweep) || radius <= kVectorEpsilon || sweep <= kVectorEpsilon) {
-        return centerlinePointsForLine(arc);
-    }
-
-    const int segment_count   = std::max(1, static_cast<int>(std::ceil(sweep / kCenterlineArcSegmentAngle)));
-    const double start_angle  = std::atan2(start.y() - center.y(), start.x() - center.x());
-    const double signed_sweep = arc.counterclockwise() ? sweep : -sweep;
-    const double z_delta      = end.z() - start.z();
-
-    std::vector<QVector3D> points;
-    points.reserve(static_cast<std::size_t>(segment_count) + 1);
-    points.push_back(start.toQVector3D());
-    for (int i = 1; i < segment_count; ++i) {
-        const double t     = static_cast<double>(i) / static_cast<double>(segment_count);
-        const double angle = start_angle + (signed_sweep * t);
-        points.push_back(QVector3D(center.x() + (radius * std::cos(angle)), center.y() + (radius * std::sin(angle)),
-                                   start.z() + (z_delta * t)));
-    }
-    points.push_back(end.toQVector3D());
-
-    return points;
-}
-
-std::vector<QVector3D> centerlinePointsForBezier(BezierSegment& curve) {
-    std::vector<QVector3D> points;
-    points.reserve(static_cast<std::size_t>(kCenterlineCurveSegments) + 1);
-    for (int i = 0; i <= kCenterlineCurveSegments; ++i) {
-        const double t = static_cast<double>(i) / static_cast<double>(kCenterlineCurveSegments);
-        points.push_back(curve.getPointAlong(t).toQVector3D());
-    }
-
-    return points;
-}
-
-std::vector<QVector3D> centerlinePointsForSegment(const QSharedPointer<SegmentBase>& segment) {
-    if (auto* arc = dynamic_cast<ArcSegment*>(segment.data())) { return centerlinePointsForArc(*arc); }
-    if (auto* bezier = dynamic_cast<BezierSegment*>(segment.data())) { return centerlinePointsForBezier(*bezier); }
-
-    return centerlinePointsForLine(*segment);
 }
 
 void appendCenterlineTube(std::vector<AsPrintedModelExporter::Triangle>& triangles,
@@ -286,7 +216,7 @@ void appendCenterlineSegment(std::vector<AsPrintedModelExporter::Triangle>& tria
     const float radius = static_cast<float>(options.centerline_diameter() * Constants::OpenGL::kObjectToView / 2.0);
     if (!std::isfinite(radius) || radius <= kVectorEpsilon) { return; }
 
-    appendCenterlineTube(triangles, centerlinePointsForSegment(segment), radius, output_scale);
+    appendCenterlineTube(triangles, GCodeSegmentFilter::segmentCenterlinePoints(segment), radius, output_scale);
 }
 
 void normalizeToLocalOrigin(std::vector<AsPrintedModelExporter::Triangle>& triangles) {
@@ -402,6 +332,25 @@ std::vector<AsPrintedModelExporter::Triangle> AsPrintedModelExporter::generateTr
     const float output_scale = viewToOutputScale(options.output_unit);
     const bool blend_corners = options.blend_corners && options.geometry_mode == GeometryMode::kTrueBeadWidths;
 
+    bool use_external_set = false;
+    QSet<const SegmentBase*> external_segments;
+    if (options.external_only) {
+        bool has_internal_flag = false;
+        for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
+            for (const QSharedPointer<SegmentBase>& segment : layer) {
+                if (segment && static_cast<bool>(segment->displayType() & SegmentDisplayType::kInternal)) {
+                    has_internal_flag = true;
+                    break;
+                }
+            }
+            if (has_internal_flag) { break; }
+        }
+        if (!has_internal_flag) {
+            external_segments = GCodeSegmentFilter::externalSegments(gcode);
+            use_external_set  = true;
+        }
+    }
+
     for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
         QVector<QSharedPointer<SegmentBase>> connected_segments;
 
@@ -411,13 +360,17 @@ std::vector<AsPrintedModelExporter::Triangle> AsPrintedModelExporter::generateTr
         };
 
         for (const QSharedPointer<SegmentBase>& segment : layer) {
-            if (!shouldExportSegment(segment, options)) {
+            if (!shouldExportSegment(segment, options) ||
+                (use_external_set &&
+                 !static_cast<bool>(segment->displayType() &
+                                    (SegmentDisplayType::kTravel | SegmentDisplayType::kSupport)) &&
+                 !external_segments.contains(segment.data()))) {
                 if (blend_corners) { flushConnectedSegments(); }
                 continue;
             }
 
             if (blend_corners && !connected_segments.isEmpty() &&
-                !pointsConnected(connected_segments.back()->end(), segment->start())) {
+                !GCodeSegmentFilter::pointsConnected(connected_segments.back()->end(), segment->start())) {
                 flushConnectedSegments();
             }
 
@@ -430,10 +383,9 @@ std::vector<AsPrintedModelExporter::Triangle> AsPrintedModelExporter::generateTr
                 const std::size_t end = vertices.size();
 
                 for (std::size_t i = start; i + 8 < end; i += 9) {
-                    triangles.push_back(
-                        {viewToOutput(QVector3D(vertices[i + 0], vertices[i + 1], vertices[i + 2]), output_scale),
-                         viewToOutput(QVector3D(vertices[i + 3], vertices[i + 4], vertices[i + 5]), output_scale),
-                         viewToOutput(QVector3D(vertices[i + 6], vertices[i + 7], vertices[i + 8]), output_scale)});
+                    appendOutputTriangle(triangles, QVector3D(vertices[i + 0], vertices[i + 1], vertices[i + 2]),
+                                         QVector3D(vertices[i + 3], vertices[i + 4], vertices[i + 5]),
+                                         QVector3D(vertices[i + 6], vertices[i + 7], vertices[i + 8]), output_scale);
                 }
             }
 
@@ -463,12 +415,14 @@ bool AsPrintedModelExporter::writeStl(const QString& path, const QVector<QVector
 
 bool AsPrintedModelExporter::shouldExportSegment(const QSharedPointer<SegmentBase>& segment, const Options& options) {
     if (segment.isNull()) { return false; }
-    if (isDegenerateSegment(segment)) { return false; }
+    if (GCodeSegmentFilter::isDegenerateLine(segment)) { return false; }
+    if (GCodeSegmentFilter::isNonBuildModifierSegment(segment)) { return false; }
 
     const SegmentDisplayType type = segment->displayType();
     if (!options.include_travel && static_cast<bool>(type & SegmentDisplayType::kTravel)) { return false; }
     if (!options.include_support && static_cast<bool>(type & SegmentDisplayType::kSupport)) { return false; }
     if (!segment->depositionActive() && !static_cast<bool>(type & SegmentDisplayType::kTravel)) { return false; }
+    if (options.external_only && static_cast<bool>(type & SegmentDisplayType::kInternal)) { return false; }
 
     return true;
 }
