@@ -34,10 +34,13 @@ void GCodeAML3DSaver::run() {
         4);
     zval = QString::number(
         GSM->getGlobal()->setting<Distance>(PRS::Dimensions::kZMax).to(m_selected_meta.m_distance_unit), 'f', 4);
-    feedrate    = QString::number(0);
-    layerNum    = 0;
-    pointNum    = 0;
-    weaveLength = QString::number(
+    const QRegularExpression layer_marker("BEGINNING LAYER:\\s*(\\d+)");
+    const auto first_layer  = layer_marker.match(m_text);
+    bool first_layer_marker = true;
+    feedrate                = QString::number(0);
+    layerNum                = first_layer.hasMatch() ? first_layer.captured(1).toInt() : 1;
+    pointNum                = 0;
+    weaveLength             = QString::number(
         GSM->getGlobal()->setting<Distance>(ES::FileOutput::kAML3DWeaveLength).to(m_selected_meta.m_distance_unit), 'f',
         4);
     weaveWidth = QString::number(
@@ -49,7 +52,6 @@ void GCodeAML3DSaver::run() {
     // While loop should always evaluate true, but need a way to contain the file operations
     // so that multiple files can be opened, written to, and closed within the parsing of the g-code lines
     while (!(lines.isEmpty())) {
-        layerNum++;
         beadNum = 0;
 
         QFile tempFile(m_temp_location % "temp");
@@ -81,10 +83,14 @@ void GCodeAML3DSaver::run() {
             start++;
 
             // The BEGINNING LAYER string denotes the start of a new layer which means we need a new file
-            if (lines[i].contains("BEGINNING LAYER")) {
-                // Ignore the start of the first layer
-                if (lines[i].contains("(BEGINNING LAYER: 1)")) { continue; }
-
+            const auto layer = layer_marker.match(lines[i]);
+            if (layer.hasMatch()) {
+                layerNum = layer.captured(1).toInt();
+                // The first marker belongs to the file already being written.
+                if (first_layer_marker) {
+                    first_layer_marker = false;
+                    continue;
+                }
                 break;
             }
             // M30 signals the end of the G-Code file

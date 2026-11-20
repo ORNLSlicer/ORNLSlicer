@@ -1,5 +1,11 @@
 #include "widgets/settings/setting_bar.h"
 
+#include <QAbstractSpinBox>
+#include <QLineEdit>
+#include <QPointer>
+#include <QScopedValueRollback>
+#include <QSignalBlocker>
+#include <QTimer>
 #include <algorithm>
 
 #include <qabstractitemview.h>
@@ -14,7 +20,6 @@
 #include <qlistview.h>
 #include <qnamespace.h>
 #include <qobject.h>
-#include <qoverload.h>
 #include <qsharedpointer.h>
 #include <qsizepolicy.h>
 #include <qtabwidget.h>
@@ -106,6 +111,7 @@ SettingTab* SettingBar::getTab(QString major, QString minor) {
 }
 
 void SettingBar::filter(QString str) {
+    if (!m_navigation_row.isNull() && str != m_navigation_search) clearNavigationFocus();
     // If the string is empty, ensure all tabs can be seen.
     if (str.isEmpty()) {
         for (SettingPane* cur_pane : m_panes) {
@@ -127,7 +133,7 @@ void SettingBar::filter(QString str) {
             bool minor_hidden = true;
             for (QSharedPointer<SettingRowBase> cur_row : cur_tab->getRows()) {
                 // Check if the current row's label matches.
-                if (cur_row->getLabelText().contains(str, Qt::CaseInsensitive)) {
+                if (cur_row->getSearchText().contains(str, Qt::CaseInsensitive)) {
                     cur_row->show();
                     if (cur_row->isShown()) {
                         minor_hidden = false;
@@ -138,6 +144,7 @@ void SettingBar::filter(QString str) {
                     cur_row->hide();
             }
 
+            cur_tab->refreshGroupVisibility(true);
             // If none of the rows are shown, hide the tab.
             if (minor_hidden)
                 cur_tab->hide();
@@ -157,6 +164,8 @@ void SettingBar::filter(QString str) {
 
 void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases,
                                        QList<QSharedPointer<SettingsBase>> inherited_bases) {
+    QScopedValueRollback<bool> restoring(m_restoring_settings, true);
+    clearNavigationFocus();
     auto settings_bases                 = name_and_bases.second;
     m_selected_settings_bases           = settings_bases;
     m_selected_inherited_settings_bases = inherited_bases;
@@ -231,7 +240,43 @@ void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<Setti
 
     refreshDependencyVisibility();
     this->blockSignals(false);
+    refreshOverrideIndicators();
     emitSelectedVisualizationSettings();
+}
+
+void SettingBar::refreshOverrideIndicators() {
+    if (m_suppress_dynamic_dependency_refresh || m_override_indicators_suspended) return;
+
+    QSet<QString> part_keys;
+    QSet<QString> layer_keys;
+    const auto global            = GSM->getGlobal();
+    const fifojson& master       = GSM->getMaster()->json();
+    const auto collect_overrides = [&](const QSharedPointer<SettingsBase>& settings, QSet<QString>& overridden_keys) {
+        if (settings->json().empty()) return;
+        for (const auto& entry : settings->json().at(0).items()) {
+            const QString key = QString::fromStdString(entry.key());
+            if (global->contains(key)) {
+                if (entry.value() != global->setting<fifojson>(key)) overridden_keys.insert(key);
+            }
+            else if (master.contains(entry.key()) &&
+                     entry.value() != master.at(entry.key()).at(Constants::Settings::Master::kDefault)) {
+                overridden_keys.insert(key);
+            }
+        }
+    };
+
+    for (const auto& part : CSM->parts()) {
+        collect_overrides(part->getSb(), part_keys);
+        for (const auto& range : part->getSettingsRanges()) collect_overrides(range->getSb(), layer_keys);
+    }
+    for (SettingPane* pane : m_panes)
+        for (SettingTab* tab : pane->getTabs())
+            for (const auto& row : tab->getRows()) row->setOverriddenKeys(part_keys, layer_keys);
+}
+
+void SettingBar::setOverrideIndicatorsSuspended(bool suspended) {
+    m_override_indicators_suspended = suspended;
+    if (!suspended) refreshOverrideIndicators();
 }
 
 void SettingBar::closeAll() {
@@ -293,18 +338,39 @@ void SettingBar::updateSettingBasePopupHeight() {
 // change selected settings base
 void SettingBar::updateSettings(QString text) {
     if (text != "") {
-        GSM->removeCurrentSettings(paneMapping[m_tab_widget->currentIndex()],
-                                   mostRecentSetting[paneMapping[m_tab_widget->currentIndex()]]);
-        GSM->constructActiveGlobal(paneMapping[m_tab_widget->currentIndex()], text);
+        QStringList categories {paneMapping[m_tab_widget->currentIndex()]};
+        const auto all_globals = GSM->getAllGlobals();
+        if (PreferencesManager::getInstance()->getPromptSettingsForAllCategoriesPreference()) {
+            QStringList available_categories;
+            for (auto it = all_globals.cbegin(); it != all_globals.cend(); ++it)
+                if (it.value().contains(text)) available_categories.append(it.key());
+
+            if (available_categories.size() > 1 &&
+                QMessageBox::question(this, "Apply Settings File",
+                                      QString("Apply \"%1\" to all categories in this file (%2)?\n\n"
+                                              "Choose No to update only %3.")
+                                          .arg(text, available_categories.join(", "), categories.front()),
+                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)
+                categories = available_categories;
+        }
+
+        if (categories.size() == 1 && mostRecentSetting.value(categories.front()) == text) return;
+
+        for (const QString& category : categories) {
+            GSM->removeCurrentSettings(category, mostRecentSetting.value(category));
+            GSM->constructActiveGlobal(category, text);
+            mostRecentSetting[category] = text;
+            CSM->setMostRecentSettingHistory(category, text);
+        }
         {
             DynamicDependencyRefreshBlocker blocker(m_suppress_dynamic_dependency_refresh);
-            for (SettingTab* tab : m_panes[paneMapping[m_tab_widget->currentIndex()]]->getTabs()) {
-                tab->setSettingBase(GSM->getGlobal());
-                tab->reload();
+            for (const QString& category : categories) {
+                for (SettingTab* tab : m_panes[category]->getTabs()) {
+                    tab->setSettingBase(GSM->getGlobal());
+                    tab->reload();
+                }
             }
         }
-        mostRecentSetting[paneMapping[m_tab_widget->currentIndex()]] = text;
-        CSM->setMostRecentSettingHistory(paneMapping[m_tab_widget->currentIndex()], text);
         enableDependRows();
         emit settingsBaseChanged(text);
         emitSelectedVisualizationSettings();
@@ -340,6 +406,7 @@ void SettingBar::displayNewSetting(QStringList settingCategories, QString settin
         }
     }
     enableDependRows();
+    refreshOverrideIndicators();
     emitSelectedVisualizationSettings();
 }
 
@@ -542,6 +609,98 @@ void SettingBar::setCurrentFolder(QString path) {
     m_current_folder->setText("Currently searching in: " % path % " for additional setting files");
 }
 
+void SettingBar::clearNavigationFocus() {
+    if (!m_navigation_row.isNull()) m_navigation_row->setNavigationRevealed(false);
+    m_navigation_row.clear();
+    if (m_navigation_hidden_pane != nullptr) {
+        if (PreferencesManager::getInstance()->isSettingHidden(m_panes.key(m_navigation_hidden_pane),
+                                                               m_navigation_hidden_category)) {
+            const QSignalBlocker blocker(m_navigation_hidden_pane);
+            auto* tab = m_navigation_hidden_pane->getTab(m_navigation_hidden_category);
+            m_navigation_hidden_pane->hideTab(m_navigation_hidden_category);
+            tab->shrinkTab();
+            tab->findChild<SettingHeader*>()->hide();
+            tab->hide();
+        }
+        m_navigation_hidden_pane = nullptr;
+    }
+    m_navigation_search.clear();
+}
+
+bool SettingBar::focusSetting(const QString& key) {
+    const fifojson& master = GSM->getMaster()->json();
+    const auto metadata    = master.find(key.toStdString());
+    if (metadata == master.end()) return false;
+    const QString major = metadata->at(Constants::Settings::Master::kMajor).get<QString>();
+    const QString minor = metadata->at(Constants::Settings::Master::kMinor).get<QString>();
+    auto* pane          = m_panes.value(major, nullptr);
+    auto* tab           = pane == nullptr ? nullptr : pane->getTab(minor);
+    const auto row      = tab == nullptr ? QSharedPointer<SettingRowBase>() : tab->getRow(key);
+    if (row.isNull() || (!m_selected_settings_bases.isEmpty() && !row->isLocal())) return false;
+
+    clearNavigationFocus();
+    m_navigation_row    = row;
+    m_navigation_search = row->getSearchText();
+    row->setNavigationRevealed(true);
+    if (PreferencesManager::getInstance()->isSettingHidden(major, minor)) {
+        pane->showTab(minor);
+        m_navigation_hidden_pane     = pane;
+        m_navigation_hidden_category = minor;
+    }
+    {
+        QScopedValueRollback<bool> restoring(m_restoring_settings, true);
+        tab->settingsBasesSelected(m_selected_settings_bases, m_selected_inherited_settings_bases);
+        for (const auto& current_row : tab->getRows()) current_row->checkDependencies();
+    }
+    m_filter_bar->setText(m_navigation_search);
+    filter(m_navigation_search);
+    m_tab_widget->setCurrentWidget(pane);
+    tab->expandTab();
+
+    auto* editor = dynamic_cast<QWidget*>(row.get());
+    auto* scroll = pane->findChild<QScrollArea*>();
+    if (editor == nullptr || scroll == nullptr) return false;
+    int component_index = 0;
+    const auto input    = GSM->getSettingInput(key);
+    if (!input.is_null()) {
+        const auto& components = input.at(Constants::Settings::Input::kComponents);
+        for (std::size_t index = 0; index < components.size(); ++index)
+            if (components.at(index).at(Constants::Settings::Input::kSetting).get<QString>() == key)
+                component_index = static_cast<int>(index);
+    }
+    const auto focus_editor = [this, editor = QPointer<QWidget>(editor), scroll = QPointer<QScrollArea>(scroll),
+                               component_index] {
+        if (editor.isNull() || scroll.isNull() || m_navigation_row.isNull() ||
+            dynamic_cast<QWidget*>(m_navigation_row.get()) != editor.data())
+            return;
+        scroll->ensureWidgetVisible(editor, 20, 40);
+        if (!editor->isEnabled()) return;
+        editor->setFocus(Qt::OtherFocusReason);
+        if (auto* spin = qobject_cast<QAbstractSpinBox*>(editor.data()))
+            spin->selectAll();
+        else if (auto* line = qobject_cast<QLineEdit*>(editor.data()))
+            line->selectAll();
+        else {
+            const auto components = editor->findChildren<QAbstractSpinBox*>(QString(), Qt::FindDirectChildrenOnly);
+            if (component_index < components.size()) {
+                components.at(component_index)->setFocus(Qt::OtherFocusReason);
+                components.at(component_index)->selectAll();
+                return;
+            }
+            for (auto* child : editor->findChildren<QWidget*>()) {
+                if (child->isEnabled() && child->focusPolicy() != Qt::NoFocus) {
+                    child->setFocus(Qt::OtherFocusReason);
+                    if (auto* spin = qobject_cast<QAbstractSpinBox*>(child)) spin->selectAll();
+                    break;
+                }
+            }
+        }
+    };
+    focus_editor();
+    QTimer::singleShot(0, this, focus_editor);
+    return true;
+}
+
 void SettingBar::setupStyle() {
     m_accentColor = PreferencesManager::getInstance()->getTheme().getDotPairedColor().name();
     m_current_editing->setText("Currently editing <font color=\"" % m_accentColor % "\">global</font> settings");
@@ -627,14 +786,19 @@ void SettingBar::setupGlobalSettings() {
 }
 
 void SettingBar::setupEvents() {
+    connect(this, &SettingBar::settingModified, this, &SettingBar::refreshOverrideIndicators);
+    connect(this, &SettingBar::settingsBaseChanged, this, &SettingBar::refreshOverrideIndicators);
+    connect(CSM.get(), &SessionManager::partAdded, this, &SettingBar::refreshOverrideIndicators, Qt::QueuedConnection);
+    connect(CSM.get(), &SessionManager::partRemoved, this, &SettingBar::refreshOverrideIndicators);
+    connect(CSM.get(), &SessionManager::partsCleared, this, &SettingBar::refreshOverrideIndicators);
     connect(m_filter_bar, &QLineEdit::textChanged, this, &SettingBar::filter);
     connect(m_tab_widget, &QTabWidget::currentChanged, this, &SettingBar::updateDisplayedLists);
-    connect(m_combo_box, QOverload<const QString&>::of(&QComboBox::currentTextChanged), this,
-            &SettingBar::updateSettings);
+    connect(m_combo_box, &QComboBox::textActivated, this, &SettingBar::updateSettings);
     connect(PreferencesManager::getInstance().get(), &PreferencesManager::anyUnitChanged, this,
             &SettingBar::reloadRowsForUnitChange);
     connect(PreferencesManager::getInstance().get(), &PreferencesManager::disabledSettingVisibilityChanged, this,
             &SettingBar::enableDependRows);
+    refreshOverrideIndicators();
 }
 
 // this function iterates through each tab of each pane, and make those rows enabled/disabled
@@ -645,13 +809,16 @@ void SettingBar::enableDependRows() {
     for (SettingPane* curr_pane : m_panes) {
         for (SettingTab* curr_tab : curr_pane->getTabs()) {
             for (QSharedPointer<SettingRowBase> row : curr_tab->getRows()) {
+                fifojson visible_if = row->getVisibilityDependencies();
+                DependencyNode visibility_root;
+                if (!visible_if.empty()) visibility_root = createNodes(master_json, row, visible_if);
+                row->setVisibilityLogic(visibility_root);
                 fifojson depends = row->getDependencies();
                 if (depends != "") {
                     DependencyNode root = createNodes(master_json, row, depends);
                     row->setDependencyLogic(root);
-                    row->checkDependencies();
                 }
-                else { row->checkDynamicDependencies(); }
+                row->checkDependencies();
             }
         }
     }
@@ -671,6 +838,7 @@ void SettingBar::refreshDependencyVisibility() {
         bool pane_has_visible_tab      = false;
 
         for (SettingTab* cur_tab : cur_pane->getTabs()) {
+            cur_tab->refreshGroupVisibility();
             if (hidden_settings.contains(cur_tab->getName())) { continue; }
 
             if (cur_tab->hasShownRows()) {

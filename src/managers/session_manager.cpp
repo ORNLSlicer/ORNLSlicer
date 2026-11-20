@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QStandardPaths>
 #include <cstdlib>
+#include <stdexcept>
 #include <string>
 
 #include <qcontainerfwd.h>
@@ -250,6 +251,11 @@ bool SessionManager::loadModel(QString filename, bool saveLocation, MeshType mt,
     return true;
 }
 
+QMap<QString, QSharedPointer<Part>> SessionManager::partsSnapshot() {
+    const QMutexLocker lock(&m_load_mutex);
+    return m_parts;
+}
+
 void SessionManager::addPart(QSharedPointer<Part> new_part, bool notify) {
     m_load_mutex.lock();
 
@@ -443,13 +449,23 @@ fifojson SessionManager::partsJson() const {
     for (QSharedPointer<Part> curr_part : m_parts) {
         fifojson part_json = fifojson::object();
 
-        part_json[Constants::Settings::Session::kFile]         = curr_part->rootMesh()->path().split("/").back();
-        part_json[Constants::Settings::Session::kMeshType]     = static_cast<int>(curr_part->rootMesh()->type());
-        part_json[Constants::Settings::Session::kGenType]      = static_cast<int>(curr_part->rootMesh()->genType());
-        part_json[Constants::Settings::Session::kOrgDims]["x"] = curr_part->rootMesh()->originalDimensions().x;
-        part_json[Constants::Settings::Session::kOrgDims]["y"] = curr_part->rootMesh()->originalDimensions().y;
-        part_json[Constants::Settings::Session::kOrgDims]["z"] = curr_part->rootMesh()->originalDimensions().z;
-        part_json[Constants::Settings::Session::kTransforms]   = curr_part->rootMesh()->transformations();
+        part_json[Constants::Settings::Session::kFile]             = curr_part->rootMesh()->path().split("/").back();
+        part_json[Constants::Settings::Session::kMeshType]         = static_cast<int>(curr_part->rootMesh()->type());
+        part_json[Constants::Settings::Session::kModifierEnabled]  = curr_part->modifierEnabled();
+        part_json[Constants::Settings::Session::kGenType]          = static_cast<int>(curr_part->rootMesh()->genType());
+        part_json[Constants::Settings::Session::kOrgDims]["x"]     = curr_part->rootMesh()->originalDimensions().x;
+        part_json[Constants::Settings::Session::kOrgDims]["y"]     = curr_part->rootMesh()->originalDimensions().y;
+        part_json[Constants::Settings::Session::kOrgDims]["z"]     = curr_part->rootMesh()->originalDimensions().z;
+        part_json[Constants::Settings::Session::kTransforms]       = curr_part->rootMesh()->transformations();
+        part_json[Constants::Settings::Session::kTransform]        = curr_part->rootMesh()->transformation();
+        part_json[Constants::Settings::Session::kAlignedTransform] = curr_part->rootMesh()->alignmentTransformation();
+        const auto source_dims                                     = curr_part->rootMesh()->sourceDimensions();
+        part_json[Constants::Settings::Session::kSourceDims]["x"]  = source_dims.x;
+        part_json[Constants::Settings::Session::kSourceDims]["y"]  = source_dims.y;
+        part_json[Constants::Settings::Session::kSourceDims]["z"]  = source_dims.z;
+        if (!curr_part->parent().isNull()) {
+            part_json[Constants::Settings::Session::kParent] = curr_part->parent()->name();
+        }
 
         session_json[Constants::Settings::Session::kParts][curr_part->name().toStdString()] = part_json;
     }
@@ -458,34 +474,46 @@ fifojson SessionManager::partsJson() const {
 }
 
 bool SessionManager::loadPartsJson(fifojson j) {
-    int totalParts = 0;
-    for (auto it : j[Constants::Settings::Session::kParts].items()) { ++totalParts; }
-
-    emit totalPartsInProject(totalParts);
-
+    QMap<QString, QSharedPointer<Part>> loaded_parts;
+    QList<QSharedPointer<Part>> loaded_objects;
     for (auto it : j[Constants::Settings::Session::kParts].items()) {
         // Get mesh information
         QString name               = QString::fromStdString(it.key());
         MeshType mesh_type         = it.value()[Constants::Settings::Session::kMeshType];
         MeshGeneratorType gen_type = it.value()[Constants::Settings::Session::kGenType];
-        Distance3D org_dims(it.value()[Constants::Settings::Session::kOrgDims]["x"],
-                            it.value()[Constants::Settings::Session::kOrgDims]["y"],
-                            it.value()[Constants::Settings::Session::kOrgDims]["z"]);
+        const auto& dims           = it.value().contains(Constants::Settings::Session::kSourceDims)
+                                         ? it.value()[Constants::Settings::Session::kSourceDims]
+                                         : it.value()[Constants::Settings::Session::kOrgDims];
+        Distance3D org_dims(dims["x"], dims["y"], dims["z"]);
         auto mtrxesArray = it.value()[Constants::Settings::Session::kTransforms];
 
-        int transformCount = 1;
         QVector<QMatrix4x4> mtrxes;
         if (mtrxesArray.size() == 0) {
             QMatrix4x4 mtrx = it.value()[Constants::Settings::Session::kTransform];
             mtrxes.append(mtrx);
         }
         else {
-            transformCount = (int)mtrxesArray.size();
-            for (auto i = 0; i < transformCount; i++) {
-                QMatrix4x4 mx = mtrxesArray[i];
+            for (const auto& matrix : mtrxesArray) {
+                QMatrix4x4 mx = matrix;
                 mtrxes.append(mx);
             }
         }
+
+        auto add_loaded_part = [&](QSharedPointer<MeshBase> mesh) {
+            if (it.value().contains(Constants::Settings::Session::kAlignedTransform)) {
+                QMatrix4x4 aligned = it.value()[Constants::Settings::Session::kAlignedTransform];
+                QMatrix4x4 current = it.value()[Constants::Settings::Session::kTransform];
+                mesh->restoreTransformation(aligned, current, mtrxes);
+            }
+            else { mesh->setTransformations(mtrxes); }
+            mesh->setType(mesh_type);
+            mesh->setName(name);
+            auto part = QSharedPointer<Part>::create(mesh, QString(), mesh_type);
+            part->setModifierEnabled(it.value().value(Constants::Settings::Session::kModifierEnabled, true));
+            addPart(part, false);
+            if (!loaded_parts.contains(name)) loaded_parts[name] = part;
+            loaded_objects.append(part);
+        };
 
         switch (gen_type) {
             case kNone:  // Not generated, so load from file
@@ -497,69 +525,63 @@ bool SessionManager::loadPartsJson(fifojson j) {
                     auto data = m_models.value(filename);
                     auto meshes =
                         MeshLoader::LoadMeshes(filename, mesh_type, mtrxes[0], Distance(mm), data.model, data.size);
-                    for (auto mesh_data : meshes) {
-                        mesh_data.mesh->setTransformations(mtrxes);
-
-                        mesh_data.mesh->setName(name);
-                        addPart(mesh_data.mesh);
-                    }
+                    for (auto mesh_data : meshes) { add_loaded_part(mesh_data.mesh); }
                 }
                 break;
             }
             case kRectangularBox: {
-                auto mesh =
-                    QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(org_dims.x, org_dims.y, org_dims.z));
-                mesh->setTransformations(mtrxes);
-                mesh->setType(mesh_type);
-                mesh->setName(name);
-                CSM->addPart(mesh);
+                add_loaded_part(
+                    QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(org_dims.x, org_dims.y, org_dims.z)));
                 break;
             }
             case kTriangularPyramid: {
-                auto mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateTriaglePyramidMesh(org_dims.y));
-                mesh->setTransformations(mtrxes);
-                mesh->setType(mesh_type);
-                mesh->setName(name);
-                CSM->addPart(mesh);
+                add_loaded_part(QSharedPointer<ClosedMesh>::create(MeshFactory::CreateTriaglePyramidMesh(org_dims.y)));
                 break;
             }
             case kHexagonalPrism: {
-                auto mesh = QSharedPointer<ClosedMesh>::create(
-                    MeshFactory::CreateHexagonalPrismMesh(org_dims.x / 2.0, org_dims.z));
-                mesh->setTransformations(mtrxes);
-                mesh->setType(mesh_type);
-                mesh->setName(name);
-                CSM->addPart(mesh);
+                add_loaded_part(QSharedPointer<ClosedMesh>::create(
+                    MeshFactory::CreateHexagonalPrismMesh(org_dims.x / 2.0, org_dims.z)));
                 break;
             }
             case kCylinder: {
-                auto mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(org_dims.y, org_dims.z));
-                mesh->setTransformations(mtrxes);
-                mesh->setType(mesh_type);
-                mesh->setName(name);
-                CSM->addPart(mesh);
+                add_loaded_part(
+                    QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(org_dims.y, org_dims.z)));
                 break;
             }
             case kCone: {
-                auto mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateConeMesh(org_dims.y, org_dims.z));
-                mesh->setTransformations(mtrxes);
-                mesh->setType(mesh_type);
-                mesh->setName(name);
-                CSM->addPart(mesh);
+                add_loaded_part(
+                    QSharedPointer<ClosedMesh>::create(MeshFactory::CreateConeMesh(org_dims.y, org_dims.z)));
                 break;
             }
             case kOpenTopBox:
             case kDefaultSettingRegion: {
-                auto mesh = QSharedPointer<OpenMesh>::create(
-                    MeshFactory::CreateOpenTopBoxMesh(org_dims.x, org_dims.y, org_dims.z));
-                mesh->setTransformations(mtrxes);
-                mesh->setType(mesh_type);
-                mesh->setName(name);
-                CSM->addPart(mesh);
+                add_loaded_part(QSharedPointer<OpenMesh>::create(
+                    MeshFactory::CreateOpenTopBoxMesh(org_dims.x, org_dims.y, org_dims.z)));
                 break;
             }
         };
     }
+
+    // Resolve names within this import after all parts exist, including any names changed to avoid collisions.
+    for (auto it : j[Constants::Settings::Session::kParts].items()) {
+        auto part        = loaded_parts.value(QString::fromStdString(it.key()));
+        auto parent_name = it.value().find(Constants::Settings::Session::kParent);
+        if (part.isNull() || parent_name == it.value().end() || !parent_name->is_string()) continue;
+        auto parent = loaded_parts.value(QString::fromStdString(parent_name->get<std::string>()));
+        if (parent.isNull()) continue;
+
+        auto ancestor = parent;
+        while (!ancestor.isNull() && ancestor != part) { ancestor = ancestor->parent(); }
+        if (ancestor == part) continue;
+        parent->adoptChild(part);
+    }
+
+    QList<QSharedPointer<Part>> root_parts;
+    for (auto part : loaded_objects) {
+        if (part->parent().isNull()) root_parts.append(part);
+    }
+    emit totalPartsInProject(root_parts.size());
+    for (auto part : root_parts) emit partAdded(part);
 
     return true;
 }
@@ -573,6 +595,14 @@ bool SessionManager::isBuildMode() {
 }
 
 bool SessionManager::doSlice() {
+    try {
+        WriterBase::layerNumber(GSM->getGlobal(), 0);
+    } catch (const std::invalid_argument& error) {
+        const QString message = QString::fromUtf8(error.what());
+        Diagnostics::logLine(message);
+        emit forwardStatusUpdate(message);
+        return false;
+    }
     const GcodeSyntax syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
     const SlicingMode type   = static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode));
     if (type == SlicingMode::kCylindrical && !supportsCylindricalSlicing(syntax)) {
@@ -580,6 +610,36 @@ bool SessionManager::doSlice() {
         qWarning() << message;
         emit forwardStatusUpdate(message);
         return false;
+    }
+
+    if (type == SlicingMode::kCylindrical &&
+        GSM->getGlobal()->setting<CylindricalPathPattern>(PS::Slicing::kCylindricalPathPattern) ==
+            CylindricalPathPattern::kHelical) {
+        QList<QSharedPointer<SettingsBase>> settings_to_check {GSM->getGlobal()};
+        for (const auto& part : m_parts) {
+            if (part->getMeshType() != MeshType::kBuild) continue;
+            auto settings = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
+            settings->populate(part->getSb());
+            settings_to_check.append(settings);
+        }
+        for (const auto& settings : settings_to_check) {
+            const QList<QPair<QString, bool>> speeds {
+                {PS::Perimeter::kSpeed, settings->setting<int>(PS::Helical::kHelicalPerimeterRevolutions) > 0},
+                {PS::Inset::kSpeed, settings->setting<int>(PS::Helical::kHelicalInsetRevolutions) > 0},
+                {PS::Infill::kSpeed, true}};
+            for (const auto& [key, enabled] : speeds) {
+                if (!enabled || settings->setting<Velocity>(key) > 0) continue;
+                const QString display = QString::fromStdString(GSM->getMaster()
+                                                                   ->json()
+                                                                   .at(key.toStdString())
+                                                                   .at(Constants::Settings::Master::kDisplay)
+                                                                   .get<std::string>());
+                const QString message = display + " must be greater than zero for Helical slicing.";
+                Diagnostics::logLine(message);
+                emit forwardStatusUpdate(message);
+                return false;
+            }
+        }
     }
 
     // check current syntax for file suffix that needs to be output
@@ -603,6 +663,14 @@ bool SessionManager::doSlice() {
     emit startSlice();
 
     return true;
+}
+
+QVector<GcodeLayer> SessionManager::layerPrograms() const {
+    return m_ast ? m_ast->layerPrograms() : QVector<GcodeLayer>();
+}
+
+bool SessionManager::requiresWeldScheduleFile() const {
+    return m_ast && m_ast->requiresWeldScheduleFile();
 }
 
 bool SessionManager::sliceComplete() {
@@ -682,6 +750,8 @@ bool SessionManager::changeSlicer(SlicingMode type) {
     connect(m_ast.get(), &AbstractSlicingThread::statusUpdate, this, &SessionManager::forwardDialogUpdate);
     connect(m_ast.get(), &AbstractSlicingThread::statusMessage, this, &SessionManager::forwardStatusUpdate);
     connect(m_ast.get(), &AbstractSlicingThread::sliceComplete, this, &SessionManager::sliceComplete);
+    connect(m_ast.get(), &AbstractSlicingThread::sliceFailed, this, &SessionManager::sliceFailed);
+    connect(m_ast.get(), &AbstractSlicingThread::sliceFailed, this, &SessionManager::forwardStatusUpdate);
     return true;
 }
 

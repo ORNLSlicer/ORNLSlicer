@@ -169,7 +169,7 @@ QString RepRapWriter::writeBeforePathRegionTransition(RegionType type) {
 QString RepRapWriter::writeLayerChange(uint layer_number) {
     QString rv;
 
-    rv += commentLine(QString("BEGINNING LAYER: ") % QString::number(layer_number + 1));
+    rv += WriterBase::writeLayerChange(layer_number);
 
     // Cooling fan
     if (layer_number >= 2 && m_sb->setting<bool>(MS::Cooling::kEnable))

@@ -8,24 +8,17 @@
 #include "gcode/gcode_layer_export.h"
 
 namespace ORNL {
-GCodeLayerSaver::GCodeLayerSaver(QString path, QString part_name, QString text, QString comment_starting_delimiter,
-                                 QString suffix)
-    : m_path(path),
-      m_part_name(part_name),
-      m_text(text),
-      m_comment_starting_delimiter(comment_starting_delimiter),
-      m_suffix(suffix) {}
+GCodeLayerSaver::GCodeLayerSaver(QString path, QString part_name, QVector<GcodeLayer> layers, QString suffix)
+    : m_path(path), m_part_name(part_name), m_layers(std::move(layers)), m_suffix(suffix) {}
 
 void GCodeLayerSaver::run() {
-    QString error;
-    const QVector<GcodeLayer> layers = splitGcodeIntoLayers(m_text, m_comment_starting_delimiter, &error);
-    if (layers.isEmpty()) {
-        emit completed(error);
+    if (m_layers.isEmpty()) {
+        emit completed("No standalone layer programs available. Enable Individual Layer Export and re-slice.");
         return;
     }
 
     QSet<QString> exported_layer_file_names;
-    for (const GcodeLayer& layer : layers) {
+    for (const GcodeLayer& layer : m_layers) {
         const QString layer_base_name = m_part_name + "_layer_" + QString::number(layer.number) + m_suffix;
         const QString layer_file_name = QDir(m_path).filePath(layer_base_name);
         if (QFile::exists(layer_file_name)) { QFile::remove(layer_file_name); }

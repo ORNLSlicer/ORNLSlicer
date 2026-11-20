@@ -1,8 +1,12 @@
 
 #include "threading/slicers/planar_slicer.h"
 
+#include <limits>
+
 #include <QtCore/QDir>
+#include <QtCore/QPointF>
 #include <QtCore/QSharedPointer>
+#include <boost/polygon/polygon.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <qcontainerfwd.h>
 #include <qdebug.h>
@@ -42,16 +46,12 @@ PlanarSlicer::PlanarSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation
 
 void PlanarSlicer::preProcess(nlohmann::json opt_data) {
     Preprocessor pp(false, true);
+    QString settings_conflict;
 
     pp.addInitialProcessing(
         [this](const Preprocessor::Parts& parts, const QSharedPointer<SettingsBase>& global_settings) {
             // Alter settings
             global_settings->makeGlobalAdjustments();
-
-            // Check for overlaps of settings parts and prevent them
-            if (SlicingUtilities::doPartsOverlap(parts.settings_parts, Plane(Point(1, 1, 1), QVector3D(0, 0, 1)))) {
-                return true;  // Cancel Slicing
-            }
 
             return false;  // No error, so continune slicing
         });
@@ -65,16 +65,35 @@ void PlanarSlicer::preProcess(nlohmann::json opt_data) {
         return false;
     });
 
-    pp.addMeshProcessing([this](QSharedPointer<MeshBase> mesh, QSharedPointer<SettingsBase> part_sb) {
-        // Clip meshes
-        auto clipping_meshes = SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
-        SlicingUtilities::ClipMesh(mesh, clipping_meshes);
+    pp.addMeshProcessing(
+        [this](QSharedPointer<MeshBase> mesh, QSharedPointer<SettingsBase> part_sb, QSharedPointer<Part> part) {
+            // Clip meshes
+            auto clipping_meshes = SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping, part);
+            SlicingUtilities::ClipMesh(mesh, clipping_meshes);
 
-        return false;  // No error, so continune slicing
-    });
+            return false;  // No error, so continune slicing
+        });
 
     pp.addStepBuilder(
-        [this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta, Preprocessor::ActivePartMeta& meta) {
+        [&, this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta, Preprocessor::ActivePartMeta& meta) {
+            // Check the actual sliced regions, including all islands and transformed slicing planes.
+            auto& regions = next_layer_meta->settings_polygons;
+            for (int i = 0; i < regions.size(); ++i) {
+                for (int j = i + 1; j < regions.size(); ++j) {
+                    auto overlap = regions[i] & regions[j];
+                    overlap &= next_layer_meta->geometry;
+                    if (!overlap.isEmpty()) {
+                        const auto settings_parts =
+                            SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kSettings, meta.part);
+                        settings_conflict =
+                            QString("Settings meshes \"%1\" and \"%2\" overlap in build object \"%3\" at slice %4.")
+                                .arg(settings_parts[i]->name(), settings_parts[j]->name(), meta.part->name())
+                                .arg(next_layer_meta->number + 1);
+                        return true;
+                    }
+                }
+            }
+
             auto addNewLayer = [this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta,
                                       Preprocessor::ActivePartMeta& meta, QSharedPointer<Layer>& new_layer) {
                 // Save settings
@@ -187,6 +206,10 @@ void PlanarSlicer::preProcess(nlohmann::json opt_data) {
         });
 
     pp.processAll();
+    if (!settings_conflict.isEmpty()) {
+        m_global_layers.clear();
+        failPreProcess(settings_conflict);
+    }
 }
 
 void PlanarSlicer::processSkin(QSharedPointer<Part> part, int part_start, int last_layer_count) {
@@ -403,44 +426,73 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         return result;
     };
 
-    auto makeRectangle = [](double minimum_x, double minimum_y, double maximum_x, double maximum_y) {
-        Polygon rectangle;
-        rectangle << Point(minimum_x, minimum_y) << Point(maximum_x, minimum_y) << Point(maximum_x, maximum_y)
-                  << Point(minimum_x, maximum_y);
-        PolygonList result;
-        result += rectangle;
-        return result;
-    };
-
-    auto isBridgeable = [&makeRectangle](PolygonList component, const PolygonList& model_below, Distance maximum_length,
-                                         Distance anchor_width) {
+    auto isBridgeable = [](const PolygonList& component, const PolygonList& model_below, Distance maximum_length,
+                           Distance anchor_width) {
         if (component.isEmpty() || model_below.isEmpty() || maximum_length <= 0) return false;
 
-        const Point minimum = component.min();
-        const Point maximum = component.max();
-        const double width  = maximum.x() - minimum.x();
-        const double height = maximum.y() - minimum.y();
+        const Point center  = component.boundingRectCenter();
         const double anchor = qMax(anchor_width(), 1.0);
+        // Rotated vertices are clipped on an integer-micron grid.
+        constexpr double tolerance     = 2.0;
+        const PolygonList anchor_model = model_below.offset(Distance(tolerance));
 
-        auto intersectsModel = [&model_below](PolygonList band) {
-            PolygonList model = model_below;
-            return !(model & band).isEmpty();
+        auto anchoredInDirection = [&](double dx, double dy) {
+            double minimum_u = std::numeric_limits<double>::max();
+            double minimum_v = std::numeric_limits<double>::max();
+            double maximum_u = std::numeric_limits<double>::lowest();
+            double maximum_v = std::numeric_limits<double>::lowest();
+            for (const Point& point : component.first()) {
+                const double x = point.x() - center.x();
+                const double y = point.y() - center.y();
+                const double u = x * dx + y * dy;
+                const double v = -x * dy + y * dx;
+                minimum_u      = qMin(minimum_u, u);
+                minimum_v      = qMin(minimum_v, v);
+                maximum_u      = qMax(maximum_u, u);
+                maximum_v      = qMax(maximum_v, v);
+            }
+            if (maximum_u - minimum_u > maximum_length() + tolerance) return false;
+
+            auto toPoint = [&](double u, double v) {
+                return Point(center.x() + u * dx - v * dy, center.y() + u * dy + v * dx);
+            };
+            auto makeBand = [&](double start, double end) {
+                Polygon band;
+                band << toPoint(start, minimum_v) << toPoint(end, minimum_v) << toPoint(end, maximum_v)
+                     << toPoint(start, maximum_v);
+                PolygonList result;
+                result += band;
+                return result;
+            };
+            const PolygonList first = makeBand(minimum_u - anchor, minimum_u);
+            const PolygonList last  = makeBand(maximum_u, maximum_u + anchor);
+            return (first - anchor_model).isEmpty() && (last - anchor_model).isEmpty();
         };
 
-        if (Distance(width) <= maximum_length) {
-            const PolygonList left =
-                makeRectangle(minimum.x() - anchor, minimum.y() - anchor, minimum.x() + anchor, maximum.y() + anchor);
-            const PolygonList right =
-                makeRectangle(maximum.x() - anchor, minimum.y() - anchor, maximum.x() + anchor, maximum.y() + anchor);
-            if (intersectsModel(left) && intersectsModel(right)) return true;
-        }
+        // Require complete opposing anchors in the span's frame, including
+        // diagonal spans. Full transverse coverage retains attached cantilevers.
+        if (anchoredInDirection(1, 0) || anchoredInDirection(0, 1)) return true;
 
-        if (Distance(height) <= maximum_length) {
-            const PolygonList bottom =
-                makeRectangle(minimum.x() - anchor, minimum.y() - anchor, maximum.x() + anchor, minimum.y() + anchor);
-            const PolygonList top =
-                makeRectangle(minimum.x() - anchor, maximum.y() - anchor, maximum.x() + anchor, maximum.y() + anchor);
-            if (intersectsModel(bottom) && intersectsModel(top)) return true;
+        QVector<QPointF> directions {QPointF(1, 0)};
+        const Polygon& outline = component.first();
+        for (int i = 0; i < outline.size(); ++i) {
+            const Point& first  = outline[i];
+            const Point& last   = outline[(i + 1) % outline.size()];
+            const double length = std::hypot(last.x() - first.x(), last.y() - first.y());
+            if (length == 0) continue;
+            const double dx = (last.x() - first.x()) / length;
+            const double dy = (last.y() - first.y()) / length;
+            bool duplicate  = false;
+            for (const QPointF& direction : directions) {
+                if (std::abs(dx * direction.x() + dy * direction.y()) > 1.0 - 1.0e-12 ||
+                    std::abs(dx * direction.y() - dy * direction.x()) > 1.0 - 1.0e-12) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (duplicate) continue;
+            directions.push_back(QPointF(dx, dy));
+            if (anchoredInDirection(dx, dy) || anchoredInDirection(-dy, dx)) return true;
         }
         return false;
     };
@@ -484,7 +536,47 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         if (!supported_from_below.isEmpty() && self_supporting_offset > 0)
             supported_from_below = supported_from_below.offset(self_supporting_offset);
 
-        PolygonList overhang    = model_geometry[upper_index] - supported_from_below;
+        PolygonList overhang        = model_geometry[upper_index] - supported_from_below;
+        PolygonList organic_contact = overhang;
+        if (!overhang.isEmpty() && self_supporting_offset > 0) {
+            // The angle offset classifies overhangs, but leaves only the tips
+            // of sloped contacts. Grow within convex cells so every restored
+            // point has a direct path to its classified contact without crossing
+            // empty space, even when the arms of a contact join elsewhere.
+            namespace BP                  = boost::polygon;
+            const PolygonList unsupported = model_geometry[upper_index] - model_geometry[upper_index - 1];
+            PolygonList restored_overhang;
+            for (const PolygonList& component : unsupported.splitIntoParts(true)) {
+                PolygonList classified_contact = overhang & component;
+                if (classified_contact.isEmpty()) continue;
+                BP::polygon_set_data<ClipperLib2::cInt> footprint;
+                for (int ring = 0; ring < component.size(); ++ring) {
+                    std::vector<BP::point_data<ClipperLib2::cInt>> points;
+                    for (const Point& point : component[ring]) {
+                        const auto integer_point = point.toIntPoint();
+                        points.emplace_back(integer_point.X, integer_point.Y);
+                    }
+                    footprint.insert(BP::polygon_data<ClipperLib2::cInt>(points.begin(), points.end()), ring > 0);
+                }
+                // Both directions reduce artificial barriers introduced by
+                // partitioning, while each individual fill remains convex.
+                for (auto direction : {BP::HORIZONTAL, BP::VERTICAL}) {
+                    std::vector<BP::polygon_data<ClipperLib2::cInt>> cells;
+                    footprint.get_trapezoids(cells, direction);
+                    for (const auto& cell : cells) {
+                        Polygon polygon;
+                        for (const auto& point : cell) polygon += Point(BP::x(point), BP::y(point));
+                        PolygonList contact = classified_contact & polygon;
+                        if (contact.isEmpty()) continue;
+                        contact = contact.offset(self_supporting_offset);
+                        contact &= polygon;
+                        contact &= component;
+                        restored_overhang |= contact;
+                    }
+                }
+            }
+            overhang |= restored_overhang;
+        }
         const Area minimum_area = upper_layer->getSb()->setting<Area>(PS::Support::kMinArea);
         overhang                = removeSmallAreas(overhang, minimum_area);
 
@@ -540,7 +632,15 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
             Angle branch_angle = upper_layer->getSb()->setting<Angle>(PS::Support::kOrganicBranchAngle);
             if (branch_angle <= 0) branch_angle = 25.0 * deg;
 
-            for (PolygonList contact_area : overhang.splitIntoParts(true)) {
+            // Restoring interfaces must not move branch seeds toward model
+            // clearance. If blockers remove every seed of a restored component,
+            // place its branches within the surviving footprint instead.
+            organic_contact |= forced_contact;
+            organic_contact &= overhang;
+            for (const PolygonList& component : overhang.splitIntoParts(true)) {
+                if ((organic_contact & component).isEmpty()) organic_contact |= component;
+            }
+            for (PolygonList contact_area : organic_contact.splitIntoParts(true)) {
                 Point root = contact_area.boundingRectCenter();
                 if (!contact_area.inside(root, true)) root = contact_area.first().first();
 
@@ -574,13 +674,10 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
             continue;
         }
 
-        const Distance xy_distance =
-            max(Distance(0), layers[layer_index]->getSb()->setting<Distance>(PS::Support::kXYDistance));
-        if (!model_geometry[layer_index].isEmpty()) {
-            PolygonList clearance = model_geometry[layer_index];
-            if (xy_distance > 0) clearance = clearance.offset(xy_distance);
-            support_geometry[layer_index] -= clearance;
-        }
+        // Stop projection on the model itself. XY clearance is applied to
+        // each layer below, after projection; clipping it here would erase
+        // demand that can fit farther beneath a sloped surface.
+        support_geometry[layer_index] -= model_geometry[layer_index];
     }
 
     // Organic mode replaces the column envelope with round branches that
@@ -927,6 +1024,7 @@ void PlanarSlicer::postProcess(nlohmann::json opt_data) {
 }
 
 void PlanarSlicer::writeGCode() {
+    if (!m_global_layers.isEmpty()) { WriterBase::layerNumber(GSM->getGlobal(), m_global_layers.size() - 1); }
     QTextStream stream(&m_temp_gcode_output_file);
 
     // for updating status window
@@ -942,13 +1040,8 @@ void PlanarSlicer::writeGCode() {
         g_layer->setDirtyBit(false);
         stream << m_base->writeAfterLayer();
 
-        if (m_syntax != GcodeSyntax::kAdamantine) {
-            auto layer_writer = m_layer_export_setup();
-            const QString standalone =
-                layer_writer->writeStandaloneLayer(current_layer, g_layer->getMinZ(), GSM->getGlobal(),
-                                                   [&]() { return g_layer->writeGCode(layer_writer); });
-            stream << m_base->writeLayerExportProgram(standalone);
-        }
+        prepareLayerExport(current_layer, g_layer->getMinZ(), GSM->getGlobal(),
+                           [&](const QSharedPointer<WriterBase>& writer) { return g_layer->writeGCode(writer); });
 
         emit statusUpdate(StatusUpdateStepType::kGcodeGeneraton, (current_layer + 1) / num_layers * 100);
         ++current_layer;

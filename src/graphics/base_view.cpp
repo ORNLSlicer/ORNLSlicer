@@ -403,8 +403,6 @@ void BaseView::initializeGL() {
     // Required for OpenGL to work
     this->initializeOpenGLFunctions();
 
-    this->setupStyle();  // color background
-
     this->glEnable(GL_CULL_FACE);   // Cull polygons based on winding
     this->glEnable(GL_DEPTH_TEST);  // Depth comparisons so stuff behind other polygons not shown
 
@@ -466,6 +464,8 @@ void BaseView::paintGL() {
     this->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // Always clear color and depth buffer!
+    const auto background = PreferencesManager::getInstance()->getTheme().getBgColor();
+    this->glClearColor(background[0], background[1], background[2], background[3]);
     this->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Always bind shader program
@@ -509,12 +509,7 @@ void BaseView::paintGL() {
 }
 
 void BaseView::setupStyle() {
-    this->glClearColor(PreferencesManager::getInstance()->getTheme().getBgColor()[0],
-                       PreferencesManager::getInstance()->getTheme().getBgColor()[1],
-                       PreferencesManager::getInstance()->getTheme().getBgColor()[2],
-                       PreferencesManager::getInstance()->getTheme().getBgColor()[3]);
-
-    this->glClear(GL_COLOR_CLEAR_VALUE);
+    this->update();
 }
 
 QPointF BaseView::normalizeWidgetPos(QPointF widget_pos) {

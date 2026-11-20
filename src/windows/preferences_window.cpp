@@ -282,7 +282,18 @@ void PreferencesWindow::setupLayout() {
 
     settings_tab_layout->addWidget(new QLabel("Disabled settings:"), 0, 0, Qt::AlignTop);
     settings_tab_layout->addWidget(m_disabled_setting_visibility_combobox, 0, 1, Qt::AlignTop);
-    settings_tab_layout->setRowStretch(1, 1);
+
+    m_prompt_settings_for_all_categories_checkbox = new QCheckBox("Prompt to apply settings files to all categories");
+    m_prompt_settings_for_all_categories_checkbox->setObjectName("prompt_settings_for_all_categories");
+    m_prompt_settings_for_all_categories_checkbox->setChecked(
+        m_preferences_manager->getPromptSettingsForAllCategoriesPreference());
+    m_prompt_settings_for_all_categories_checkbox->setToolTip(
+        "When selecting a settings file, offer to apply it to every category included in that file.");
+    settings_tab_layout->addWidget(m_prompt_settings_for_all_categories_checkbox, 1, 0, 1, 2, Qt::AlignTop);
+    settings_tab_layout->setRowStretch(2, 1);
+
+    connect(m_prompt_settings_for_all_categories_checkbox, &QCheckBox::clicked, m_preferences_manager.get(),
+            &PreferencesManager::setPromptSettingsForAllCategoriesPreference);
 
     connect(m_disabled_setting_visibility_combobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this] {
         PreferencesManager::getInstance()->setDisabledSettingVisibilityPreference(
@@ -570,6 +581,9 @@ void PreferencesWindow::refreshFromPreferences() {
         m_preferences_manager->getGCodeInfoVisibleByDefaultPreference());
     m_warn_unsaved_project_on_close_checkbox->setChecked(
         m_preferences_manager->getWarnUnsavedProjectOnClosePreference());
+
+    m_prompt_settings_for_all_categories_checkbox->setChecked(
+        m_preferences_manager->getPromptSettingsForAllCategoriesPreference());
 
     setPreferenceValue(m_boxes[0], m_preferences_manager->getProjectShiftPreference());
     setPreferenceValue(m_boxes[1], m_preferences_manager->getAlignPreference());

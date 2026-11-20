@@ -7,6 +7,47 @@ Release versions follow the project's
 
 ## Unreleased
 
+### Added
+
+- Added a live Settings Overrides window to inspect, filter, navigate, copy, and export project part and layer overrides, with inherited values and inactive-feature explanations.
+- Added optional Arc Specialties weld schedule generation with collapsible regional forms for gas timing, startup, welding, and crater fill ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
+- Added an optional prompt under Preferences > Settings to apply a selected settings file to all categories it contains; the preference is disabled by default.
+- Added parent assignment, detachment, modifier activation, and undoable hierarchy controls, with an Applies to column showing modifier targets.
+- Added parent assignment, detachment, modifier activation, and undoable hierarchy controls, with an Applies to column showing modifier targets ([#373](https://github.com/ORNLSlicer/ORNLSlicer/pull/373)).
+- Added cube and stacked-layer icons beside global settings to distinguish part and layer overrides, showing both when both apply.
+- Added a Starting Layer Number setting under Printer > G-Code for continuation builds, with consistent layer, bead, block, and individual-layer export numbering ([#347](https://github.com/ORNLSlicer/ORNLSlicer/issues/347)).
+
+### Changed
+
+- Changed generated Arc Specialties weld schedules to use in/min for wire-feed speeds and mm/min for startup travel override and regional travel speeds, matching metric motion feedrates ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
+- Changed the GUI to bundled Noto Sans with 9 pt regular controls and semibold regional form headings, and arranged weld schedule gas timing settings one per row ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
+- Changed UI theme choices to Light Mode and Dark Mode, with consistent palettes for standalone Qt dialogs and calculators and readable status, help, and selection colors. Existing System (default) preferences now select Light Mode; saved Dark Mode preferences are preserved.
+- Changed child clipping and settings meshes to affect only their immediate parent when it is a build object; enabled unparented modifiers remain global.
+- Changed default parent deletion to remove its hierarchy; Delete Object(s), Keep Children preserves descendants and leaves modifiers whose target changes inactive.
+- Changed child clipping and settings meshes to affect only their immediate parent when it is a build object; enabled unparented modifiers remain global ([#373](https://github.com/ORNLSlicer/ORNLSlicer/pull/373)).
+- Changed default parent deletion to remove its hierarchy; Delete Object(s), Keep Children preserves descendants and leaves modifiers whose target changes inactive ([#373](https://github.com/ORNLSlicer/ORNLSlicer/pull/373)).
+- Changed individual-layer export to a disabled-by-default setting under Experimental > File Output. Enable Individual Layer Export before slicing to prepare separate layer files; reopened G-code must be re-sliced to export individual layers.
+
+### Fixed
+
+- Fixed main-toolbar icon visibility in Dark Mode and distinguished unavailable commands when switching between Part View and G-Code View.
+- Fixed Linux model-loading and replacement dialogs hiding uppercase and mixed-case file extensions, and made model import handling consistent across extension casing.
+- Fixed ARC exports using the current generation checkbox instead of the completed slice's companion requirement; cached programs and individual layers now retain their slice-time decision ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
+- Fixed inconsistent light/dark theme heading fonts; regional form headings now use the same font family and size as their controls, with bold reserved for headings ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
+- Fixed dark-mode group-box frames and the continuous background behind regional weld schedule forms so sections remain visually separated ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
+- Fixed changing themes before a 3D view is initialized by deferring OpenGL background updates until rendering.
+- Fixed missing supports beneath arches and sloped overhangs while preserving the configured XY clearance and generating continuous support interfaces.
+- Fixed ESAM (Arc Specialties) helical torch orientation after arc-length offsets so the torch remains normal to the surface ([#372](https://github.com/ORNLSlicer/ORNLSlicer/issues/372)).
+- Fixed parent/child links, transforms, mesh roles, and layer overrides being lost or desynchronized during project save/load, duplication, instance changes, reload/replacement, reset, and undo.
+- Fixed settings-region conflicts being missed on elevated or rotated slices and allowing stale results to be exported; conflicts now identify both meshes, their target, and the slice.
+- Fixed parent/child links, transforms, mesh roles, and layer overrides being lost or desynchronized during project save/load, duplication, instance changes, reload/replacement, reset, and undo ([#373](https://github.com/ORNLSlicer/ORNLSlicer/pull/373)).
+- Fixed settings-region conflicts being missed on elevated or rotated slices and allowing stale results to be exported; conflicts now identify both meshes, their target, and the slice ([#373](https://github.com/ORNLSlicer/ORNLSlicer/pull/373)).
+- Fixed generated G-code containing embedded standalone layer programs and export-only markers, including when individual-layer export is enabled.
+- Fixed incomplete Git LFS checkouts silently building with missing GUI icons, setting arrows, and Slice toolbar access by rejecting unresolved bundled resources with recovery instructions ([#351](https://github.com/ORNLSlicer/ORNLSlicer/issues/351)).
+- Fixed regular CI not running for pull requests from fork branches, including Linux and Windows builds and Linux and macOS flake checks.
+- Fixed STEP assemblies of touching solids, and solids with internal voids, importing as open meshes; vertices are now welded per shell ([#341](https://github.com/ORNLSlicer/ORNLSlicer/issues/341)).
+- Fixed building against CGAL 6 while keeping CGAL 5 support, and a null dereference when a mesh intersection is not a single point ([#343](https://github.com/ORNLSlicer/ORNLSlicer/issues/343)).
+
 ---
 
 ## 2.2.0 - 2026-10-20

@@ -50,23 +50,27 @@ sources:
     resource: repo://tests/settings_manager_tests.cpp
   - id: openwiki-source-1fd14546369693e17741b750
     resource: repo://tests/settings_version_control_tests.cpp
+  - id: openwiki-source-0d13845cec1adce5e1ca3a2a
+    resource: repo://tests/support_generation_tests.cpp
   - id: openwiki-source-488b08952aaa6db435f7b20d
     resource: repo://tests/test_utils.h
+  - id: openwiki-source-b9c7e17b3cb7c478ba95a2f8
+    resource: repo://tests/theme_tests.cpp
   - id: openwiki-source-fd42cdedbc9d871771e139f8
     resource: repo://tests/variable_layer_height_tests.cpp
   - id: openwiki-source-e143789d80bbbd16ebcc1e73
     resource: repo://tests/version_tests.py
   - id: openwiki-source-7a4801d8dab8724a03e566bd
     resource: repo://tests/visualization_colors_tests.cpp
-generated: { by: "codex", at: "2026-10-20T18:20:49.849Z" }
+generated: { by: "codex", at: "2026-11-10T17:47:51.624Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-20T18:20:49.849Z
+    at: 2026-11-10T17:47:51.624Z
 ---
 
 # Test Strategy and Validation Map
 
-ORNLSlicer uses small standalone C++ executables for focused regression coverage and an optional whole-application slicing check for a local project fixture. The focused tests exercise production classes directly and link the same object library as the application; they are not a separate mock implementation of the slicer. [source](repo://CMakeLists.txt#L139-L164) [source](repo://CMakeLists.txt#L229-L241)
+ORNLSlicer uses small standalone C++ executables for focused regression coverage and an optional whole-application slicing check for a local project fixture. The focused tests exercise production classes directly and link the same object library as the application; they are not a separate mock implementation of the slicer. [source](repo://CMakeLists.txt#L139-L164) [source](repo://CMakeLists.txt#L239-L248)
 
 ```text
                         ornlslicer_obj
@@ -82,7 +86,7 @@ ORNLSlicer uses small standalone C++ executables for focused regression coverage
 
 ## How the suite is wired
 
-`include(CTest)` creates the conventional `BUILD_TESTING` option. `ORNLSLICER_BUILD_TESTS` defaults to that value, and its guarded block creates the test executables, enables CTest, and registers each executable with `add_test()`. Set `-DORNLSLICER_BUILD_TESTS=OFF` only when intentionally omitting the suite from a configuration. [source](repo://CMakeLists.txt#L17-L26) [source](repo://CMakeLists.txt#L229-L241)
+`include(CTest)` creates the conventional `BUILD_TESTING` option. `ORNLSLICER_BUILD_TESTS` defaults to that value, and its guarded block creates the test executables, enables CTest, and registers each executable with `add_test()`. Set `-DORNLSLICER_BUILD_TESTS=OFF` only when intentionally omitting the suite from a configuration. [source](repo://CMakeLists.txt#L17-L26) [source](repo://CMakeLists.txt#L239-L248)
 
 Every focused binary follows the same naming split:
 
@@ -99,7 +103,7 @@ Configure in the repository's Nix development shell, then build the default targ
 ```bash
 nix develop .#ornlslicerDev -L --command cmake --preset generic-llvm-ninja
 nix develop .#ornlslicerDev -L --command \
-  cmake --build build/generic-llvm-ninja --config Debug
+  cmake --build build/generic-llvm-ninja --config Debug -j 32
 nix develop .#ornlslicerDev -L --command \
   ctest --test-dir build/generic-llvm-ninja -C Debug --output-on-failure
 ```
@@ -111,17 +115,19 @@ For a narrow change, build one prefixed executable target and filter by its unpr
 ```bash
 nix develop .#ornlslicerDev -L --command \
   cmake --build build/generic-llvm-ninja --config Debug \
-  --target ornlslicer_arc_specialties_parser_tests
+  --target ornlslicer_arc_specialties_parser_tests -j 32
 nix develop .#ornlslicerDev -L --command \
   ctest --test-dir build/generic-llvm-ninja -C Debug \
   -R '^arc_specialties_parser_tests$' --output-on-failure
 ```
 
+Build every selected executable explicitly before running it; CTest JSON can omit executable commands for unbuilt targets. For theme visual checks, apply Fusion, the application palette and the root stylesheet, then exercise both themes. `theme_tests` uses an XCB branch for real-context checks; offscreen widgets alone do not prove OpenGL rendering. [source](repo://tests/theme_tests.cpp#L47-L96) [source](repo://tests/theme_tests.cpp#L130-L157)
+
 Use `ctest --test-dir build/generic-llvm-ninja -C Debug -N` to inspect the tests registered by the current configuration. Reconfigure after adding or deleting source, header, resource, or test-target declarations; source and resource discovery is glob-based even though test targets themselves are explicit. [source](repo://CMakeLists.txt#L139-L157) [source](repo://CMakeLists.txt#L139-L157)
 
 ## Coverage map
 
-The 28 always-declared focused tests divide into four practical risk groups. The table summarizes the behavior protected by each CTest name, not merely the class named by the file.
+The test block declares 45 focused C++ executables plus `settings_metadata_tests` (Python) and `resource_validation_tests` (CMake), for 47 unconditional CTest entries. The optional project fixture adds one more. The tables route changes to their regression surfaces. [source](repo://CMakeLists.txt#L239-L760) The table summarizes the behavior protected by each CTest name, not merely the class named by the file.
 
 | Area | CTest name | Principal regression surface |
 | --- | --- | --- |
@@ -140,38 +146,57 @@ The 28 always-declared focused tests divide into four practical risk groups. The
 | Settings compatibility | `gcode_settings_importer_tests` | Comment-style normalization, importer fixtures, legacy keys and version migration, unknown keys, and cancellation of missing-setting prompts. [source](repo://tests/gcode_settings_importer_tests.cpp#L64-L242) |
 | Settings compatibility | `settings_file_comparator_tests` | JSON/settings-array validation; changed and one-sided values across settings sets; recursive ordering behavior; floating-point tolerance; and unreadable or malformed files. [source](repo://tests/settings_file_comparator_tests.cpp#L15-L124) |
 | Settings compatibility | `settings_version_control_tests` | Helical angle-to-distance migration, variable-Z conversion, connected-contour renames, collision handling and idempotence through version 15. [source](repo://tests/settings_version_control_tests.cpp#L15-L173) |
-| Settings compatibility | `settings_manager_tests` | Rejection of project-local and project-session JSON as global templates without rewriting either source file. [source](repo://tests/settings_manager_tests.cpp#L26-L94) |
+| Settings compatibility | `settings_manager_tests` | Template-shape rejection plus cache replacement on reload and reset of removed applied keys. [source](repo://tests/settings_manager_tests.cpp#L26-L94) |
 | Settings compatibility | `preferences_import_tests` | Transactional preference import, one aggregate unit-change signal, and observers seeing the complete final state. [source](repo://tests/preferences_import_tests.cpp#L20-L76) |
 | Settings compatibility | `preferences_manager_tests` | Persistence and defaulting of manager-owned preferences, including STEP-to-STL linear deflection. [source](repo://tests/preferences_manager_tests.cpp#L14-L52) |
-| Application UI | `main_toolbar_tests` | Full startup-width visibility plus constrained-width overflow, including availability of the Slice action from Qt's overflow menu. [source](repo://tests/main_toolbar_tests.cpp#L15-L78) |
-| Session lifecycle | `session_manager_tests` | Recent-project ordering, caps and clearing, project types, asynchronous CLI-style load, and archived settings migration. [source](repo://tests/session_manager_tests.cpp#L74-L188) |
+| Application UI | `main_toolbar_tests` | Startup visibility/overflow plus icon contrast, muted disabled state and unavailable checked backgrounds across both views and themes. [source](repo://tests/main_toolbar_tests.cpp#L84-L227) |
+| Session lifecycle | `session_manager_tests` | Recent-project ordering, caps and clearing, project types, asynchronous CLI-style load, and archived settings migration. [source](repo://tests/session_manager_tests.cpp#L289-L406) |
 | Parsing and visualization | `common_parser_tests` | Travel timing and scaling plus modifier-only layer and tip-wipe height inference. [source](repo://tests/common_parser_tests.cpp#L296-L316) |
-| Parsing and visualization | `arc_specialties_parser_tests` | Arc Specialties parsing and writing, including optional stops, G80 scheduling, CP visualization, rejection cases, handedness, frames, comments, startup, rounding, and arc density. [source](repo://tests/arc_specialties_parser_tests.cpp#L837-L909) |
+| Parsing and visualization | `arc_specialties_parser_tests` | Arc Specialties parsing and writing, including optional stops, G80 scheduling, CP visualization, rejection cases, handedness, frames, comments, startup, rounding, and arc density. [source](repo://tests/arc_specialties_parser_tests.cpp#L948-L1048) |
 | Parsing and visualization | `juggerbot_writer_tests` | Arc bead-area extrusion scaling and zero-RPM extrusion shutdown. [source](repo://tests/juggerbot_writer_tests.cpp#L81-L93) |
 | Parsing and visualization | `visualization_colors_tests` | Registry completeness, stable names/defaults, preference registration, and G-code comment/segment color mapping. [source](repo://tests/visualization_colors_tests.cpp#L93-L210) |
 | Export artifacts | `as_printed_model_exporter_tests` | Bead meshes and centerlines, bounds/orientation/units, radial and LFAM behavior, filtering, arc/corner geometry, and binary/ASCII STL validity. [source](repo://tests/as_printed_model_exporter_tests.cpp#L129-L341) |
 
-The declarations for those targets are centralized in the test block rather than inferred from filenames. Consequently, adding a new `tests/*.cpp` file alone does not add it to CTest; a corresponding executable and `add_test()` entry are required. [source](repo://CMakeLists.txt#L229-L539)
+The declarations for those targets are centralized in the test block rather than inferred from filenames. Consequently, adding a new `tests/*.cpp` file alone does not add it to CTest; a corresponding executable and `add_test()` entry are required. [source](repo://CMakeLists.txt#L239-L746)
 
 Additional focused targets cover the recently changed contracts:
 
 | CTest name | Contract |
 | --- | --- |
-| `gcode_layer_export_tests` | Standalone entry/shutdown across representative writers, corrupted metadata rejection before writes, single-layer handling, and stale-file cleanup. [source](repo://tests/gcode_layer_export_tests.cpp#L127-L294) |
+| `gcode_layer_export_tests` | Standalone entry/shutdown across representative writers, opt-in in-memory programs, slice/load snapshot clearing, cached ARC companion decisions, and stale-file cleanup. [source](repo://tests/gcode_layer_export_tests.cpp#L205-L548) |
 | `changelog_tests` | Bundled offline Markdown from outside the checkout, theme-colored links, nonmodal parent ownership, close/reopen behavior. [source](repo://tests/changelog_tests.cpp#L15-L68) |
 | `gcode_shading_tests` | Production shaders render bead geometry with preserved hue and original luminance across colors and neutral shades. OpenGL 4.4 or offscreen surface failure returns 77, configured as CTest skip. [source](repo://tests/gcode_shading_tests.cpp#L128-L181) [source](repo://CMakeLists.txt#L353-L363) |
 
 Release rules use a separate Python suite: `python3 tests/version_tests.py`. It tests real temporary Git histories plus Python/CMake/Nix version reader parity; it is not a CTest executable. Git, CMake and Nix must be available for the external-reader cases. [source](repo://tests/version_tests.py#L1-L35) [source](repo://tests/version_tests.py#L175-L284)
 
+Additional regression routes introduced since the earlier suite:
+
+| CTest name | Contract |
+| --- | --- |
+| `settings_metadata_tests`, `resource_validation_tests` | YAML schema/group metadata and generated-config consistency; unresolved LFS pointer rejection. [source](repo://CMakeLists.txt#L239-L248) |
+| `step_import_tests` | Closed STEP solids, touching assemblies and shells remain valid after per-shell welding. [source](repo://tests/step_import_tests.cpp) |
+| `support_generation_tests` | Sloped contact paths, constrained restoration, rotated gaps/bridges, partial anchors, cantilevers, taper, organic clearance and landings. [source](repo://tests/support_generation_tests.cpp#L375-L407) |
+| `settings_selection_tests` | Cross-category template prompt, decline, preference persistence and preserving manual edits on reselection. [source](repo://tests/settings_selection_tests.cpp) |
+| `setting_override_indicator_tests` | Part/layer indicator differences, composite keys and suspended scans. [source](repo://tests/setting_override_indicator_tests.cpp) |
+| `arc_specialties_settings_tests`, `regional_settings_tests` | Mode/region visibility and helical setting placement. [source](repo://tests/arc_specialties_settings_tests.cpp) [source](repo://tests/regional_settings_tests.cpp) |
+| `arc_specialties_group_tests` | Collapsible/searchable forms, one-row Gas Timing, widths, section fills and resolved fonts in both themes. [source](repo://tests/arc_specialties_group_tests.cpp) |
+| `cylindrical_speed_tests` | Regional segment speeds, ordering/travel speed, generated schedules and wire-feed versus motion units. [source](repo://tests/cylindrical_speed_tests.cpp) |
+| `arc_specialties_export_tests` | Companion/main write failures, reference patching, shared standalone companion and CLI success/failure. [source](repo://tests/arc_specialties_export_tests.cpp) |
+| `layer_numbering_tests` | Valid/invalid starts, overflow, writer labels and integer-only UI entry. [source](repo://tests/layer_numbering_tests.cpp) |
+| `part_hierarchy_copy_tests`, `part_hierarchy_edit_tests` | Deep-copy independence, descendants, reparent/delete/disable operations, selection and undo/redo. [source](repo://tests/part_hierarchy_copy_tests.cpp) [source](repo://tests/part_hierarchy_edit_tests.cpp) |
+| `part_hierarchy_transform_tests`, `part_hierarchy_ui_tests` | World poses, inherited transforms, undo baselines, tree labels and selection. [source](repo://tests/part_hierarchy_transform_tests.cpp) [source](repo://tests/part_hierarchy_ui_tests.cpp) |
+| `part_modifier_scope_tests`, `cylindrical_modifier_scope_tests` | Direct-parent modifier scope, reparent/root behavior, actual sliced settings conflicts and failure cleanup. [source](repo://tests/part_modifier_scope_tests.cpp) [source](repo://tests/cylindrical_modifier_scope_tests.cpp) |
+| `theme_tests` | Light/Dark palettes and widget refresh; an XCB-only branch checks a real OpenGL framebuffer. [source](repo://tests/theme_tests.cpp#L47-L157) |
+
 ## Fixtures and isolation
 
-Most focused cases construct geometry, settings, commands, and expected values directly in C++. File-oriented tests create disposable fixtures with `QTemporaryDir`, including preference import, settings import, session history/project loading, and model export. This keeps the routine suite independent of a developer's persistent preferences and output directories. [source](repo://tests/preferences_import_tests.cpp#L1-L42) [source](repo://tests/session_manager_tests.cpp#L74-L113) [source](repo://tests/as_printed_model_exporter_tests.cpp#L129-L157)
+Session-manager fixtures use `QStandardPaths::setTestModeEnabled(true)` so singleton history outlives temporary fixture directories safely. [source](repo://tests/session_manager_tests.cpp#L289-L296) Most focused cases construct geometry, settings, commands, and expected values directly in C++. File-oriented tests create disposable fixtures with `QTemporaryDir`, including preference import, settings import, session history/project loading, and model export. This keeps the routine suite independent of a developer's persistent preferences and output directories. [source](repo://tests/preferences_import_tests.cpp#L1-L42) [source](repo://tests/session_manager_tests.cpp#L74-L113) [source](repo://tests/as_printed_model_exporter_tests.cpp#L129-L157)
 
 Some parser, writer, settings, session, WAAM, and exporter tests instantiate `QCoreApplication` because the production code uses Qt core facilities. They do not create a `QApplication`, a main window, an OpenGL context, or an interactive event-driving harness. Passing these tests therefore supports data-flow and algorithm correctness, not visual correctness or full GUI behavior. [source](repo://tests/common_parser_tests.cpp#L1-L4) [source](repo://tests/common_parser_tests.cpp#L296-L299) [source](repo://tests/session_manager_tests.cpp#L1-L4) [source](repo://tests/session_manager_tests.cpp#L74-L78)
 
 ## Optional whole-project slicing regression
 
-The only registered whole-application slicing test is conditional. At configure time, CMake checks `ORNLSLICER_NEW_IMPACT_PROJECT`; when that path exists, it registers `new_impact_project_regression`, launches the built `ornlslicer` executable with `--input_project_file` and `--output_location`, and writes artifacts beneath the build tree. The checked-in default is a developer-local absolute path, so this test is normally absent on other machines unless explicitly configured. [source](repo://CMakeLists.txt#L541-L553) [source](repo://tests/run_project_slice_regression.cmake#L1-L31)
+The only registered whole-application slicing test is conditional. At configure time, CMake checks `ORNLSLICER_NEW_IMPACT_PROJECT`; when that path exists, it registers `new_impact_project_regression`, launches the built `ornlslicer` executable with `--input_project_file` and `--output_location`, and writes artifacts beneath the build tree. The checked-in default is a developer-local absolute path, so this test is normally absent on other machines unless explicitly configured. [source](repo://CMakeLists.txt#L748-L760) [source](repo://tests/run_project_slice_regression.cmake#L1-L31)
 
 To enable it with an available project:
 
@@ -180,7 +205,7 @@ nix develop .#ornlslicerDev -L --command \
   cmake --preset generic-llvm-ninja \
   -DORNLSLICER_NEW_IMPACT_PROJECT=/absolute/path/to/project.s2p
 nix develop .#ornlslicerDev -L --command \
-  cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer
+  cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer -j 32
 nix develop .#ornlslicerDev -L --command \
   ctest --test-dir build/generic-llvm-ninja -C Debug \
   -R '^new_impact_project_regression$' --output-on-failure
@@ -190,16 +215,16 @@ Success means the application exited with status zero and produced a nonempty `.
 
 ## CI evidence and current gaps
 
-The push workflow has three complementary signals:
+Push and fork-PR CI provide three complementary signals (same-repository PR events defer to their push run):
 
 - Ubuntu and macOS run `nix flake check --all-systems`;
 - Ubuntu builds and bundles the Linux AppImage and runs only its `--help` command as a smoke test;
-- Ubuntu cross-builds the Windows portable tree and installer and uploads both artifacts. [source](repo://.github/workflows/ci.yml#L1-L40) [source](repo://.github/workflows/ci.yml#L73-L87) [source](repo://.github/workflows/ci.yml#L106-L167)
+- Ubuntu cross-builds the Windows portable tree and installer and uploads both artifacts. [source](repo://.github/workflows/ci.yml#L1-L40) [source](repo://.github/workflows/ci.yml#L76-L90) [source](repo://.github/workflows/ci.yml#L110-L175)
 
-The workflow does not explicitly invoke `ctest`, and the Nix package derivation defines neither a check phase nor a CTest command. A green packaging workflow therefore demonstrates the declared Nix/build/package steps, but it should not be reported as a run of the 28 focused tests. [source](repo://.github/workflows/ci.yml#L8-L19) [source](repo://.github/workflows/ci.yml#L42-L56) [source](repo://nix/ornlslicer/default.nix#L12-L64)
+The workflow does not explicitly invoke `ctest`, and the Nix package derivation defines neither a check phase nor a CTest command. A green packaging workflow therefore demonstrates the declared Nix/build/package steps, but it should not be reported as a run of the focused CTest suite. [source](repo://.github/workflows/ci.yml#L8-L19) [source](repo://.github/workflows/ci.yml#L42-L56) [source](repo://nix/ornlslicer/default.nix#L12-L64)
 
-The suite has bounded GUI and rendering checks: toolbar and changelog tests create offscreen widgets, and `gcode_shading_tests` renders bead geometry with the production shaders. It still does not drive the complete main-window workflow, native dialogs, drag-and-drop, or controller execution. A skipped shading test is not rendering evidence. The AppImage smoke check starts only the command-line help path. Validate those risks interactively on a machine with a display and suitable graphics support; for AppImage release work, follow the dedicated launch, dialog, preferences, alternate-settings, and output-ownership checklist. [source](repo://CMakeLists.txt#L229-L509) [source](repo://tests/main_toolbar_tests.cpp#L15-L78) [source](repo://.github/workflows/ci.yml#L83-L87) [source](repo://docs/contributing/linux-appimage.md#L33-L72)
+The suite has bounded GUI and rendering checks: toolbar and changelog tests create offscreen widgets, and `gcode_shading_tests` renders bead geometry with the production shaders. A targeted layer-export regression creates MainWindow only to verify slice-start snapshot invalidation; it is not a complete GUI workflow. Native dialogs, drag-and-drop and controller execution still need integration checks. [source](repo://tests/gcode_layer_export_tests.cpp#L458-L479) A skipped shading test is not rendering evidence. The AppImage smoke check starts only the command-line help path. Validate those risks interactively on a machine with a display and suitable graphics support; for AppImage release work, follow the dedicated launch, dialog, preferences, alternate-settings, and output-ownership checklist. [source](repo://CMakeLists.txt#L229-L509) [source](repo://tests/main_toolbar_tests.cpp#L84-L227) [source](repo://.github/workflows/ci.yml#L83-L87) [source](repo://docs/contributing/linux-appimage.md#L33-L72)
 
-Likewise, parser and writer tests validate syntax transformations in process, not acceptance by a physical controller. The optional project regression proves only that one supplied project reaches a nonempty G-code artifact. Treat controller compatibility, representative-project output review, and machine motion as separate integration evidence. [source](repo://tests/arc_specialties_parser_tests.cpp#L837-L909) [source](repo://tests/juggerbot_writer_tests.cpp#L81-L93) [source](repo://tests/run_project_slice_regression.cmake#L23-L50)
+Likewise, parser and writer tests validate syntax transformations in process, not acceptance by a physical controller. The optional project regression proves only that one supplied project reaches a nonempty G-code artifact. Treat controller compatibility, representative-project output review, and machine motion as separate integration evidence. [source](repo://tests/arc_specialties_parser_tests.cpp#L948-L1048) [source](repo://tests/juggerbot_writer_tests.cpp#L81-L93) [source](repo://tests/run_project_slice_regression.cmake#L23-L50)
 
 Related reading: [Build and Packaging](../operations/build-and-packaging.md), [Slicing Pipeline](../architecture/slicing-pipeline.md), [G-code and Visualization](../architecture/gcode-and-visualization.md), and [Machine Syntaxes](../integrations/machine-syntaxes.md).

@@ -25,11 +25,11 @@ namespace ORNL {
  * setting. Planar paths use Axis C as a fixed CP positioner value, while cylindrical radial paths compute CP from each
  * transformed endpoint's angle around the transformed radial slicing center plus Axis C. Helical paths report CP as the
  * signed radius-derived start-angle offset plus angular sweep from the transformed helical start point and Axis C.
- * The user-facing arc-length offset is converted using each generated path's actual radius. Helical tool-frame XR/YR
- * output also adds one half of the effective start-angle offset for the current radius pass.
- * The initial TRAFO-off world approach uses ZR=-90; work-object motion uses ZR=-135. When Supports G2/G3 is enabled,
- * print arcs are emitted as G02/G03 with I/J center parameters; cylindrical radial and helical arcs are divided
- * according to Arcs per Revolution.
+ * The user-facing arc-length offset is converted using each generated path's actual radius. Helical work-object tool
+ * frames are rotated about work-frame Y by the negative effective start-angle offset to preserve the torch normal. The
+ * initial TRAFO-off world approach uses ZR=-90; work-object motion defaults to ZR=-135 before correction. When Supports
+ * G2/G3 is enabled, print arcs are emitted as G02/G03 with I/J center parameters; cylindrical radial and helical arcs
+ * are divided according to Arcs per Revolution.
  */
 class ArcSpecialtiesWriter : public WriterBase {
    public:
@@ -39,6 +39,9 @@ class ArcSpecialtiesWriter : public WriterBase {
      * @param sb Global settings used while writing.
      */
     ArcSpecialtiesWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
+
+    //! @brief Returns the generated-companion decision captured when this writer was created.
+    bool shouldGenerateWeldScheduleFile() const;
 
     /*!
      * @brief Supplies the effective part-local helical Z clip rounding values for the settings header.
@@ -189,16 +192,17 @@ class ArcSpecialtiesWriter : public WriterBase {
 
     /*!
      * @brief Returns whether print motion feedrates should reference the G80 schedule speed variable.
-     * @return True when a sanitized G80 weld schedule file is configured.
+     * @return True when a sanitized G80 weld schedule file is configured or generated.
      */
     bool usesG80ScheduleSpeedVariable() const;
 
     /*!
      * @brief Formats the Arc Specialties motion feedrate field.
-     * @param speed Numeric feedrate used when schedule speed output is inactive.
+     * @param speed Effective motion speed, including segment overrides.
+     * @param params Segment settings identifying the print region.
      * @return Either a numeric F field or the G80 schedule speed variable field.
      */
-    QString writeMotionFeedrate(Velocity speed) const;
+    QString writeMotionFeedrate(Velocity speed, const QSharedPointer<SettingsBase>& params) const;
 
     /*!
      * @brief Writes a single Arc Specialties motion command.
@@ -411,6 +415,9 @@ class ArcSpecialtiesWriter : public WriterBase {
     QString writeHelicalLayerStart(const Point& start_point, const Point& end_point,
                                    const QSharedPointer<SettingsBase>& params);
 
+    //! @brief Keeps the program's companion requirement stable while settings are edited.
+    const bool m_generate_weld_schedule_file;
+
     //! @brief Tracks whether any travel move has been emitted.
     bool m_first_travel = true;
 
@@ -439,7 +446,7 @@ class ArcSpecialtiesWriter : public WriterBase {
     int m_current_layer = 0;
 
     //! @brief Tracks the next Beckhoff block number for the active layer.
-    int m_next_block_number = 0;
+    qint64 m_next_block_number = 0;
 
     //! @brief Tracks whether per-layer block numbering has been initialized for this layer.
     bool m_layer_block_numbering_started = false;

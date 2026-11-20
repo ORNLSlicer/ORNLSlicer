@@ -731,7 +731,7 @@ QString CincinnatiWriter::writeAfterLayer() {
 
 QString CincinnatiWriter::writeShutdown() {
     QString rv;
-    rv += finalPositionBlock(writeFinalLift());
+    rv += writeFinalLift();
     rv += m_M5 % commentSpaceLine("TURN EXTRUDER OFF END OF PRINT") % writeTamperOff() % "M68 (PARK)\n";
 
     if (m_sb->setting<int>(MS::Extruder::kServoToTravelSpeed)) {
@@ -739,10 +739,9 @@ QString CincinnatiWriter::writeShutdown() {
     }
     if (m_sb->setting<int>(PRS::Dimensions::kEnableDoffing) &&
         m_current_w > m_sb->setting<int>(PRS::Dimensions::kDoffingHeight)) {
-        rv += finalPositionBlock(
-            m_G1 % m_w %
-            QString::number(m_sb->setting<Distance>(PRS::Dimensions::kDoffingHeight).to(m_meta.m_distance_unit)) %
-            commentSpaceLine("JOG W TO DOFFING LOCATION"));
+        rv += m_G1 % m_w %
+              QString::number(m_sb->setting<Distance>(PRS::Dimensions::kDoffingHeight).to(m_meta.m_distance_unit)) %
+              commentSpaceLine("JOG W TO DOFFING LOCATION");
     }
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline % "M30" % commentSpaceLine("END OF G-CODE");
     return rv;

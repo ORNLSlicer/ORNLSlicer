@@ -2,6 +2,9 @@
 
 This guide summarizes expectations for code style, formatting, documentation, and workflow so contributions remain consistent, maintainable, and easy to review.
 
+Start with the [developer setup guide](docs/contributing/development-setup.md) for Linux,
+Windows (WSL2), and macOS build and test instructions.
+
 ---
 
 ## Quick Workflow

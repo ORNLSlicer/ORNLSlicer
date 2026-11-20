@@ -5,7 +5,7 @@ description: Runtime map for ORNLSlicer's GUI and command-line shells, shared ma
 tags: [runtime, qt, gui, cli, threading]
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-20T18:20:49.849Z
+    at: 2026-11-10T17:47:51.624Z
 sources:
   - id: openwiki-source-3eee793d88e31c2c26304c07
     resource: repo://include/threading/abs_slicing_thread.h
@@ -23,6 +23,8 @@ sources:
     resource: repo://src/threading/abs_slicing_thread.cpp
   - id: openwiki-source-c9b49d4d1b98e2ebff97fee2
     resource: repo://src/threading/session_loader.cpp
+  - id: openwiki-source-36534df945d3cf811e962890
+    resource: repo://src/utilities/theme_tool.cpp
   - id: openwiki-source-c8bd61f0cfef6efd243b1e22
     resource: repo://src/widgets/main_toolbar.cpp
   - id: openwiki-source-0883503c04a6d6436d2f870d
@@ -33,7 +35,7 @@ sources:
     resource: repo://tests/changelog_tests.cpp
   - id: openwiki-source-eca38ea4c3df70e00aa49450
     resource: repo://tests/main_toolbar_tests.cpp
-generated: { by: "codex", at: "2026-10-20T18:20:49.849Z" }
+generated: { by: "codex", at: "2026-11-10T17:47:51.624Z" }
 ---
 
 # Application Runtime and Coordination
@@ -55,9 +57,11 @@ Startup registers the Qt metatypes carried across queued signal/slot connections
 | Invocation | Qt application | Coordinator | Completion |
 | --- | --- | --- | --- |
 | No extra arguments | `QApplication` | `MainWindow` | The user closes the window; close confirmation and preference persistence run before the event loop exits. |
-| One or more arguments | `QCoreApplication` | `MainControl` | `MainControl::finished` is queued to `QCoreApplication::quit`; parse or option failures return before the event loop. |
+| One or more arguments | `QCoreApplication` | `MainControl` | `MainControl::finished(int)` is queued to the event loop's `exit(int)`; parse or option failures return before the event loop. |
 
 Because the branch condition is simply `argc > 1`, informational options such as `--help` and `--version` also enter the CLI branch.
+
+The GUI selects Qt's Fusion style and loads bundled Noto Sans regular and semibold fonts before constructing the window; a font-load failure exits with status 1. Theme changes apply the application palette and root stylesheet, then refresh the part view, G-code view, toolbar, and settings bar through `PreferencesWindow::updateTheme`. Changing the stored preference alone does not apply that UI state. [source](repo://src/main.cpp#L101-L124) [source](repo://src/utilities/theme_tool.cpp#L13-L18) [source](repo://src/windows/main_window.cpp#L280-L292) [source](repo://src/windows/main_window.cpp#L1113-L1119)
 
 ## Shared ownership
 
@@ -80,7 +84,7 @@ The window is the UI router, not the data owner. Its event graph connects sessio
 ### GUI slice sequence
 
 1. `PartWidget::slice` invokes `MainWindow::doSlice()`.
-2. The window clears old G-code views, requires at least one build part, creates a `SliceDialog`, and connects progress and cancellation.
+2. The window clears old G-code views and export snapshots, requires at least one build part, creates a `SliceDialog`, and connects progress and cancellation.
 3. `SessionManager::doSlice()` validates the selected mode/syntax, selects or reuses the concrete slicer, requests current GUI transforms, and emits `startSlice`.
 4. The active `AbstractSlicingThread` receives `doSlice()` in its internal worker thread. Status and completion signals return through `SessionManager`.
 5. `forwardSliceComplete` makes the GUI start a `GCodeLoader`. That worker parses the file and independently supplies visualization segments, formatted text, layer-time statistics, export metadata, and status text.
@@ -88,11 +92,15 @@ The window is the UI router, not the data owner. Its event graph connects sessio
 
 An invalid cylindrical configuration is rejected before work starts: current source permits cylindrical slicing only with the Arc Specialties syntax. The manager emits a user-visible status and returns `false`, allowing the GUI to discard the slice dialog.
 
+The same preflight validates the configured starting layer number and positive speeds for active helical regions. On generated output, the window captures standalone layer programs and the ARC companion requirement from the completed slice before starting the parser. Imported G-code receives neither snapshot. This keeps export attached to the program that was generated even if settings change afterward. [source](repo://src/managers/session_manager.cpp#L592-L638) [source](repo://src/windows/main_window.cpp#L1391-L1409) [source](repo://src/windows/main_window.cpp#L1473-L1501)
+
 ## Runtime UI extensions
 
 `MainWindow` owns auxiliary dialogs as children, including the settings-file comparison dialog. It constructs that dialog during window setup, exposes **Compare Settings Files** in the Settings menu, and brings the existing dialog to the foreground when the action is triggered. The comparison dialog therefore remains a UI-owned helper; it does not introduce a second settings-state owner.
 
 The main toolbar is likewise a child of the main container and emits intent through signals that `MainWindow` connects to the active view and session consumers. Its command controls are `QAction`s (with only the view tabs represented by a widget action), allowing Qt to move trailing commands into its built-in overflow menu when width is constrained. At the normal startup view width the controls remain visible; the focused offscreen Qt test covers both that baseline and the constrained-overflow behavior.
+
+Toolbar styling rebuilds monochrome icons from their original resources with active and disabled palette colors. The colored information icon stays intact. Tests exercise light/dark theme switches and both views, checking icon contrast, visibly muted disabled icons, retained action states, and neutral backgrounds for unavailable checked controls. [source](repo://src/widgets/main_toolbar.cpp#L442-L475) [source](repo://tests/main_toolbar_tests.cpp#L36-L80) [source](repo://tests/main_toolbar_tests.cpp#L133-L172)
 
 The Help menu opens a parent-owned, nonmodal `ChangelogWindow`. It renders `:/docs/CHANGELOG.md` from the embedded docs resource, so installed applications can show release history offline without the source checkout. External links open through `QTextBrowser`; link formatting inherits the theme color. The Close button hides the dialog and the existing instance can be reopened. `changelog_tests` checks resource availability from a temporary working directory, Markdown rendering, links, and reopen behavior. [source](repo://src/windows/changelog.cpp#L13-L47) [source](repo://src/windows/main_window.cpp#L908-L912) [source](repo://resources/docs/docs.qrc#L1-L5) [source](repo://tests/changelog_tests.cpp#L15-L68)
 
@@ -106,6 +114,8 @@ The loading path differs by input:
 - A project starts a `SessionLoader`; its reported part count establishes the same completion barrier.
 
 When the last part arrives, `MainControl` asks the session manager to slice. Image slicing finishes after the slicer's image output. Toolpath modes start a `GCodeLoader`, even in headless mode, so generated G-code receives the same parsing and minimum-layer-time adjustment pass used by the GUI. The loader reports the detected metadata and temporary path; `MainControl` then writes the requested basename with the syntax-specific suffix and emits `finished`.
+
+For ARC output that requires weld schedules, the CLI captures the slice-time requirement and uses `GCodeArcSpecialtiesSaver` to write the program and companion; read or save errors exit with status 1. The generation checkbox is not reread at export time. [source](repo://src/console/main_control.cpp#L129-L189)
 
 Progress is reduced to a console status line keyed by `StatusUpdateStepType`. Repeated updates for the same phase rewrite the line; a 100% update terminates it.
 
@@ -138,7 +148,7 @@ Failure behavior follows the boundary that detects it:
 
 GUI close first asks whether a modified project may be discarded. It records changed window geometry preferences, then quits the application. During `MainWindow` destruction, dirty preferences are exported and a nonempty session is saved to `_lastsession.s2p`; this final save is explicitly waited on before widget teardown completes. `SessionManager` persists its separate `app.history` record when destroyed.
 
-The CLI has no window-owned state. Its `finished` signal quits the event loop through a queued connection, after which `main()` deletes `MainControl` and returns the Qt event-loop status.
+The CLI has no window-owned state. Its `finished(int)` signal exits the event loop through a queued connection, after which `main()` deletes `MainControl` and returns that status.
 
 ## Where to extend or verify
 

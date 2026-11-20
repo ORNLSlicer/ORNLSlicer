@@ -182,4 +182,25 @@ Prefer single-file or single-test runs during iteration. Full suites are for the
 
 When the user corrects your approach, append a one-line rule here before ending the session. Write it concretely ("Always use X for Y"), never abstractly ("be careful with Y"). If an existing line already covers the correction, tighten it instead of adding a new one. Remove lines when the underlying issue goes away (model upgrades, refactors, process changes).
 
+- Finish source edits and formatting before starting a build; do not rewrite files while the compiler may have them memory mapped.
 - Verify hook file-type filters before claiming generated JSON is excluded; keep formatter changes after confirming parsed JSON matches the staged data, then re-stage and rerun pre-commit.
+- Continue tracing unresolved code paths and implementing an authorized change; do not end the task at an intermediate finding.
+- Treat the hand-calculated NC angles supplied with #372 as approximate reference checks; verify the tool-frame geometry independently and do not assume discrepancies are truncation.
+- Provide every citation format available in the OSTI DOECode record and copy each verbatim; preserve its registered title, historical URL, date, sponsor, and DOI when reorganizing docs.
+- For GUI screenshots and regressions, match the application's Qt style and root stylesheet and exercise light and dark themes; setting the theme preference alone does not apply it.
+- Verify disabled toolbar icons are visibly muted relative to enabled icons and that unavailable checked controls lose their active background in both views and themes.
+- Verify that grouped-form gaps match the surrounding panel background and that individual sections retain their own fill.
+- Check resolved font family, size, and weight for headings and fields across theme switches.
+- Keep weld schedule Gas Timing settings one per row in every regional form.
+- Export only ARC weld schedule wire-feed speeds in in/min; export startup travel override and V.S.SPEED in mm/min, and verify resolved metric F matches numeric motion output.
+- Build every selected test executable explicitly; CTest JSON can omit commands for unbuilt executables.
+- Keep the ARC companion requirement paired with its cached program through slicing, loading, and export; never re-read the generation checkbox to export an existing slice.
+- Use focused widgets for offscreen Qt tests; a full MainWindow creates 3D views that require initialized OpenGL contexts and printer objects, including during import and teardown.
+- When using QComboBox::textActivated, preserve manual edits when the active item is reselected unless the user accepts applying it across categories.
+- Use integer, enum, or boolean settings in dropdown test fixtures; physical-value widgets can clamp or round raw values during construction.
+- Set Qt table selections with explicit `QItemSelectionModel` flags after synthetic modified key events; retained modifiers can make `selectRow()` toggle selection.
+- In new SessionManager tests, use `QStandardPaths::setTestModeEnabled(true)`; temporary `XDG_DATA_HOME` directories disappear before singleton history is saved.
+- Snapshot selection before hierarchy edits and restore it after rebuilding parent links; Qt can clear selection while rows move.
+- For CLI export checks, pass an output prefix without a suffix and verify the generated G-code is a non-empty regular file.
+- Preload archive entries before creating `.s2p` variants with Python; passing the source archive's `ZipInfo` objects to `writestr()` mutates their offsets.
+- Constrain support restoration to paths through the unsupported contact; preserve angle-classified organic branch seeds and keep negative test probes beyond restoration reach of joining contacts.

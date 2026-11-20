@@ -8,6 +8,7 @@
 #include <cmath>
 #include <limits>
 
+#include <Eigen/Geometry>
 #include <qcontainerfwd.h>
 #include <qsharedpointer.h>
 #include <qvectornd.h>
@@ -17,6 +18,7 @@
 #include "gcode/writers/writer_base.h"
 #include "geometry/point.h"
 #include "managers/settings/settings_manager.h"
+#include "slicing/region_speed.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -49,9 +51,6 @@ constexpr double kToolFrameZR = -135.0;
 
 //! @brief Tool-frame ZR used for rapid travel moves.
 constexpr double kRapidTravelToolFrameZR = -90.0;
-
-//! @brief Arc Specialties helical tool-frame XR/YR compensation per degree of tool start-angle offset.
-constexpr double kHelicalToolStartAngleToolFrameScale = 0.5;
 
 //! @brief First-pass clearance above the highest point of the build parts for the startup world approach.
 static const Distance kStartupWorldApproachZBuffer = 100.0 * mm;
@@ -146,7 +145,9 @@ QString helicalRegionComment(RegionType region_type) {
 }  // namespace
 
 ArcSpecialtiesWriter::ArcSpecialtiesWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb)
-    : WriterBase(meta, sb) {
+    : WriterBase(meta, sb),
+      m_generate_weld_schedule_file(sb != nullptr && sb->contains(PS::ArcSpecialties::kGenerateWeldScheduleFile) &&
+                                    sb->setting<bool>(PS::ArcSpecialties::kGenerateWeldScheduleFile)) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
 }
 
@@ -168,7 +169,7 @@ void ArcSpecialtiesWriter::startLayerBlockNumbering() {
 
 void ArcSpecialtiesWriter::initializeLayerBlockNumbering() {
     if (!m_layer_block_numbering_started) {
-        m_next_block_number             = std::max(1, m_current_layer) * 10000;
+        m_next_block_number             = static_cast<qint64>(std::max(1, m_current_layer)) * 10000;
         m_layer_block_numbering_started = true;
     }
 }
@@ -297,7 +298,7 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                                                m_meta.m_distance_unit));
             text += commentLine(
                 "Helical Tool Offset Conversion: signed angle = arc length / actual generated path radius; CP "
-                "receives the full angle and XR/YR each receive half");
+                "receives the full angle and the torch frame rotates about work-frame Y by the opposite angle");
             text += commentLine("Helical Region Pitch Fallback: " % formatDistance(bead_width, m_meta.m_distance_unit) %
                                 " when a region stepover is 0");
             text += commentLine("Helical Perimeter Revolutions: " %
@@ -452,7 +453,7 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
     m_startup_kinematics_written       = false;
     m_pending_layer_change.clear();
     m_current_bead                  = 0;
-    m_current_layer                 = 0;
+    m_current_layer                 = layerNumber(m_sb, 0) - 1;
     m_next_block_number             = 0;
     m_layer_block_numbering_started = false;
     m_layer_block_numbering_active  = false;
@@ -506,6 +507,7 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
 
 QString ArcSpecialtiesWriter::writeLayerChange(uint layer_number) {
     const QString layer_change = WriterBase::writeLayerChange(layer_number);
+    m_current_layer            = layerNumber(m_sb, layer_number) - 1;
     if (!m_startup_kinematics_written || isHelicalPathPattern()) {
         m_pending_layer_change += layer_change;
         return QString();
@@ -519,7 +521,7 @@ QString ArcSpecialtiesWriter::writeBeforeLayer(float min_z, QSharedPointer<Setti
     m_layer_start  = true;
     m_current_bead = 1;
     m_current_layer++;
-    m_next_block_number             = std::max(1, m_current_layer) * 10000;
+    m_next_block_number             = static_cast<qint64>(std::max(1, m_current_layer)) * 10000;
     m_layer_block_numbering_started = false;
     m_layer_block_numbering_active  = false;
     m_helical_opt_stop_mode_written = false;
@@ -540,6 +542,7 @@ QString ArcSpecialtiesWriter::writeBeforeRegion(RegionType type, int pathSize) {
     QString rv;
     if (type == RegionType::kPerimeter) { rv += "G80 [1] ;Perimeter Schedule" % m_newline; }
     else if (type == RegionType::kInset) { rv += "G80 [2] ;Inset Schedule" % m_newline; }
+    else if (type == RegionType::kSkeleton) { rv += "G80 [3] ;Skeleton Schedule" % m_newline; }
     else if (type == RegionType::kInfill) { rv += "G80 [0] ;Infill Schedule" % m_newline; }
     if (isHelicalPathPattern()) {
         m_pending_region_schedule += rv;
@@ -749,7 +752,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     const QString print_comment = printMoveComment(params);
     rv += writeNumberedBlock(QString(ccw ? "G03" : "G02") %
                              writeCoordinates(end_point, params, toolFrameRotationForMotion(print_comment, params)) %
-                             writeArcCenterParameters(start_point, center_point) % writeMotionFeedrate(speed) %
+                             writeArcCenterParameters(start_point, center_point) % writeMotionFeedrate(speed, params) %
                              inline_optional_stop % commentSpaceLine(print_comment));
     return rv;
 }
@@ -816,8 +819,8 @@ QString ArcSpecialtiesWriter::writeAfterLayer() {
 QString ArcSpecialtiesWriter::writeShutdown() {
     stopLayerBlockNumbering();
     QString rv;
-    rv += finalPositionBlock(writePendingLayerChange());
-    rv += finalPositionBlock(writePendingLayerPrefix());
+    rv += writePendingLayerChange();
+    rv += writePendingLayerPrefix();
     m_pending_region_schedule.clear();
 
     rv += writeWelderOff();
@@ -871,12 +874,31 @@ QString ArcSpecialtiesWriter::g80WeldScheduleFile() const {
     return g80_schedule_file;
 }
 
-bool ArcSpecialtiesWriter::usesG80ScheduleSpeedVariable() const {
-    return !g80WeldScheduleFile().isEmpty();
+bool ArcSpecialtiesWriter::shouldGenerateWeldScheduleFile() const {
+    return m_generate_weld_schedule_file;
 }
 
-QString ArcSpecialtiesWriter::writeMotionFeedrate(Velocity speed) const {
-    if (usesG80ScheduleSpeedVariable()) { return m_f % kG80ScheduleSpeedVariable; }
+bool ArcSpecialtiesWriter::usesG80ScheduleSpeedVariable() const {
+    return shouldGenerateWeldScheduleFile() || !g80WeldScheduleFile().isEmpty();
+}
+
+QString ArcSpecialtiesWriter::writeMotionFeedrate(Velocity speed, const QSharedPointer<SettingsBase>& params) const {
+    bool use_schedule_speed = usesG80ScheduleSpeedVariable();
+    if (use_schedule_speed && shouldGenerateWeldScheduleFile()) {
+        const RegionType region = params->setting<RegionType>(SS::kRegionType);
+        switch (region) {
+            case RegionType::kPerimeter:
+            case RegionType::kInset:
+            case RegionType::kInfill:
+            case RegionType::kSkeleton:
+                use_schedule_speed = speed() == regionPrintSpeed(*m_sb, region)();
+                break;
+            default:
+                use_schedule_speed = false;
+                break;
+        }
+    }
+    if (use_schedule_speed) { return m_f % kG80ScheduleSpeedVariable; }
 
     return m_f % QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4);
 }
@@ -897,7 +919,7 @@ QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& d
     }
     else {
         return writeNumberedBlock(command % writeCoordinates(destination, params, tool_frame_rotation, cp_reference) %
-                                  writeMotionFeedrate(speed) % commentSpaceLine(comment));
+                                  writeMotionFeedrate(speed, params) % commentSpaceLine(comment));
     }
 }
 
@@ -974,29 +996,49 @@ QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const Q
 ArcSpecialtiesWriter::ToolFrameRotation ArcSpecialtiesWriter::toolFrameRotationForMotion(
     const QString& comment, const QSharedPointer<SettingsBase>& params) const {
     auto settingAngleOrDefault = [this, &params](const QString& key, double fallback) {
-        if (params != nullptr && params->contains(key)) { return params->setting<Angle>(key).to(m_meta.m_angle_unit); }
-        if (m_sb != nullptr && m_sb->contains(key)) { return m_sb->setting<Angle>(key).to(m_meta.m_angle_unit); }
+        // Keep full precision until output formatting; Unit::to() rounds to six significant digits.
+        if (params != nullptr && params->contains(key)) {
+            return params->setting<Angle>(key)() / m_meta.m_angle_unit();
+        }
+        if (m_sb != nullptr && m_sb->contains(key)) { return m_sb->setting<Angle>(key)() / m_meta.m_angle_unit(); }
 
         return fallback;
     };
 
     const bool helical_motion = isHelicalPathPattern(params);
-    const double helical_tool_start_angle_tool_frame_offset =
-        helical_motion
-            ? settingAngleOrDefault(SS::kHelicalToolStartAngleOffset, 0.0) * kHelicalToolStartAngleToolFrameScale
-            : 0.0;
+    const double offset_radians =
+        helical_motion ? settingAngleOrDefault(SS::kHelicalToolStartAngleOffset, 0.0) * m_meta.m_angle_unit() : 0.0;
 
-    auto helicalToolFrameRotation = [&settingAngleOrDefault, helical_tool_start_angle_tool_frame_offset](
+    auto correctToolFrameRotation = [this, offset_radians](ToolFrameRotation frame) {
+        if (offset_radians == 0.0) { return frame; }
+
+        // Compensate the positioner offset about work-frame Y, then recover ZYX Euler angles.
+        // This matches the untilted layer 9/10 poses and tool frame supplied in issue #372.
+        const Eigen::Matrix3d rotation =
+            (Eigen::AngleAxisd(-offset_radians, Eigen::Vector3d::UnitY()) *
+             Eigen::AngleAxisd(frame.zr * m_meta.m_angle_unit(), Eigen::Vector3d::UnitZ()) *
+             Eigen::AngleAxisd(frame.yr * m_meta.m_angle_unit(), Eigen::Vector3d::UnitY()) *
+             Eigen::AngleAxisd(frame.xr * m_meta.m_angle_unit(), Eigen::Vector3d::UnitX()))
+                .toRotationMatrix();
+        const double cos_pitch = std::hypot(rotation(0, 0), rotation(1, 0));
+        const double yr        = std::atan2(-rotation(2, 0), cos_pitch);
+        // At pitch +/-90 degrees, roll and yaw are coupled; choose yaw zero for an equivalent frame.
+        const bool singular = cos_pitch < 1.0e-12;
+        const double xr =
+            singular ? std::atan2(-rotation(1, 2), rotation(1, 1)) : std::atan2(rotation(2, 1), rotation(2, 2));
+        const double zr = singular ? 0.0 : std::atan2(rotation(1, 0), rotation(0, 0));
+        return ToolFrameRotation {xr / m_meta.m_angle_unit(), yr / m_meta.m_angle_unit(), zr / m_meta.m_angle_unit()};
+    };
+
+    auto helicalToolFrameRotation = [&settingAngleOrDefault, &correctToolFrameRotation](
                                         const QString& x_key, const QString& y_key, const QString& z_key) {
-        return ToolFrameRotation {
-            settingAngleOrDefault(x_key, kToolFrameXR) + helical_tool_start_angle_tool_frame_offset,
-            settingAngleOrDefault(y_key, kToolFrameYR) + helical_tool_start_angle_tool_frame_offset,
-            settingAngleOrDefault(z_key, kToolFrameZR)};
+        return correctToolFrameRotation({settingAngleOrDefault(x_key, kToolFrameXR),
+                                         settingAngleOrDefault(y_key, kToolFrameYR),
+                                         settingAngleOrDefault(z_key, kToolFrameZR)});
     };
 
     if (comment == kWorldApproachTravelComment) {
-        return ToolFrameRotation {kToolFrameXR + helical_tool_start_angle_tool_frame_offset,
-                                  kToolFrameYR + helical_tool_start_angle_tool_frame_offset, kRapidTravelToolFrameZR};
+        return ToolFrameRotation {kToolFrameXR, kToolFrameYR, kRapidTravelToolFrameZR};
     }
 
     if (!helical_motion) { return ToolFrameRotation {kToolFrameXR, kToolFrameYR, kToolFrameZR}; }
@@ -1042,8 +1084,7 @@ ArcSpecialtiesWriter::ToolFrameRotation ArcSpecialtiesWriter::toolFrameRotationF
         }
     }
 
-    return ToolFrameRotation {kToolFrameXR + helical_tool_start_angle_tool_frame_offset,
-                              kToolFrameYR + helical_tool_start_angle_tool_frame_offset, kToolFrameZR};
+    return correctToolFrameRotation({kToolFrameXR, kToolFrameYR, kToolFrameZR});
 }
 
 Point ArcSpecialtiesWriter::firstTravelPointAboveTravelLowerDestination(const Point& travel_destination,

@@ -5,6 +5,7 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QObject>
+#include <QSet>
 #include <QToolButton>
 #include <QWidget>
 #include <functional>
@@ -61,6 +62,9 @@ class SettingRowBase {
     //! \return row label text
     QString getLabelText();
 
+    //! \brief Returns the full setting name and group titles used by search.
+    QString getSearchText() const;
+
     //! \brief Styles row label
     //! \param isConsistent: whether or not settings are consistent
     void styleLabel(bool isConsistent);
@@ -81,6 +85,9 @@ class SettingRowBase {
     //! \return master json information containing dependency information
     fifojson getDependencies();
 
+    //! \brief Returns conditions that hide this row independently of disabled-setting preferences.
+    fifojson getVisibilityDependencies();
+
     //! \brief Check dependencies and enable/disable as appropriate
     void checkDependencies();
 
@@ -96,9 +103,15 @@ class SettingRowBase {
     //! \brief Returns whether this row's widgets should currently be visible.
     bool isShown() const;
 
+    //! \brief Temporarily reveals an overview navigation target without enabling inactive settings.
+    void setNavigationRevealed(bool revealed);
+
     //! \brief Sets dependency logic for this row
     //! \param root: DependencyNode object that contains all dependency information
     void setDependencyLogic(DependencyNode root);
+
+    //! \brief Sets the conditions that control whether this row is applicable.
+    void setVisibilityLogic(DependencyNode root);
 
     //! \brief Adds rows to dependency list
     //! \param row: row to add to depenendcy list
@@ -129,6 +142,9 @@ class SettingRowBase {
 
     //! \brief Set callback used to notify before this row writes a new value.
     void setValueChangeCallback(ValueChangeCallback callback);
+
+    //! \brief Marks global rows whose keys have differing part or layer values.
+    void setOverriddenKeys(const QSet<QString>& part_keys, const QSet<QString>& layer_keys);
 
    protected:
     //! \brief Function to handle value changes for each widget type
@@ -325,11 +341,19 @@ class SettingRowBase {
     //! \brief Button used to remove selected local overrides.
     QScopedPointer<QToolButton> m_reset_button;
 
+    //! \brief Passive indicators for global values overridden by part or layer settings.
+    QScopedPointer<QLabel> m_part_override_indicator;
+    QScopedPointer<QLabel> m_layer_override_indicator;
+    bool m_part_overridden  = false;
+    bool m_layer_overridden = false;
+
     //! \brief Editor widgets that must follow row visibility and enabled state.
     QList<QWidget*> m_row_widgets;
 
     //! \brief Whether this row is currently visible.
     bool m_row_visible;
+
+    bool m_navigation_revealed = false;
 
     //! \brief Whether this row is currently enabled.
     bool m_row_enabled;
@@ -337,11 +361,17 @@ class SettingRowBase {
     //! \brief Whether this row is currently enabled by dependency logic.
     bool m_dependency_enabled;
 
+    //! \brief Whether this row is applicable under its visibility conditions.
+    bool m_visibility_enabled;
+
     //! \brief Master json that this row was constructed from
     fifojson m_json;
 
     //! \brief Nodes that hold the other settings this row is dependent on for enable/disable
     DependencyNode m_dependency_logic;
+
+    //! \brief Nodes that control visibility independently of dependency enablement.
+    DependencyNode m_visibility_logic;
 
     //! \brief Holds pointers to dependents to notify when current value changes
     QList<QSharedPointer<SettingRowBase>> m_rows_to_notify;

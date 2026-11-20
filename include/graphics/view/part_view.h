@@ -335,6 +335,9 @@ class PartView : public BaseView {
         //! \brief If the view is currently blocking the model updates or not.
         bool blocking = false;
 
+        //! \brief Suppresses transform callbacks while the view writes its transforms to the model.
+        bool model_transform_blocked = false;
+
         //! \brief Timer used to determine if a rotation or a right click menu should be shown.
         QElapsedTimer right_click_timer;
     } m_state;
@@ -411,6 +414,9 @@ class PartView : public BaseView {
     //! \brief Blocks the model from modifying the view. Useful when making model changes in the view to prevent
     //! feedback.
     void blockModel();
+
+    //! \brief Copies a part hierarchy's visible transforms to the model without applying the motion again.
+    void synchronizePartTransformations(QSharedPointer<PartMetaItem> pm);
 
     //! \brief Allows the model to modify the view. Useful when making model changes in the view to prevent feedback.
     void permitModel();

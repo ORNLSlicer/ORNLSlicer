@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QObject>
+#include <QPointer>
+#include <QUndoStack>
 
 #include <qlist.h>
 #include <qmap.h>
@@ -64,6 +66,13 @@ class PartMetaModel : public QObject, public QEnableSharedFromThis<PartMetaModel
     //! \brief Sets the number of items that are instances of this item.
     void setInstanceCount(QSharedPointer<PartMetaItem> pm, int count);
 
+    //! \brief User hierarchy operations preserve world placement and share the application undo stack.
+    void setUndoStack(QUndoStack* stack);
+    bool reparentItems(QList<QSharedPointer<PartMetaItem>> items, QSharedPointer<PartMetaItem> parent);
+    void deleteItems(QList<QSharedPointer<PartMetaItem>> items, bool delete_children);
+    void setModifiersEnabled(QList<QSharedPointer<PartMetaItem>> items, bool enabled);
+    bool hierarchyChangeInProgress() const;
+
    signals:
     //! \brief Signal that an item was added.
     void itemAddedUpdate(QSharedPointer<PartMetaItem> pm);
@@ -85,6 +94,8 @@ class PartMetaModel : public QObject, public QEnableSharedFromThis<PartMetaModel
     //! \brief Signal that any update has occured.
     void modelUpdated(QSharedPointer<PartMetaItem> pm);
 
+    void hierarchyChanged();
+
    private slots:
     //! \brief Slot to recieve updates from items.
     void itemUpdated(PartMetaItem::PartMetaUpdateType type);
@@ -92,6 +103,21 @@ class PartMetaModel : public QObject, public QEnableSharedFromThis<PartMetaModel
    private:
     //! \brief Items need access to private slots.
     friend class PartMetaItem;
+    friend class HierarchyUndoCommand;
+
+    struct HierarchyState {
+        QSharedPointer<PartMetaItem> item;
+        QSharedPointer<PartMetaItem> parent;
+        bool enabled;
+        bool present = true;
+    };
+    QList<HierarchyState> hierarchyState(const QList<QSharedPointer<PartMetaItem>>& items);
+    void applyHierarchyState(const QList<HierarchyState>& states);
+    void changeHierarchy(const QString& text, const QList<HierarchyState>& before, const QList<HierarchyState>& after);
+    QSharedPointer<PartMetaItem> duplicateItem(QSharedPointer<PartMetaItem> item);
+
+    QPointer<QUndoStack> m_undo_stack;
+    bool m_changing_hierarchy = false;
 
     //! \brief Items.
     QMap<QSharedPointer<Part>, QSharedPointer<PartMetaItem>> m_pointer_lookup;

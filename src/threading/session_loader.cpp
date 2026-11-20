@@ -91,8 +91,7 @@ void SessionLoader::saveSession() {
     QVector<session_file> jsons;
 
     // Add part transforms
-    jsons.append({Constants::Settings::Session::Files::kSession,
-                  CSM->partsJson()});  // TODO: this need updated to reflect parent/ child relationships
+    jsons.append({Constants::Settings::Session::Files::kSession, CSM->partsJson()});
 
     // Add global settings
     jsons.append({Constants::Settings::Session::Files::kGlobal, GSM->globalJson()});

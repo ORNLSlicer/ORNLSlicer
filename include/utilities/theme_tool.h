@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QColor>
+#include <QPalette>
 #include <QWidget>
 
 #include <qcontainerfwd.h>
@@ -14,6 +15,9 @@ namespace ORNL {
  */
 class Theme {
    public:
+    //! @brief Loads the bundled GUI fonts and sets the application default after QApplication/resource setup.
+    static bool initializeFonts();
+
     //! @brief Constructor
     //! @param themeNum Number corresponding to the desired theme (should be taken from ThemeName enumerator)
     Theme(int themeNum);
@@ -178,11 +182,15 @@ class Theme {
     //! @return QString holding the folder path for the current theme
     QString getFolderPath();
 
+    //! @brief Returns the application palette for controls and standalone dialogs.
+    QPalette getPalette();
+
    private:
     //! Folder path
     QString m_folder_path;
 
     //! Colors
+    QPalette m_palette;
     QVector<double> m_bgColor;
     QVector<QColor> m_dotColors;
     QColor m_dotColor_paired;

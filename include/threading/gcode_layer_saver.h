@@ -5,11 +5,13 @@
 
 #include <qtmetamacros.h>
 
+#include "gcode/gcode_layer_export.h"
+
 namespace ORNL {
 class GCodeLayerSaver : public QThread {
     Q_OBJECT
    public:
-    GCodeLayerSaver(QString path, QString part_name, QString text, QString comment_starting_delimiter, QString suffix);
+    GCodeLayerSaver(QString path, QString part_name, QVector<GcodeLayer> layers, QString suffix);
 
     void run() override;
 
@@ -19,8 +21,7 @@ class GCodeLayerSaver : public QThread {
    private:
     QString m_path;
     QString m_part_name;
-    QString m_text;
-    QString m_comment_starting_delimiter;
+    QVector<GcodeLayer> m_layers;
     QString m_suffix;
 };
 }  // namespace ORNL

@@ -8,6 +8,7 @@
 #include <exception>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 
 #include <qdebug.h>
 #include <qfiledevice.h>
@@ -281,8 +282,10 @@ QSharedPointer<WriterBase> makeWriter(GcodeSyntax syntax, const QSharedPointer<S
 }  // namespace
 
 void AbstractSlicingThread::setGcodeOutput(QString output) {
-    m_syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
-    m_base   = makeWriter(m_syntax, GSM->getGlobal());
+    m_layer_programs.clear();
+    m_requires_weld_schedule_file = false;
+    m_syntax                      = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+    m_base                        = makeWriter(m_syntax, GSM->getGlobal());
 
     if (!m_skip_gcode) {
         m_temp_gcode_output_file.setFileName(output);
@@ -301,6 +304,8 @@ bool AbstractSlicingThread::shouldCancel() {
     if (m_should_cancel) {
         m_should_cancel = false;
         m_temp_gcode_output_file.close();
+        m_layer_programs.clear();
+        m_requires_weld_schedule_file = false;
         return true;
     }
 
@@ -319,8 +324,30 @@ void AbstractSlicingThread::forwardStatus(StatusUpdateStepType type, int complet
     emit statusUpdate(type, completedPercentage);
 }
 
+bool AbstractSlicingThread::writeGCodeFile() {
+    m_layer_programs.clear();
+    m_requires_weld_schedule_file = false;
+    try {
+        writeGCodeSetup();
+        writeGCode();
+        writeGCodeShutdown();
+        m_requires_weld_schedule_file = m_syntax == GcodeSyntax::kArcSpecialties &&
+                                        m_base.staticCast<ArcSpecialtiesWriter>()->shouldGenerateWeldScheduleFile();
+        return true;
+    } catch (const std::invalid_argument& error) {
+        m_temp_gcode_output_file.resize(0);
+        m_temp_gcode_output_file.close();
+        m_layer_programs.clear();
+        emit sliceFailed(QString::fromUtf8(error.what()));
+        return false;
+    }
+}
+
 void AbstractSlicingThread::writeGCodeSetup() {
-    QTextStream stream(&m_temp_gcode_output_file);
+    m_generate_individual_layers =
+        m_syntax != GcodeSyntax::kAdamantine && GSM->getGlobal()->setting<bool>(ES::FileOutput::kIndividualLayerOutput);
+    m_layer_export_header.clear();
+    QTextStream stream(&m_layer_export_header);
 
     float minimum_x(std::numeric_limits<float>::max()), minimum_y(std::numeric_limits<float>::max()),
         maximum_x(std::numeric_limits<float>::min()), maximum_y(std::numeric_limits<float>::min()),
@@ -346,11 +373,19 @@ void AbstractSlicingThread::writeGCodeSetup() {
     stream << m_base->writeInitialSetup(Distance(minimum_x), Distance(minimum_y), Distance(maximum_x),
                                         Distance(maximum_y), m_max_steps);
 
-    if (m_syntax != GcodeSyntax::kAdamantine) { stream << m_base->writeCommentLine(kLayerHeaderEnd); }
+    stream.flush();
+    QTextStream output(&m_temp_gcode_output_file);
+    output << m_layer_export_header;
 
     // Reproduce the state established by the shared header, without inheriting any earlier layer.
     m_layer_export_setup = [=, this]() {
-        auto writer = makeWriter(m_syntax, GSM->getGlobal());
+        auto settings = GSM->getGlobal();
+        if (m_syntax == GcodeSyntax::kArcSpecialties) {
+            settings = QSharedPointer<SettingsBase>::create(*settings);
+            settings->setSetting(PS::ArcSpecialties::kGenerateWeldScheduleFile,
+                                 m_base.staticCast<ArcSpecialtiesWriter>()->shouldGenerateWeldScheduleFile());
+        }
+        auto writer = makeWriter(m_syntax, settings);
         if (has_part_bounds) { writer->setBuildMaximumZ(Distance(maximum_z)); }
         writer->writeInitialSetup(Distance(minimum_x), Distance(minimum_y), Distance(maximum_x), Distance(maximum_y),
                                   m_max_steps);
@@ -358,11 +393,25 @@ void AbstractSlicingThread::writeGCodeSetup() {
     };
 }
 
+void AbstractSlicingThread::prepareLayerExport(
+    uint layer_number, float min_z, const QSharedPointer<SettingsBase>& settings,
+    const std::function<QString(const QSharedPointer<WriterBase>&)>& emit_layer) {
+    if (!m_generate_individual_layers) { return; }
+    auto writer = m_layer_export_setup();
+    const QString standalone =
+        writer->writeStandaloneLayer(layer_number, min_z, settings, [&]() { return emit_layer(writer); });
+    m_layer_programs.push_back({WriterBase::layerNumber(settings, layer_number), m_layer_export_header + standalone});
+}
+
 void AbstractSlicingThread::writeGCodeShutdown() {
     {
         QTextStream stream(&m_temp_gcode_output_file);
-        stream << m_base->writeShutdownWithLayerMarkers();
-        if (m_syntax != GcodeSyntax::kMVP) stream << m_base->writeSettingsFooter();
+        stream << m_base->writeShutdown();
+        if (m_syntax != GcodeSyntax::kMVP) {
+            const QString footer = m_base->writeSettingsFooter();
+            stream << footer;
+            if (!m_layer_programs.isEmpty()) { m_layer_programs.last().text += footer; }
+        }
         stream.flush();
     }
     writeLayerTimeComments();
@@ -408,13 +457,13 @@ void AbstractSlicingThread::writeLayerTimeComments() {
         }
 
         const int layer_time_offset = adjusted_layer_times.size() > layer_marker_count ? 1 : 0;
+        int generated_layer_index   = 0;
         for (int line_index = 0; line_index < annotated_lines.size(); ++line_index) {
             const QRegularExpressionMatch match = layer_marker.match(annotated_lines[line_index]);
             if (!match.hasMatch()) { continue; }
 
-            bool converted             = false;
-            const int layer_time_index = match.captured(1).toInt(&converted) - 1 + layer_time_offset;
-            if (!converted || layer_time_index < 0 || layer_time_index >= adjusted_layer_times.size()) { continue; }
+            const int layer_time_index = generated_layer_index++ + layer_time_offset;
+            if (layer_time_index >= adjusted_layer_times.size()) { continue; }
 
             annotated_lines.insert(line_index + 1, layerTimeComment(meta, adjusted_layer_times[layer_time_index]));
             ++line_index;

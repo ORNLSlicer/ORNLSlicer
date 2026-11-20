@@ -63,6 +63,9 @@ class SettingBar : public QWidget {
     //! \param path Path of current folder
     void setCurrentFolder(QString path);
 
+    //! \brief Reveals and focuses an existing row without changing settings or visibility preferences.
+    bool focusSetting(const QString& key);
+
    signals:
     /*!
      * \brief Signals that a setting is about to be modified.
@@ -150,6 +153,12 @@ class SettingBar : public QWidget {
     //! \brief Reloads a restored setting row and forwards normal modified-setting notifications.
     void restoreSettingValue(QString setting_key);
 
+    //! \brief Refreshes indicators for global values overridden by part or layer settings.
+    void refreshOverrideIndicators();
+
+    //! \brief Defers indicator scans while the session loader modifies parts and settings.
+    void setOverrideIndicatorsSuspended(bool suspended);
+
     //! \brief Starts a paired setting edit driven by a view interaction.
     void beginPairedGlobalSettingChange(QString first_key, QString second_key);
 
@@ -222,6 +231,8 @@ class SettingBar : public QWidget {
     //! \brief Reloads rows after unit changes and refreshes dynamic warnings once.
     void reloadRowsForUnitChange();
 
+    void clearNavigationFocus();
+
     //! \brief Setup the static widgets and their layouts.
     void setupWidget();
 
@@ -291,5 +302,13 @@ class SettingBar : public QWidget {
 
     //! \brief Defers full dynamic warning refreshes while rows are reloaded in bulk.
     bool m_suppress_dynamic_dependency_refresh = false;
+
+    //! \brief Prevents indicator scans while project data is being loaded on a worker thread.
+    bool m_override_indicators_suspended = false;
+
+    QSharedPointer<SettingRowBase> m_navigation_row;
+    SettingPane* m_navigation_hidden_pane = nullptr;
+    QString m_navigation_hidden_category;
+    QString m_navigation_search;
 };
 }  // Namespace ORNL

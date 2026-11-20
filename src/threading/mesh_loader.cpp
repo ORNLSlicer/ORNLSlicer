@@ -77,25 +77,9 @@ void applyInitialTransform(const QSharedPointer<MeshBase>& mesh, QMatrix4x4 tran
     mesh->setTransformation(transform);
 }
 
-MeshTypes::SurfaceMesh buildSurfaceMeshFromStep(const QString& file_path) {
-    MeshTypes::SurfaceMesh surface_mesh;
-
-    Interface_Static::SetCVal("xstep.cascade.unit", "MM");
-
-    STEPControl_Reader reader;
-    const QByteArray file_path_data = file_path.toUtf8();
-    if (reader.ReadFile(file_path_data.constData()) != IFSelect_RetDone) return surface_mesh;
-
-    if (reader.TransferRoots() == 0) return surface_mesh;
-
-    TopoDS_Shape shape = reader.OneShape();
-    if (shape.IsNull()) return surface_mesh;
-
-    const double linear_deflection_mm = PreferencesManager::getInstance()->getStepStlLinearDeflection().to(mm);
-    BRepMesh_IncrementalMesh mesher(shape, linear_deflection_mm, false, kStepAngularDeflectionRadians, true);
-    mesher.Perform();
-    if (!mesher.IsDone()) return surface_mesh;
-
+//! \brief Appends the triangulated faces of \p shape to \p surface_mesh, skipping faces inside sub-shapes of type
+//! \p avoid. Coincident vertices are welded only among the faces appended by this call.
+void appendStepFaces(const TopoDS_Shape& shape, TopAbs_ShapeEnum avoid, MeshTypes::SurfaceMesh& surface_mesh) {
     using VertexIndex = MeshTypes::SurfaceMesh::Vertex_index;
     std::map<std::tuple<long long, long long, long long>, VertexIndex> vertex_lookup;
 
@@ -113,7 +97,7 @@ MeshTypes::SurfaceMesh buildSurfaceMeshFromStep(const QString& file_path) {
         return index;
     };
 
-    for (TopExp_Explorer explorer(shape, TopAbs_FACE); explorer.More(); explorer.Next()) {
+    for (TopExp_Explorer explorer(shape, TopAbs_FACE, avoid); explorer.More(); explorer.Next()) {
         TopoDS_Face face = TopoDS::Face(explorer.Current());
 
         TopLoc_Location location;
@@ -144,6 +128,35 @@ MeshTypes::SurfaceMesh buildSurfaceMeshFromStep(const QString& file_path) {
                 surface_mesh.add_face(indices[0], indices[2], indices[1]);
         }
     }
+}
+
+MeshTypes::SurfaceMesh buildSurfaceMeshFromStep(const QString& file_path) {
+    MeshTypes::SurfaceMesh surface_mesh;
+
+    Interface_Static::SetCVal("xstep.cascade.unit", "MM");
+
+    STEPControl_Reader reader;
+    const QByteArray file_path_data = file_path.toUtf8();
+    if (reader.ReadFile(file_path_data.constData()) != IFSelect_RetDone) return surface_mesh;
+
+    if (reader.TransferRoots() == 0) return surface_mesh;
+
+    TopoDS_Shape shape = reader.OneShape();
+    if (shape.IsNull()) return surface_mesh;
+
+    const double linear_deflection_mm = PreferencesManager::getInstance()->getStepStlLinearDeflection().to(mm);
+    BRepMesh_IncrementalMesh mesher(shape, linear_deflection_mm, false, kStepAngularDeflectionRadians, true);
+    mesher.Perform();
+    if (!mesher.IsDone()) return surface_mesh;
+
+    // Weld coincident vertices within one shell at a time. Welding across the whole compound merges vertices of
+    // solids that touch each other (assemblies) or of a solid's inner void shells, which creates non-manifold
+    // vertices that Surface_mesh::add_face rejects and leaves a watertight model open.
+    for (TopExp_Explorer shell_explorer(shape, TopAbs_SHELL); shell_explorer.More(); shell_explorer.Next())
+        appendStepFaces(shell_explorer.Current(), TopAbs_SHAPE, surface_mesh);
+
+    // Faces that are not part of any shell.
+    appendStepFaces(shape, TopAbs_SHELL, surface_mesh);
 
     return surface_mesh;
 }
@@ -254,7 +267,7 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
 
     Assimp::Importer importer;
 
-    auto model_type = file_info.suffix();
+    auto model_type = file_info.suffix().toLower();
 
     if (isStepFile(model_type)) {
         auto step_meshes = loadStepMeshes(file_info, mt, transform, unit, file_data, read_from_memory);
@@ -262,25 +275,25 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
         return step_meshes;
     }
 
-    if (model_type == "stl" || model_type == "STL") {
+    if (model_type == "stl") {
         scene =
             importer.ReadFileFromMemory(file_data.first, file_data.second,
                                         aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType,
                                         "stl");  // Tell assimp we are using STL.
     }
-    else if (model_type == "3mf" || model_type == "3MF") {
+    else if (model_type == "3mf") {
         scene =
             importer.ReadFileFromMemory(file_data.first, file_data.second,
                                         aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType,
                                         "3mf");  // Tell assimp we are using 3mf.
     }
-    else if (model_type == "obj" || model_type == "OBJ") {
+    else if (model_type == "obj") {
         scene = importer.ReadFileFromMemory(
             file_data.first, file_data.second,
             aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_SortByPType,
             "obj");  // Tell assimp we are using obj.
     }
-    else if (model_type == "amf" || model_type == "AMF") {
+    else if (model_type == "amf") {
         scene = importer.ReadFileFromMemory(
             file_data.first, file_data.second,
             aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_SortByPType,

@@ -18,6 +18,7 @@
 #include <qtmetamacros.h>
 #include <qtypes.h>
 
+#include "gcode/gcode_layer_export.h"
 #include "geometry/mesh/mesh_base.h"
 #include "part/part.h"
 #include "utilities/enums.h"
@@ -65,6 +66,9 @@ class SessionManager : public QObject {
     inline QMap<QString, QSharedPointer<Part>>& parts() {
         return m_parts;
     }
+
+    //! \brief Copy the part list safely while background mesh imports add parts.
+    QMap<QString, QSharedPointer<Part>> partsSnapshot();
 
     //! \brief Returns a Part class associated with a name.
     inline QSharedPointer<Part> getPart(QString name) {
@@ -214,6 +218,12 @@ class SessionManager : public QObject {
     //! \brief Signals the internal slicing thread has complete computation.
     bool sliceComplete();
 
+    //! \brief Standalone layer programs from the completed slice.
+    QVector<GcodeLayer> layerPrograms() const;
+
+    //! \brief Whether the completed slice requires a generated ARC weld schedule companion.
+    bool requiresWeldScheduleFile() const;
+
     //! \brief Returns the time elapsed for the current slice.
     qint64 getSliceTimeElapsed();
 
@@ -277,13 +287,16 @@ class SessionManager : public QObject {
     //! \brief Signal that slicing has complete.  Forward to main window to start visualization and adjust layer times.
     void forwardSliceComplete(QString filepath, bool alterFile);
 
+    //! \brief Signal that slicing failed and no G-Code should be imported or exported.
+    void sliceFailed(QString message);
+
     //! \brief Signal that slicing thread has started writing the GCode file.
     void forwardStatusUpdate(QString status);
 
     //! \brief Signal that a session file has been saved successfully.
     void sessionSaved(QString path);
 
-    //! \brief Signal for total number of parts expected to load from project
+    //! \brief Number of root partAdded notifications expected when loading a project.
     void totalPartsInProject(int total);
 
    private:

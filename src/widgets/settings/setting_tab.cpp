@@ -1,5 +1,6 @@
 #include "widgets/settings/setting_tab.h"
 
+#include <QGroupBox>
 #include <cstddef>
 
 #include <qboxlayout.h>
@@ -60,6 +61,8 @@ fifojson makeInputRowJson(const fifojson& setting_json, const fifojson& input) {
     row_json[Constants::Settings::Master::kMinor]   = input.at(Constants::Settings::Input::kMinor);
     row_json[Constants::Settings::Master::kMajor]   = input.at(Constants::Settings::Input::kMajor);
     row_json[Constants::Settings::Master::kLocal]   = input.at(Constants::Settings::Input::kLocal);
+    if (input.contains(Constants::Settings::Input::kVisibleIf))
+        row_json[Constants::Settings::Master::kVisibleIf] = input.at(Constants::Settings::Input::kVisibleIf);
     return row_json;
 }
 }  // namespace
@@ -131,6 +134,81 @@ bool SettingTab::hasShownRows() const {
     return false;
 }
 
+void SettingTab::refreshGroupVisibility(bool searching) {
+    m_group_searching = searching;
+    for (auto it = m_group_cells.begin(); it != m_group_cells.end(); ++it)
+        it.value()->setVisible(m_rows.value(it.key())->isShown());
+    for (auto& group : m_groups) {
+        bool visible = false;
+        for (const auto& key : group.keys) visible |= m_rows.value(key)->isShown();
+        group.frame->setVisible(visible);
+        if (group.toggle != nullptr) {
+            const bool expanded = searching || !group.collapsed;
+            group.content->setVisible(expanded);
+            group.toggle->setArrowType(expanded ? Qt::DownArrow : Qt::RightArrow);
+            group.toggle->setEnabled(!searching);
+            group.toggle->setToolTip(searching ? "Matching regions stay expanded while searching."
+                                               : "Expand or collapse this region's weld schedule settings.");
+        }
+    }
+}
+
+std::pair<QGridLayout*, int> SettingTab::groupedRowLayout(const QString& key, const fifojson& metadata) {
+    const QString region  = jsonString(metadata, Constants::Settings::Group::kRegion);
+    const QString section = jsonString(metadata, Constants::Settings::Group::kSection);
+    const QString path    = region + "/" + section;
+    if (!m_groups.contains(region)) {
+        m_container_layout->setAlignment(Qt::AlignTop);
+        SettingGroup group;
+        group.frame = new QFrame(m_container);
+        group.frame->setObjectName("setting_group_" + region);
+        auto* layout = new QVBoxLayout(group.frame);
+        layout->setContentsMargins(8, 4, 0, 4);
+        group.toggle = new QToolButton(group.frame);
+        group.toggle->setObjectName("setting_group_toggle_" + region);
+        group.toggle->setProperty("settingGroupToggle", true);
+        group.toggle->setText(region);
+        group.toggle->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        group.toggle->setAutoRaise(true);
+        group.content = new QFrame(group.frame);
+        group.content->setObjectName("setting_group_content_" + region);
+        group.layout = new QGridLayout(group.content);
+        group.layout->setContentsMargins(0, 0, 0, 0);
+        layout->addWidget(group.toggle);
+        layout->addWidget(group.content);
+        connect(group.toggle, &QToolButton::clicked, this, [this, region]() {
+            m_groups[region].collapsed = !m_groups[region].collapsed;
+            refreshGroupVisibility(m_group_searching);
+        });
+        m_container_layout->addWidget(group.frame, m_size++, 0, 1, 5);
+        m_groups.insert(region, group);
+    }
+    if (!m_groups.contains(path)) {
+        SettingGroup group;
+        group.frame = new QGroupBox(section, m_groups[region].content);
+        group.frame->setObjectName("setting_group_" + path);
+        group.content = group.frame;
+        group.layout  = new QGridLayout(group.content);
+        group.layout->setContentsMargins(8, 8, 8, 8);
+        m_groups[region].layout->addWidget(group.frame, m_groups[region].layout->rowCount(), 0);
+        m_groups.insert(path, group);
+    }
+    auto& group = m_groups[path];
+    group.keys.append(key);
+    m_groups[region].keys.append(key);
+    const int index = group.size++;
+    if (metadata.value(Constants::Settings::Group::kColumns, 1) == 2) {
+        auto* cell   = new QWidget(group.content);
+        auto* layout = new QGridLayout(cell);
+        layout->setColumnStretch(1, 1);
+        group.layout->addWidget(cell, index / 2, index % 2);
+        group.layout->setColumnStretch(index % 2, 1);
+        m_group_cells.insert(key, cell);
+        return {layout, 0};
+    }
+    return {group.layout, index};
+}
+
 void SettingTab::addRow(QString key, const fifojson& json, const fifojson& input) {
     if (m_row_aliases.contains(key)) return;
 
@@ -174,16 +252,28 @@ void SettingTab::addRow(QString key, const fifojson& json, const fifojson& input
         return;
     }
 
-    QSharedPointer<SettingRowBase> newRow =
-        QSharedPointer<SettingRowBase>(m_creation_mapping[json.at(Constants::Settings::Master::kType)](
-            this, m_sb, key, json, m_container_layout, m_size));
+    QGridLayout* row_layout = m_container_layout;
+    int row_index           = m_size;
+    const bool grouped      = json.contains(Constants::Settings::Master::kGroup);
+    if (grouped) {
+        const auto placement = groupedRowLayout(key, json.at(Constants::Settings::Master::kGroup));
+        row_layout           = placement.first;
+        row_index            = placement.second;
+    }
+    QSharedPointer<SettingRowBase> newRow = QSharedPointer<SettingRowBase>(
+        m_creation_mapping[json.at(Constants::Settings::Master::kType)](this, m_sb, key, json, row_layout, row_index));
+    if (grouped) {
+        const int margin = m_group_cells.contains(key) ? 0 : 8;
+        row_layout->setContentsMargins(margin, margin, margin, margin);
+        if (!m_group_cells.contains(key)) row_layout->setColumnStretch(1, 1);
+    }
 
     newRow->setValueChangeCallback(
         [this](const QString& changed_key, const QList<QSharedPointer<SettingsBase>>& settings_bases) {
             emit settingAboutToChange(changed_key, settings_bases);
         });
     m_rows.insert(key, newRow);
-    ++m_size;
+    if (!grouped) ++m_size;
 }
 
 void SettingTab::keyModified(QString key) {

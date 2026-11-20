@@ -12,6 +12,8 @@ sources:
     resource: repo://resources/settings/022_profile_perimeter.yaml
   - id: openwiki-source-ef4b9c6751bed39ac234315e
     resource: repo://resources/settings/023_profile_inset.yaml
+  - id: openwiki-source-705e367d28f02d33c9e68315
+    resource: repo://resources/settings/040_profile_arc_specialties.yaml
   - id: openwiki-source-6f5d88049adbd611fb8e2754
     resource: repo://resources/settings/README.md
   - id: openwiki-source-f3d5520098265089809f783c
@@ -30,10 +32,16 @@ sources:
     resource: repo://src/slicing/preprocessor.cpp
   - id: openwiki-source-e451362b0f73808dce5d1127
     resource: repo://src/step/layer/regions/perimeter.cpp
+  - id: openwiki-source-36534df945d3cf811e962890
+    resource: repo://src/utilities/theme_tool.cpp
+  - id: openwiki-source-e9f59b825434f12cc1c38d48
+    resource: repo://src/widgets/settings/double_spin_subtypes/setting_speed_spin_box.cpp
   - id: openwiki-source-cd03371ffb111a7bd1510481
     resource: repo://src/widgets/settings/setting_bar.cpp
   - id: openwiki-source-ab8500cd8bf29ac0c5dcbd85
     resource: repo://src/widgets/settings/setting_tab.cpp
+  - id: openwiki-source-403d1cb683b233c4f42460d0
+    resource: repo://src/windows/main_window.cpp
   - id: openwiki-source-c8c3856269528aaa315ddcb3
     resource: repo://src/windows/settings_file_compare.cpp
   - id: openwiki-source-6949df8bebfa2cc2eb946f04
@@ -44,10 +52,10 @@ sources:
     resource: repo://tests/settings_manager_tests.cpp
   - id: openwiki-source-1fd14546369693e17741b750
     resource: repo://tests/settings_version_control_tests.cpp
-generated: { by: "codex", at: "2026-10-20T18:20:49.849Z" }
+generated: { by: "codex", at: "2026-11-10T17:47:51.624Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-20T18:20:49.849Z
+    at: 2026-11-10T17:47:51.624Z
 ---
 
 # Settings, Templates, and Preferences
@@ -97,7 +105,7 @@ Files are read in sorted path order and entries retain file order, so the filena
 
 Every scalar setting must declare `display`, `type`, `tooltip`, `depends`, `options`, `default`, `minor`, `major`, `namespace`, `symbol`, and `local`. An optional top-level `inputs` section describes composite `vector2` and `vector3` rows over existing scalar settings. [source](repo://scripts/generate_master_config.py#L18-L42)
 
-Generation is also validation. It rejects unknown or missing fields, invalid types, malformed or unknown dependencies, invalid enumeration defaults, duplicate names, invalid composite widgets, missing or reused components, and mismatched component categories or locality. Only after all definitions validate does it emit deterministic JSON. [source](repo://scripts/generate_master_config.py#L235-L308) [source](repo://scripts/generate_master_config.py#L311-L380) [source](repo://scripts/generate_master_config.py#L427-L487)
+Generation is also validation. It rejects unknown or missing fields, invalid types, malformed or unknown dependencies, invalid enumeration defaults, duplicate names, invalid composite widgets, missing or reused components, and mismatched component categories or locality. Optional `group` metadata requires nonempty region, section and label fields and allows one or two columns. Only after validation does it emit deterministic JSON. [source](repo://scripts/generate_master_config.py#L235-L380) [source](repo://scripts/generate_master_config.py#L447-L503)
 
 When automatic generation is enabled, CMake watches the YAML tree and generator script, regenerates both configuration files, and makes the main object target depend on that output. A missing Python interpreter or empty settings tree is a configure-time failure. [source](repo://CMakeLists.txt#L478-L518)
 
@@ -108,6 +116,8 @@ When automatic generation is enabled, CMake watches the YAML tree and generator 
 This means template composition is overwrite-based and call-order-sensitive when two selected files contain the same key. Normal template organization avoids overlap by assigning settings to their master `major` category, but `SettingsBase::populate` itself simply replaces matching keys in iteration order. [source](repo://src/configs/settings_base.cpp#L17-L27)
 
 Layer-bar templates use `.s2l`. Each entry supplies a low layer, high layer, and sparse settings object; loading creates a `SettingsRange` for each entry. The range endpoints are inclusive, and multiple matching ranges are applied in their container order. [source](repo://src/managers/settings/settings_manager.cpp#L155-L194) [source](repo://src/configs/settings_range.cpp#L35-L47)
+
+Reloading a template replaces its cached categories and keys. The manager separately retains the keys actually applied, so switching away can reset keys removed by a later reload to master defaults. The dropdown uses `textActivated`; an optional preference prompts to apply a file to every category it contains. Declining applies only the active category, and reselecting its current file preserves manual edits unless applying across categories is accepted. [source](repo://src/managers/settings/settings_manager.cpp#L173-L193) [source](repo://src/managers/settings/settings_manager.cpp#L263-L268) [source](repo://src/managers/settings/settings_manager.cpp#L404-L417) [source](repo://src/widgets/settings/setting_bar.cpp#L329-L363) [source](repo://src/widgets/settings/setting_bar.cpp#L695-L695)
 
 ## Effective-setting precedence
 
@@ -139,6 +149,10 @@ When adding or changing a setting, keep all layers aligned:
 4. Add or update the corresponding constants and runtime consumer separately; metadata does not itself implement slicing behavior.
 5. Exercise generation plus the focused consumer or migration tests.
 
+ARC weld forms use metadata-defined region headers and section frames. Regions collapse independently; search expands matching regions and disables their collapse controls until searching ends. Hidden rows hide their cells/empty groups. Gas Timing remains one setting per row in each region; metadata can request two columns for other sections. Helical controls live with their perimeter/inset/infill region controls. [source](repo://src/widgets/settings/setting_tab.cpp#L137-L210) [source](repo://resources/settings/040_profile_arc_specialties.yaml#L1-L57) [source](repo://resources/settings/022_profile_perimeter.yaml#L306-L370)
+
+Global rows show separate part and layer override indicators when sparse values differ from the global value (or master default if absent). Scans include all parts and their ranges; project setup suspends scans and resumes on worker completion or early exit. Composite rows aggregate component keys. ARC wire-feed speed controls are exempt from machine XY motion-speed limits. [source](repo://src/widgets/settings/setting_bar.cpp#L238-L270) [source](repo://src/windows/main_window.cpp#L1741-L1754) [source](repo://src/widgets/settings/double_spin_subtypes/setting_speed_spin_box.cpp#L30-L42)
+
 ## Versioning and migration
 
 Saved setting files carry a master version. If an older file is loaded, `SettingsManager::checkVersion` can roll it forward automatically, ask in the GUI, or ask on the console. Accepting a prompted migration mutates the JSON; file-based template loading writes the migrated document back. Declining returns `-1`, but the current loader still continues to inspect and load the document, so callers must not describe decline as a hard rejection. [source](repo://src/managers/settings/settings_manager.cpp#L301-L366) [source](repo://src/managers/settings/settings_manager.cpp#L93-L139)
@@ -147,7 +161,7 @@ Migrations are sequential transformations in `SettingsVersionControl`, now throu
 
 `checkVersion` snapshots the document before attempting migration and restores it on exceptions, returning `-1` and showing a GUI error for prompted updates. As with declined migration, callers must inspect their own handling of that result rather than assuming a hard load rejection. [source](repo://src/managers/settings/settings_manager.cpp#L301-L366)
 
-Connected contour enable flags are local-capable, but complete-loop, connect-after-wipe, and perimeter-to-inset chain controls are global-only metadata. Their dependencies restrict them to planar slicing and the relevant enabled regions. See [Planar Path Generation](../slicing/planar-path-generation.md) for geometry and fallback behavior. [source](repo://resources/settings/022_profile_perimeter.yaml#L235-L282) [source](repo://resources/settings/023_profile_inset.yaml#L148-L183)
+Connected contour enable flags are local-capable, but complete-loop, connect-after-wipe, and perimeter-to-inset chain controls are global-only metadata. Their dependencies restrict them to planar slicing and the relevant enabled regions. See [Planar Path Generation](../slicing/planar-path-generation.md) for geometry and fallback behavior. [source](repo://resources/settings/022_profile_perimeter.yaml#L254-L305) [source](repo://resources/settings/023_profile_inset.yaml#L161-L201)
 
 Serialization should go through the version formatter. `globalJson()` and `saveTemplate()` both attach the current versioned header rather than writing the in-memory settings array directly. [source](repo://src/managers/settings/settings_manager.cpp#L463-L466) [source](repo://src/managers/settings/settings_manager.cpp#L473-L515)
 
@@ -166,6 +180,8 @@ Import is transactional from an observer's perspective. A `QSignalBlocker` suppr
 Preference-specific migrations and guards belong in `PreferencesManager`, not the build-setting version chain. For example, stored visualization colors are migrated by their own version marker, invalid or empty colors fall back to registered defaults, and STEP tessellation deflection is clamped to a positive supported range; the round-trip and lower-bound behavior are covered by a focused test. [source](repo://src/managers/preferences_manager.cpp#L34-L94) [source](repo://src/managers/preferences_manager.cpp#L192-L223) [source](repo://tests/preferences_manager_tests.cpp#L19-L50)
 
 Legacy `SpiralConnection` color preferences migrate to `Connection`; an existing current color wins. This is a preference migration, separate from the build-setting schema. [source](repo://src/managers/preferences_manager.cpp#L192-L210)
+
+The theme preference defaults to Light and supports explicit Light/Dark palettes. The application initializes bundled fonts and applies both the palette and root stylesheet; theme tests check palette roles, resolved fonts and grouped forms. See [Application Runtime](application-runtime.md) for the live update wiring and toolbar state checks. [source](repo://src/managers/preferences_manager.cpp#L129-L132) [source](repo://src/managers/preferences_manager.cpp#L682-L696) [source](repo://src/utilities/theme_tool.cpp#L13-L78)
 
 ## Failure and review checklist
 

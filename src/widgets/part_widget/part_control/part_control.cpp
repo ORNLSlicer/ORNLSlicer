@@ -2,6 +2,7 @@
 
 #include <QDir>
 #include <QGraphicsDropShadowEffect>
+#include <QHeaderView>
 #include <QListWidget>
 #include <QMenu>
 #include <QStack>
@@ -20,6 +21,7 @@
 
 #include "gcode/writers/writer_base.h"
 #include "managers/preferences_manager.h"
+#include "managers/settings/settings_manager.h"
 #include "utilities/constants.h"
 #include "widgets/part_widget/model/part_meta_item.h"
 #include "widgets/part_widget/model/part_meta_model.h"
@@ -105,6 +107,11 @@ void PartControl::modelParentingUpdate(QSharedPointer<PartMetaItem> pm) {
     QList<QTreeWidgetItem*> tl = m_tree_widget->findItems(pm->part()->name(), Qt::MatchExactly | Qt::MatchRecursive);
     PartControlTreeItem* tree_item = tree_item = (PartControlTreeItem*)tl.at(0);
 
+    if (tree_item->parent())
+        tree_item->parent()->takeChild(tree_item->parent()->indexOfChild(tree_item));
+    else
+        m_tree_widget->takeTopLevelItem(m_tree_widget->indexOfTopLevelItem(tree_item));
+
     // Add to top level by default.
     m_tree_widget->insertTopLevelItem(0, tree_item);
 
@@ -124,10 +131,17 @@ void PartControl::modelParentingUpdate(QSharedPointer<PartMetaItem> pm) {
             m_tree_widget->findItems(child->part()->name(), Qt::MatchExactly | Qt::MatchRecursive);
 
         if (!tlc.empty()) {
-            m_tree_widget->takeTopLevelItem(m_tree_widget->indexOfTopLevelItem(tlc.at(0)));
-            tree_item->addChild(tlc.at(0));
+            auto* child_item = tlc.at(0);
+            if (child_item->parent() == tree_item) continue;
+            if (child_item->parent())
+                child_item->parent()->takeChild(child_item->parent()->indexOfChild(child_item));
+            else
+                m_tree_widget->takeTopLevelItem(m_tree_widget->indexOfTopLevelItem(child_item));
+            tree_item->addChild(child_item);
         }
     }
+    tree_item->addContainer(m_tree_widget, 0);
+    refreshModifierScopes();
 }
 
 void PartControl::modelVisualUpdate(QSharedPointer<PartMetaItem> pm) {
@@ -135,6 +149,7 @@ void PartControl::modelVisualUpdate(QSharedPointer<PartMetaItem> pm) {
     PartControlTreeItem* tree_item = tree_item = (PartControlTreeItem*)tl.at(0);
 
     tree_item->updateMeshType(pm->meshType());
+    refreshModifierScopes();
 }
 
 void PartControl::modelNameUpdate(QSharedPointer<PartMetaItem> pm) {
@@ -146,6 +161,7 @@ void PartControl::modelNameUpdate(QSharedPointer<PartMetaItem> pm) {
             break;
         }
     }
+    refreshModifierScopes();
 }
 
 void PartControl::handleSelectionChange() {
@@ -157,7 +173,7 @@ void PartControl::handleSelectionChange() {
         QSharedPointer<PartMetaItem> meta = m_model->lookupByTreeItem((PartControlTreeItem*)curr_item);
         if (meta.isNull()) continue;
 
-        if (meta->graphicsPart()->locked()) {
+        if (!meta->graphicsPart().isNull() && meta->graphicsPart()->locked()) {
             curr_item->setSelected(false);
             continue;
         }
@@ -171,31 +187,22 @@ void PartControl::handleSelectionChange() {
 }
 
 void PartControl::handleParentingChange() {
-    QObject::disconnect(m_model.get(), &PartMetaModel::parentingUpdate, this, &PartControl::modelParentingUpdate);
-
+    QMap<QSharedPointer<PartMetaItem>, QList<QSharedPointer<PartMetaItem>>> changes;
     QList<QTreeWidgetItem*> tl = m_tree_widget->findItems("*", Qt::MatchWildcard | Qt::MatchRecursive);
     for (auto curr_item : tl) {
         QSharedPointer<PartMetaItem> meta        = m_model->lookupByTreeItem((PartControlTreeItem*)curr_item);
         QSharedPointer<PartMetaItem> item_parent = m_model->lookupByTreeItem((PartControlTreeItem*)curr_item->parent());
 
-        // If the model's parent does not match the item's parent, then we need to update the model.
-        if (meta->parent() != item_parent) {
-            // Parent orphans the child.
-            if (!meta->parent().isNull()) meta->parent()->orphanChild(meta);
-
-            // New parent adopts the child.
-            if (!item_parent.isNull()) item_parent->adoptChild(meta);
-
-            QList<QTreeWidgetItem*> tl =
-                m_tree_widget->findItems(meta->part()->name(), Qt::MatchExactly | Qt::MatchRecursive);
-            PartControlTreeItem* tree_item = tree_item = (PartControlTreeItem*)tl.at(0);
-
-            m_tree_widget->removeItemWidget(tree_item, 0);
-            tree_item->addContainer(m_tree_widget, 0);
-        }
+        if (!meta.isNull() && meta->parent() != item_parent) changes[item_parent].append(meta);
     }
+    for (auto it = changes.cbegin(); it != changes.cend(); ++it) { m_model->reparentItems(it.value(), it.key()); }
+    refreshModifierScopes();
+}
 
-    QObject::connect(m_model.get(), &PartMetaModel::parentingUpdate, this, &PartControl::modelParentingUpdate);
+void PartControl::refreshModifierScopes() {
+    for (auto* item : m_tree_widget->findItems("*", Qt::MatchWildcard | Qt::MatchRecursive)) {
+        static_cast<PartControlTreeItem*>(item)->updateModifierScope();
+    }
 }
 
 void PartControl::setFloatingStatus(const QString& name, bool status) {
@@ -219,7 +226,10 @@ void PartControl::setOutsideStatus(const QString& name, bool status) {
 void PartControl::setupSubWidgets() {
     m_tree_widget = new PartControlTreeWidget(this);
     m_tree_widget->resize(Constants::UI::PartControl::kSize);
-    m_tree_widget->setHeaderHidden(true);
+    m_tree_widget->setHeaderLabels({"Object", "Applies to"});
+    m_tree_widget->header()->setSectionResizeMode(0, QHeaderView::Interactive);
+    m_tree_widget->header()->setSectionResizeMode(1, QHeaderView::Stretch);
+    m_tree_widget->setColumnWidth(0, 125);
     m_tree_widget->setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_tree_widget->setDragDropMode(QAbstractItemView::InternalMove);
     m_tree_widget->show();
@@ -239,6 +249,7 @@ void PartControl::setupEvents() {
     // Tree Widget -> Model
     connect(m_tree_widget, &PartControlTreeWidget::itemSelectionChanged, this, &PartControl::handleSelectionChange);
     connect(m_tree_widget, &PartControlTreeWidget::dropEnded, this, &PartControl::handleParentingChange);
+    connect(GSM.get(), &SettingsManager::globalLoaded, this, &PartControl::refreshModifierScopes);
 
     connect(m_tree_widget, &QListWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
         auto list_item = dynamic_cast<PartControlTreeItem*>(m_tree_widget->itemAt(pos));

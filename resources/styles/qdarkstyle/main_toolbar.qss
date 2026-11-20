@@ -5,9 +5,9 @@ QToolButton#sliceButton {
     color: #2b3234;
     border-radius: 4px;
     padding:3px;
-    font-weight:bold;
+    font-weight:600;
     font-size: 11pt;
-    font-family: "arial black";
+    font-family: "Noto Sans";
     min-width: 60px;
     min-height: 20px;
     margin:4px;
@@ -115,6 +115,15 @@ QToolButton {
     margin: 2px 2px;
 }
 
+QToolButton:checked, QToolButton:focus, QToolButton:on,
+QToolButton:selected, QToolButton:pressed {
+    background-color: #405a1e;
+}
+
+QToolButton:hover {
+    background-color: #4d5557;
+}
+
 QToolButton:checked, QToolButton:hover, QToolButton#menuButton:checked, QToolButton#menuButton:hover {
     border-bottom: 0px solid #000000;
     color: #ffffff;
@@ -123,6 +132,14 @@ QToolButton:checked, QToolButton:hover, QToolButton#menuButton:checked, QToolBut
 QToolButton:!checked, QToolButton#menuButton:!checked {
     border-bottom: 0px solid #000000;
     color: #757575;
+}
+
+QToolButton:disabled, QToolButton#menuButton:disabled {
+    background-color: #3a4143;
+}
+
+QToolButton::menu-indicator:disabled, QToolButton::menu-arrow:disabled {
+    image: url(:/styles/qdarkstyle/rc/down_arrow_disabled.png);
 }
 
 QComboBox{

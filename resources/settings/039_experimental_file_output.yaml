@@ -1,6 +1,18 @@
 # Canonical settings metadata for ORNLSlicer.
 # Edit this file instead of resources/configs/master.conf.
 settings:
+  - name: "individual_layer_output"
+    display: "Enable Individual Layer Export"
+    type: "boolean"
+    tooltip: "Enable before slicing to prepare standalone layer programs for saving each layer as a separate G-Code file during export."
+    depends: {"NOT":[{"syntax":29}]}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kIndividualLayerOutput"
+    local: false
   - name: "additional_meld_output"
     display: "Enable Meld Companion File Output"
     type: "boolean"

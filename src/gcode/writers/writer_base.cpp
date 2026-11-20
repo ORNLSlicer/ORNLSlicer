@@ -1,6 +1,9 @@
 #include "gcode/writers/writer_base.h"
 
 #include <QStringBuilder>
+#include <cmath>
+#include <limits>
+#include <stdexcept>
 
 #include <CGAL/property_map.h>
 #include <qsharedpointer.h>
@@ -8,7 +11,6 @@
 #include <qvectornd.h>
 
 #include "configs/settings_base.h"
-#include "gcode/gcode_layer_export.h"
 #include "gcode/gcode_meta.h"
 #include "geometry/point.h"
 #include "managers/settings/settings_manager.h"
@@ -97,22 +99,6 @@ QString WriterBase::writeLayerTravel(Point start, Point target, TravelLiftType t
         writeTravel(start, target, m_standalone_entry_pending ? TravelLiftType::kBoth : type, params);
     m_standalone_entry_pending = false;
     return result;
-}
-
-QString WriterBase::writeLayerExportProgram(const QString& program) {
-    return layerExportProgram(program, m_meta);
-}
-
-QString WriterBase::writeShutdownWithLayerMarkers() {
-    QString shutdown = writeShutdown();
-    if (!shutdown.isEmpty() && !shutdown.endsWith(m_newline)) { shutdown += m_newline; }
-    return commentLine(kLayerShutdownBegin) + shutdown + commentLine(kLayerShutdownEnd);
-}
-
-QString WriterBase::finalPositionBlock(const QString& gcode) {
-    if (gcode.isEmpty()) { return {}; }
-    return commentLine(kFinalPositionBegin) + gcode + (gcode.endsWith(m_newline) ? QString() : QString(m_newline)) +
-           commentLine(kFinalPositionEnd);
 }
 
 QString WriterBase::regionComment(RegionType region_type, PathModifiers path_modifiers,
@@ -360,8 +346,27 @@ QString WriterBase::writeSettingsHeader(GcodeSyntax syntax) {
     return text;
 }
 
+int WriterBase::layerNumber(const QSharedPointer<SettingsBase>& settings, uint layer_index) {
+    double start = 1;
+    if (settings->contains(PRS::GCode::kStartingLayerNumber)) {
+        const auto value = settings->setting<fifojson>(PRS::GCode::kStartingLayerNumber);
+        if (!value.is_number()) {
+            throw std::invalid_argument("Starting Layer Number must be a whole number from 1 to 2147483647.");
+        }
+        start = value.get<double>();
+    }
+    if (start < 1 || start > std::numeric_limits<int>::max() || std::floor(start) != start) {
+        throw std::invalid_argument("Starting Layer Number must be a whole number from 1 to 2147483647.");
+    }
+    if (start + layer_index > std::numeric_limits<int>::max()) {
+        throw std::invalid_argument(
+            "Starting Layer Number is too large for the generated layer count (maximum layer number is 2147483647).");
+    }
+    return static_cast<int>(start + layer_index);
+}
+
 QString WriterBase::writeLayerChange(uint layer_number) {
-    return commentLine(QString("BEGINNING LAYER: ") % QString::number(layer_number + 1));
+    return commentLine(QString("BEGINNING LAYER: ") % QString::number(layerNumber(m_sb, layer_number)));
 }
 
 QString WriterBase::writeSettingsFooter() {

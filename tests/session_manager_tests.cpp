@@ -6,14 +6,18 @@
 #include <QTemporaryDir>
 #include <QTimer>
 #include <cstdlib>
+#include <cstring>
 #include <optional>
 #include <string>
 
 #include <zip/zip.h>
 
+#include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_factory.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "test_utils.h"
+#include "threading/mesh_loader.h"
 #include "threading/session_loader.h"
 #include "utilities/constants.h"
 
@@ -67,6 +71,218 @@ std::optional<fifojson> readGlobalFromProject(const QString& path) {
     zip_close(zip);
 
     return fifojson::parse(text);
+}
+
+bool hierarchyPersists(const QString& project_path) {
+    auto session = ORNL::CSM;
+    session->clearParts();
+
+    auto make_part = [&session](const QString& name, ORNL::MeshType type, float x) {
+        QSharedPointer<ORNL::MeshBase> mesh;
+        if (name == "Z_parent" || name == "B_child") {
+            const QByteArray stl_source = R"(solid hierarchy
+facet normal 0 0 -1
+outer loop
+vertex 0 0 0
+vertex 0 2 0
+vertex 1 0 0
+endloop
+endfacet
+facet normal 0 -1 0
+outer loop
+vertex 0 0 0
+vertex 1 0 0
+vertex 0 0 3
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+vertex 0 0 0
+vertex 0 0 3
+vertex 0 2 0
+endloop
+endfacet
+facet normal 1 1 1
+outer loop
+vertex 1 0 0
+vertex 0 2 0
+vertex 0 0 3
+endloop
+endfacet
+endsolid hierarchy
+)";
+            const QString filename      = name + ".stl";
+            void* model_data            = std::malloc(stl_source.size());
+            std::memcpy(model_data, stl_source.constData(), stl_source.size());
+            session->models()[filename] = {model_data, static_cast<size_t>(stl_source.size())};
+            const auto meshes = ORNL::MeshLoader::LoadMeshes(filename, type, QMatrix4x4(), ORNL::Distance(ORNL::mm),
+                                                             model_data, stl_source.size());
+            if (meshes.isEmpty()) return QSharedPointer<ORNL::Part>();
+            mesh = meshes.first().mesh;
+        }
+        else { mesh = QSharedPointer<ORNL::ClosedMesh>::create(ORNL::MeshFactory::CreateBoxMesh(1000, 2000, 3000)); }
+        mesh->setName(name);
+        mesh->setType(type);
+        QMatrix4x4 transform;
+        transform.translate(x, 2000, 3000);
+        transform.rotate(35, 0, 0, 1);
+        transform.scale(1.2f, 0.8f, 1.5f);
+        transform.rotate(x / 100, 0, 1, 0);
+        mesh->setTransformation(transform);
+        auto part = QSharedPointer<ORNL::Part>::create(mesh, QString(), type);
+        session->addPart(part, false);
+        return part;
+    };
+
+    auto parent     = make_part("Z_parent", ORNL::MeshType::kBuild, 1000);
+    auto child      = make_part("B_child", ORNL::MeshType::kSettings, 2000);
+    auto grandchild = make_part("A_grandchild", ORNL::MeshType::kClipping, 3000);
+    auto sibling    = make_part("C_sibling", ORNL::MeshType::kBuild, 4000);
+    auto standalone = make_part("D_standalone", ORNL::MeshType::kBuild, 5000);
+    if (!ORNL::Testing::expect(parent && child && grandchild && sibling && standalone,
+                               "Could not import the STL hierarchy fixtures."))
+        return false;
+
+    // A standalone rotation can already be baked into a mesh before it is grouped.
+    const auto live_transform = sibling->rootMesh()->transformation();
+    sibling->rootMesh()->resetAlignedAxis(QMatrix4x4());
+    QMatrix4x4 baked_transform;
+    baked_transform.rotate(20, 1, 0, 0);
+    sibling->rootMesh()->setTransformation(baked_transform);
+    sibling->rootMesh()->alignAxis(QMatrix4x4());
+    baked_transform.setToIdentity();
+    baked_transform.scale(1.1f, 0.9f, 1.2f);
+    baked_transform.rotate(15, 0, 0, 1);
+    sibling->rootMesh()->setTransformation(baked_transform);
+    sibling->rootMesh()->alignAxis(QMatrix4x4());
+    sibling->rootMesh()->setTransformation(live_transform);
+
+    parent->adoptChild(child);
+    parent->adoptChild(sibling);
+    child->adoptChild(grandchild);
+    child->setModifierEnabled(false);
+    session->renamePart(parent, "Z_renamed");
+
+    QMap<QString, QVector<ORNL::MeshVertex>> original_vertices;
+    for (auto part : session->parts()) { original_vertices[part->name()] = part->rootMesh()->vertices(); }
+    const fifojson original = session->partsJson();
+    const auto& parts       = original[ORNL::Constants::Settings::Session::kParts];
+    if (!ORNL::Testing::expect(parts["B_child"].contains("parent") && parts["B_child"]["parent"] == "Z_renamed" &&
+                                   parts["A_grandchild"]["parent"] == "B_child" &&
+                                   !parts["D_standalone"].contains("parent"),
+                               "Saved parts should identify their parents by current name and omit root parents."))
+        return false;
+    if (!ORNL::Testing::expect(
+            !parts["B_child"][ORNL::Constants::Settings::Session::kModifierEnabled].get<bool>() &&
+                parts["A_grandchild"][ORNL::Constants::Settings::Session::kModifierEnabled].get<bool>(),
+            "Project metadata must preserve disabled and enabled modifier states."))
+        return false;
+
+    ORNL::SessionLoader saver(project_path, true);
+    saver.run();
+    session->clearParts();
+    for (const QString& filename : {QString("Z_parent.stl"), QString("B_child.stl")}) {
+        std::free(session->models()[filename].model);
+        session->models().remove(filename);
+    }
+
+    auto model = QSharedPointer<ORNL::PartMetaModel>::create();
+    QStringList notified_parts;
+    int announced_parts     = -1;
+    bool total_before_parts = false;
+    const auto record_total = [&](int total) {
+        announced_parts    = total;
+        total_before_parts = notified_parts.isEmpty();
+    };
+    auto total_connection = QObject::connect(session.get(), &ORNL::SessionManager::totalPartsInProject, record_total);
+    auto connection       = QObject::connect(session.get(), &ORNL::SessionManager::partAdded,
+                                             [&model, &notified_parts](QSharedPointer<ORNL::Part> part) {
+                                           notified_parts.append(part->name());
+                                           model->newItem(part);
+                                             });
+    ORNL::SessionLoader loader(project_path, false);
+    loader.run();
+    QObject::disconnect(connection);
+    QObject::disconnect(total_connection);
+
+    if (!ORNL::Testing::expect(total_before_parts && announced_parts == 2 && announced_parts == notified_parts.size(),
+                               "Project loading must announce the root notification count before adding parts."))
+        return false;
+
+    if (!ORNL::Testing::expect(session->count() == 5,
+                               "Saving and reloading a project should preserve all hierarchy members."))
+        return false;
+    for (auto part : session->parts()) {
+        const auto expected = original_vertices[part->name()];
+        const auto actual   = part->rootMesh()->vertices();
+        if (!ORNL::Testing::expect(actual.size() == expected.size(), "Reloaded part vertex count changed."))
+            return false;
+        for (int i = 0; i < actual.size(); ++i) {
+            if (!ORNL::Testing::expect((actual[i].location - expected[i].location).length() < 0.05f,
+                                       "Saving and reloading transformed hierarchy members changed world geometry."))
+                return false;
+        }
+    }
+    if (!ORNL::Testing::expect(
+            notified_parts == QStringList({"D_standalone", "Z_renamed"}) && model->items().size() == 5 &&
+                !session->getPart("B_child")->modifierEnabled() &&
+                session->getPart("A_grandchild")->modifierEnabled() &&
+                model->lookupByPointer(session->getPart("A_grandchild"))->parent()->part() ==
+                    session->getPart("B_child"),
+            "Project loading must restore modifier activation and notify complete root hierarchies once."))
+        return false;
+
+    fifojson legacy = original;
+    for (auto& part : legacy[ORNL::Constants::Settings::Session::kParts]) {
+        part.erase("parent");
+        part.erase("aligned_transform");
+        part.erase("source_dim");
+        part.erase(ORNL::Constants::Settings::Session::kModifierEnabled);
+    }
+    session->clearParts();
+    notified_parts.clear();
+    announced_parts    = -1;
+    total_before_parts = false;
+    total_connection   = QObject::connect(session.get(), &ORNL::SessionManager::totalPartsInProject, record_total);
+    connection = QObject::connect(session.get(), &ORNL::SessionManager::partAdded,
+                                  [&](QSharedPointer<ORNL::Part> part) { notified_parts.append(part->name()); });
+    session->loadPartsJson(legacy);
+    QObject::disconnect(connection);
+    QObject::disconnect(total_connection);
+    if (!ORNL::Testing::expect(total_before_parts && announced_parts == 5 && announced_parts == notified_parts.size(),
+                               "Legacy projects must announce and notify every independent object."))
+        return false;
+    for (auto part : session->parts()) {
+        if (!ORNL::Testing::expect(
+                part->parent().isNull() && part->children().isEmpty() && part->modifierEnabled(),
+                "Legacy projects should load independent objects with modifiers enabled by default."))
+            return false;
+    }
+
+    session->loadPartsJson(original);
+    if (!ORNL::Testing::expect(session->getPart("B_child_1")->parent() == session->getPart("Z_renamed_1") &&
+                                   session->getPart("A_grandchild_1")->parent() == session->getPart("B_child_1") &&
+                                   !session->getPart("B_child_1")->modifierEnabled(),
+                               "Imported hierarchy references and activation must survive part name collisions."))
+        return false;
+
+    fifojson malformed                                                              = original;
+    malformed[ORNL::Constants::Settings::Session::kParts]["B_child"]["parent"]      = "A_grandchild";
+    malformed[ORNL::Constants::Settings::Session::kParts]["C_sibling"]["parent"]    = "C_sibling";
+    malformed[ORNL::Constants::Settings::Session::kParts]["D_standalone"]["parent"] = "missing";
+    malformed[ORNL::Constants::Settings::Session::kParts]["Z_renamed"]["parent"]    = 17;
+    session->clearParts();
+    session->loadPartsJson(malformed);
+    if (!ORNL::Testing::expect(session->getPart("B_child")->parent().isNull() &&
+                                   session->getPart("A_grandchild")->parent() == session->getPart("B_child") &&
+                                   session->getPart("C_sibling")->parent().isNull() &&
+                                   session->getPart("D_standalone")->parent().isNull() &&
+                                   session->getPart("Z_renamed")->parent().isNull(),
+                               "Invalid parent references should leave objects accessible without hierarchy cycles."))
+        return false;
+
+    session->clearParts();
+    return true;
 }
 }  // namespace
 
@@ -183,6 +399,8 @@ int main(int argc, char* argv[]) {
     if (!ORNL::Testing::expect(loaded_slice_normal_x == 0.25,
                                "CLI-style session load did not use migrated global settings in memory."))
         return EXIT_FAILURE;
+
+    if (!hierarchyPersists(temp_dir.filePath("hierarchy.s2p"))) return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
 }

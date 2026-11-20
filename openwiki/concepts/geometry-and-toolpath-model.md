@@ -6,6 +6,8 @@ tags: [geometry, mesh, toolpath, transforms, ownership]
 sources:
   - id: openwiki-source-64a270853a980573ef55f133
     resource: repo://include/geometry/connection.h
+  - id: openwiki-source-e94ea13be38b7ae271cc6f8c
+    resource: repo://include/geometry/mesh/advanced/mesh_types.h
   - id: openwiki-source-8cb3f06f029677597f888cb5
     resource: repo://include/geometry/mesh/mesh_base.h
   - id: openwiki-source-e086f074a8c3472745b4505c
@@ -16,6 +18,8 @@ sources:
     resource: repo://include/units/unit.h
   - id: openwiki-source-5e1407456a1bc930b497003b
     resource: repo://src/cross_section/cross_section.cpp
+  - id: openwiki-source-294141c01fa7a7102ae1bca9
+    resource: repo://src/geometry/mesh/closed_mesh.cpp
   - id: openwiki-source-034506ce199cb451a9a8a72c
     resource: repo://src/geometry/mesh/mesh_base.cpp
   - id: openwiki-source-b79ac60f55187d7cb361c2a6
@@ -24,6 +28,10 @@ sources:
     resource: repo://src/geometry/point.cpp
   - id: openwiki-source-165fea8ffaca12491bd296b9
     resource: repo://src/geometry/segment_base.cpp
+  - id: openwiki-source-e41c3878370f67229df83de1
+    resource: repo://src/graphics/view/part_view.cpp
+  - id: openwiki-source-1c931b6d3c850e1860fde20c
+    resource: repo://src/managers/session_manager.cpp
   - id: openwiki-source-b441330c759fe652a2df3d75
     resource: repo://src/part/part.cpp
   - id: openwiki-source-85901c6cd3589bcc0a1df2b0
@@ -34,6 +42,10 @@ sources:
     resource: repo://src/step/layer/layer.cpp
   - id: openwiki-source-49cb237e320e24287dd4e890
     resource: repo://src/step/layer/regions/region_base.cpp
+  - id: openwiki-source-c97c50d7ad4d8d89717ac6d3
+    resource: repo://src/threading/mesh_loader.cpp
+  - id: openwiki-source-d20245c2ba28ff4c4104054b
+    resource: repo://src/widgets/part_widget/model/part_meta_item.cpp
   - id: openwiki-source-adce7a1f3cfeab8995ef38b7
     resource: repo://tests/global_layer_tests.cpp
   - id: openwiki-source-3308169b66ac9fd6252e5bb8
@@ -42,10 +54,10 @@ sources:
     resource: repo://tests/path_modifier_tests.cpp
   - id: openwiki-source-7c7eaa23810381aad20aac88
     resource: repo://tests/waam_layer_z_tests.cpp
-generated: { by: "codex", at: "2026-10-20T18:20:49.849Z" }
+generated: { by: "codex", at: "2026-11-10T17:47:51.624Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-20T18:20:49.849Z
+    at: 2026-11-10T17:47:51.624Z
 ---
 
 # Geometry and Toolpath Data Model
@@ -90,7 +102,13 @@ It also tracks the current transformation, replayable transformation history, im
 
 `MeshBase::setTransformation()` does not compound a matrix onto already transformed vertices. It resets current vertices/faces from the aligned copies, applies the supplied matrix, rebuilds the concrete geometry representation, and recomputes bounds. Replaying a saved transformation list deliberately restores the supplied list afterward so a load/save cycle does not duplicate rotation history. [source](repo://src/geometry/mesh/mesh_base.cpp#L74-L98) [source](repo://src/geometry/mesh/mesh_base.cpp#L106-L129)
 
-At part scope, a transformation is propagated to the root and every submesh and marks all existing steps dirty. Moving a settings mesh is broader: because it can affect paths on any build part, the operation marks every session part dirty. [source](repo://src/part/part.cpp#L255-L275)
+At part scope, a transformation is propagated to the root and every submesh and marks all existing steps dirty. Moving a settings mesh conservatively marks every session part dirty. [source](repo://src/part/part.cpp#L274-L285)
+
+Aligned transforms are now serialized separately from the current matrix and history. `restoreTransformation` rebuilds aligned geometry from the original mesh, applies the current matrix and restores the recorded history; source dimensions let generated primitives be reconstructed before those transforms are restored. The project loader retains a legacy history-only fallback. [source](repo://src/geometry/mesh/mesh_base.cpp#L170-L195) [source](repo://src/managers/session_manager.cpp#L442-L460) [source](repo://src/managers/session_manager.cpp#L479-L507)
+
+Parent/child rotation stays in the live transform rather than being baked into mesh alignment. `PartView::synchronizePartTransformations` recursively copies graphics transforms back into metadata before later operations. Hierarchy transform tests cover inherited parent motion and undo/redo baselines. Parent links are distinct from a part's root/submesh collection; modifier selection includes enabled root settings/clipping parts and enabled direct children of the target build part. [source](repo://src/widgets/part_widget/model/part_meta_item.cpp#L144-L160) [source](repo://src/graphics/view/part_view.cpp#L1666-L1673) [source](repo://src/slicing/slicing_utilities.cpp#L164-L174)
+
+CGAL intersection result aliases derive from `any_intersection` return types. Extraction branches on the CGAL version for standard versus Boost variants, supporting the CGAL 6 transition without dropping the older representation. STEP import also keeps vertex welding local to each shell so touching solids and inner shells retain separate topology. [source](repo://include/geometry/mesh/advanced/mesh_types.h#L78-L110) [source](repo://src/geometry/mesh/closed_mesh.cpp#L250-L267) [source](repo://src/threading/mesh_loader.cpp#L152-L159)
 
 Mesh roles are behavioral, not merely visual labels. Planar preprocessing partitions build, clipping, and settings parts before it creates layers; other pipelines select support meshes separately. Code that adds another role must update every role-based filter, not just rendering. [source](repo://src/slicing/preprocessor.cpp#L17-L26)
 

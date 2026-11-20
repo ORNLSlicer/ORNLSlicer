@@ -5,8 +5,8 @@ QToolButton#sliceButton {
     color: #f0f0f0;
     border-radius: 4px;
     font-size: 11pt;
-    font-weight:bold;
-    font-family:"arial black";
+    font-weight:600;
+    font-family:"Noto Sans";
     min-width: 60px;
     min-height: 20px;
     margin:4px;
@@ -123,6 +123,10 @@ QToolButton:checked, QToolButton:hover, QToolButton#menuButton:checked, QToolBut
 QToolButton:!checked, QToolButton#menuButton:!checked {
     border-bottom: 0px solid #000000;
     color: #757575;
+}
+
+QToolButton:disabled, QToolButton#menuButton:disabled {
+    background: #eeeeee;
 }
 
 QComboBox{

@@ -9,6 +9,7 @@
 #include <list>
 #include <optional>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <CGAL/Aff_transformation_3.h>
@@ -38,6 +39,7 @@
 #include <CGAL/boost/graph/properties.h>
 #include <CGAL/boost/graph/properties_Polyhedron_3.h>
 #include <CGAL/exceptions.h>
+#include <CGAL/version.h>
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qsharedpointer.h>
@@ -251,8 +253,13 @@ QVector<Point> ClosedMesh::intersect(Point start, Point end) {
 
     QVector<Point> intersection_points;
     for (auto intersection : intersections) {
-        auto point = boost::get<MeshTypes::Point_3>(&(intersection->first));
-        intersection_points.push_back(Point(*point));
+#if CGAL_VERSION_NR >= 1060000000
+        const auto* point = std::get_if<MeshTypes::Point_3>(&(intersection->first));
+#else
+        const auto* point = boost::get<MeshTypes::Point_3>(&(intersection->first));
+#endif
+        // A segment can also intersect a facet along a segment; only point hits are reported.
+        if (point != nullptr) intersection_points.push_back(Point(*point));
     }
     return intersection_points;
 }

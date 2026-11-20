@@ -202,6 +202,10 @@ class Part : public QEnableSharedFromThis<Part> {
     //! \brief Get the parent of this part.
     QSharedPointer<Part> parent();
 
+    //! \brief Whether this clipping/settings mesh is active.
+    bool modifierEnabled() const;
+    void setModifierEnabled(bool enabled);
+
     /*!
      * \title Step Methods
      * \brief A part contains a list of steps that are printed in order. If a part has sub-meshes the steps are combined
@@ -317,6 +321,8 @@ class Part : public QEnableSharedFromThis<Part> {
 
     //! \brief Parent of this part. Internally a raw pointer to prevent double free.
     QSharedPointer<Part> m_parent = nullptr;
+
+    bool m_modifier_enabled = true;
 
     //! \brief m_root_mesh: the mesh used for graphic representation of the part
     QSharedPointer<MeshBase> m_root_mesh;

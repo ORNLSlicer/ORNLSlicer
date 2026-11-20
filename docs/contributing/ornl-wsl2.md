@@ -1,3 +1,10 @@
+# ORNL-Managed WSL2 Installation (Historical)
+
+This retained procedure describes the original Windows 10 setup on ORNL-managed
+machines. Internal tools and DNS requirements may have changed; confirm them
+with ORNL IT before applying these steps. For general Windows development, use
+the [Windows setup instructions](development-setup.md#windows-wsl2).
+
 To conform to the enforced security protocols on an ORNL computer, `WSL` must be installed using the following instructions. These instructions are specific to the Windows 10 operating system. If using Windows 11 or newer, some details may have changed.
 
 1. **Open** the `Privilege Elevation Tool - Self Service` application and generate a request with the following information:

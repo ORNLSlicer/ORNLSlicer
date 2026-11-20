@@ -1,6 +1,17 @@
-# To add a new user setting:
+# Creating and Updating Settings
 
-### 1. Add the setting to `resources/settings`.
+The canonical metadata lives in `resources/settings/*.yaml`. It defines the UI display,
+input type, tooltip, dependencies, options, defaults, categories, and local-setting support.
+`resources/configs/master.conf` and `resources/configs/setting_inputs.conf` are generated
+from this metadata and embedded through Qt resources for runtime use. **Do not edit
+these generated files by hand.** For an existing setting, edit its YAML entry and run
+the generator in step 2; new settings also need the C++ integration below.
+
+Use a top-level `inputs:` section to present scalar settings as one composite UI row,
+such as `vector2` or `vector3`. Keep each component under `settings:` so saved settings
+remain flat, and list the component setting names under the grouped input.
+
+## 1. Add the setting to `resources/settings`.
 
 Settings metadata is stored in YAML files under `resources/settings`. Files are read in sorted path order, and settings
 inside each file are emitted in file order, so add the setting where it should appear in the UI.
@@ -36,7 +47,7 @@ Each setting entry has these fields:
   - voltage
 * `tooltip`: Short description of what the setting does. Tooltips can include a
   small Qt resource image using rich-text markup; see
-  [Adding Images to Settings Tooltips](Adding-Images-to-Settings-Tooltips.md).
+  [Adding Images to Settings Tooltips](settings-tooltips.md).
 * `depends`: Structured dependency object used to decide when a setting is enabled or disabled. Use `{}` for no
   dependency.
 
@@ -65,7 +76,7 @@ Each setting entry has these fields:
 * `local`: Whether the setting can be applied to a specific part or layer. Mark a setting as local only when local
   handling is actually implemented.
 
-### 2. Generate the master settings file.
+## 2. Generate the master settings file.
 
 Run CMake/build, or run the generator directly:
 
@@ -73,9 +84,11 @@ Run CMake/build, or run the generator directly:
 python3 scripts/generate_master_config.py resources/settings resources/configs/master.conf resources/configs/setting_inputs.conf
 ```
 
-See [Generating the Master Settings File](Generating-the-Master-Settings-File.md) for more information.
+The generator uses only the Python standard library. It validates duplicate setting names, required fields,
+setting types, enum defaults and options, dependency references, and grouped input component references.
+Verify that both generated files changed as expected.
 
-### 3. Add the setting to the `Constants` class.
+## 3. Add the setting to the `Constants` class.
 
 `Constants` is located in `include/utilities/constants.h` and `src/utilities/constants.cpp`.
 
@@ -85,7 +98,7 @@ minor category, add a matching subclass.
 
 The string value must match the `name` field in the YAML metadata.
 
-### 4. Fetch the setting value from code.
+## 4. Fetch the setting value from code.
 
 Retrieve values from the relevant settings base: global settings, a part settings base, or a layer settings base.
 

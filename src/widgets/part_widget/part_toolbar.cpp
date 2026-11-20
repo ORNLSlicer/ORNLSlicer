@@ -235,7 +235,7 @@ void PartToolbar::setupStyle() {
 
     // The input panels have their own stylesheet. Replacing it with the part
     // toolbar stylesheet removes input-specific rules such as the spin-box
-    // arrow images in the system-default theme.
+    // arrow images in the light theme.
     m_translation_controls->setupStyle();
     m_rotation_controls->setupStyle();
     m_scale_controls->setupStyle();

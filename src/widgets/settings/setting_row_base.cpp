@@ -33,6 +33,7 @@ SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb,
       m_row_visible(true),
       m_row_enabled(true),
       m_dependency_enabled(true),
+      m_visibility_enabled(true),
       m_json(json) {
     m_theme_path          = PreferencesManager::getInstance()->getTheme().getFolderPath();
     m_local_override_keys = {m_key};
@@ -43,6 +44,10 @@ SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb,
     m_key_label->setCursor(Qt::WhatsThisCursor);
     m_key_label->setMinimumHeight(25);
     m_key_label->setIndent(25);
+    if (json.contains(Constants::Settings::Master::kGroup)) {
+        m_key_label->setText(json.at(Constants::Settings::Master::kGroup).at(Constants::Settings::Group::kLabel));
+        m_key_label->setIndent(0);
+    }
     this->styleLabelFromFile(m_theme_path + "setting_rows_normal.qss");
     layout->addWidget(m_key_label.get(), index, 0);
 
@@ -56,6 +61,24 @@ SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb,
                      [this]() { resetLocalOverrides(); });
     layout->addWidget(m_reset_button.get(), index, 3);
 
+    m_part_override_indicator.reset(new QLabel(parent));
+    m_part_override_indicator->setObjectName("part_override_indicator_" + m_key);
+    m_part_override_indicator->setPixmap(QIcon(":/icons/cube_black.png").pixmap(16, 16));
+    m_part_override_indicator->setFixedSize(20, 20);
+    m_part_override_indicator->setAlignment(Qt::AlignCenter);
+    m_part_override_indicator->setToolTip("Overridden by part settings.");
+    m_part_override_indicator->hide();
+    layout->addWidget(m_part_override_indicator.get(), index, 3);
+
+    m_layer_override_indicator.reset(new QLabel(parent));
+    m_layer_override_indicator->setObjectName("layer_override_indicator_" + m_key);
+    m_layer_override_indicator->setPixmap(QIcon(":/icons/color_layers.png").pixmap(16, 16));
+    m_layer_override_indicator->setFixedSize(20, 20);
+    m_layer_override_indicator->setAlignment(Qt::AlignCenter);
+    m_layer_override_indicator->setToolTip("Overridden by layer settings.");
+    m_layer_override_indicator->hide();
+    layout->addWidget(m_layer_override_indicator.get(), index, 4);
+
     layout->setContentsMargins(0, 0, 20, 0);
 }
 
@@ -68,10 +91,23 @@ void SettingRowBase::clearDependencyLogic() {
     m_rows_to_notify.clear();
     m_dependency_logic.dependentRow.reset();
     m_dependency_logic.children.clear();
+    m_visibility_logic.dependentRow.reset();
+    m_visibility_logic.children.clear();
 }
 
 QString SettingRowBase::getLabelText() {
     return m_key_label->text();
+}
+
+QString SettingRowBase::getSearchText() const {
+    QString text = QString::fromStdString(m_json.at(Constants::Settings::Master::kDisplay).get<std::string>());
+    if (m_json.contains(Constants::Settings::Master::kGroup)) {
+        const auto& group = m_json.at(Constants::Settings::Master::kGroup);
+        for (const auto& field : {Constants::Settings::Group::kRegion, Constants::Settings::Group::kSection,
+                                  Constants::Settings::Group::kLabel})
+            text += " " + QString::fromStdString(group.at(field).get<std::string>());
+    }
+    return text;
 }
 
 // This is to style inheritents of setting_row_base (i.e., all the different types of settings)
@@ -135,6 +171,10 @@ fifojson SettingRowBase::getDependencies() {
     return m_json[Constants::Settings::Master::kDepends];
 }
 
+fifojson SettingRowBase::getVisibilityDependencies() {
+    return m_json.value(Constants::Settings::Master::kVisibleIf, fifojson::object());
+}
+
 void SettingRowBase::addRowToNotify(QSharedPointer<SettingRowBase> row) {
     if (!m_rows_to_notify.contains(row)) { m_rows_to_notify.push_back(row); }
 }
@@ -152,6 +192,7 @@ QList<QSharedPointer<SettingsBase>> SettingRowBase::getBases() {
 }
 
 void SettingRowBase::checkDependencies() {
+    m_visibility_enabled = checkLogic(m_visibility_logic);
     setDependencyEnabled(checkLogic(m_dependency_logic));
     checkDynamicDependencies();
 }
@@ -170,14 +211,20 @@ bool SettingRowBase::isShown() const {
     return rowWidgetsVisible();
 }
 
+void SettingRowBase::setNavigationRevealed(bool revealed) {
+    m_navigation_revealed = revealed;
+    applyBaseWidgetState();
+}
+
 bool SettingRowBase::rowWidgetsVisible() const {
     const bool show_disabled =
         PreferencesManager::getInstance()->getDisabledSettingVisibilityPreference() == DisabledSettingVisibility::kGrey;
-    return m_row_visible && (m_dependency_enabled || show_disabled);
+    return m_row_visible &&
+           (m_navigation_revealed || (m_visibility_enabled && (m_dependency_enabled || show_disabled)));
 }
 
 bool SettingRowBase::rowWidgetsEnabled() const {
-    return m_row_enabled && m_dependency_enabled;
+    return m_row_enabled && m_dependency_enabled && (!m_navigation_revealed || m_visibility_enabled);
 }
 
 void SettingRowBase::applyWidgetState(QWidget* widget) const {
@@ -237,12 +284,26 @@ void SettingRowBase::setDependencyLogic(DependencyNode root) {
     m_dependency_logic = root;
 }
 
+void SettingRowBase::setVisibilityLogic(DependencyNode root) {
+    m_visibility_logic = root;
+}
+
 void SettingRowBase::setSettingsBase(QSharedPointer<SettingsBase> sb) {
     m_sb = sb;
 }
 
 void SettingRowBase::setValueChangeCallback(ValueChangeCallback callback) {
     m_value_change_callback = callback;
+}
+
+void SettingRowBase::setOverriddenKeys(const QSet<QString>& part_keys, const QSet<QString>& layer_keys) {
+    m_part_overridden  = false;
+    m_layer_overridden = false;
+    for (const QString& key : m_local_override_keys) {
+        m_part_overridden  = m_part_overridden || part_keys.contains(key);
+        m_layer_overridden = m_layer_overridden || layer_keys.contains(key);
+    }
+    updateResetButton();
 }
 
 void SettingRowBase::notifyValueAboutToChange(const QString& key) {
@@ -306,6 +367,11 @@ void SettingRowBase::updateResetButton() {
     const bool should_show = rowWidgetsVisible() && hasLocalOverride();
     m_reset_button->setVisible(should_show);
     m_reset_button->setEnabled(should_show && rowWidgetsEnabled());
+    const bool show_global = rowWidgetsVisible() && m_settings_bases.isEmpty();
+    m_part_override_indicator->setVisible(show_global && m_part_overridden);
+    m_part_override_indicator->setEnabled(rowWidgetsEnabled());
+    m_layer_override_indicator->setVisible(show_global && m_layer_overridden);
+    m_layer_override_indicator->setEnabled(rowWidgetsEnabled());
 }
 
 void SettingRowBase::resetLocalOverrides() {

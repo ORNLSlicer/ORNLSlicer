@@ -52,15 +52,15 @@ sources:
     resource: repo://tests/global_layer_tests.cpp
   - id: openwiki-source-fd42cdedbc9d871771e139f8
     resource: repo://tests/variable_layer_height_tests.cpp
-generated: { by: "codex", at: "2026-10-20T18:20:49.849Z" }
+generated: { by: "codex", at: "2026-11-10T18:02:46.284Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-20T18:20:49.849Z
+    at: 2026-11-10T18:02:46.284Z
 ---
 
 # Planar Cross-Sections and Path Generation
 
-Planar slicing is a staged transformation rather than one geometry call. `PlanarSlicer` configures a reusable `Preprocessor`; the preprocessor copies and cross-sections build meshes into `Layer` objects; dirty layers compute island regions in worker threads; `GlobalLayer` objects combine part steps; and postprocessing orders paths, inserts travel and modifiers, and restores printer coordinates before G-code emission. [source](repo://src/threading/slicers/planar_slicer.cpp#L43-L190) [source](repo://src/threading/traditional_ast.cpp#L42-L109) [source](repo://src/threading/slicers/planar_slicer.cpp#L870-L950)
+Planar slicing is a staged transformation rather than one geometry call. `PlanarSlicer` configures a reusable `Preprocessor`; the preprocessor copies and cross-sections build meshes into `Layer` objects; dirty layers compute island regions in worker threads; `GlobalLayer` objects combine part steps; and postprocessing orders paths, inserts travel and modifiers, and restores printer coordinates before G-code emission. [source](repo://src/threading/slicers/planar_slicer.cpp#L43-L190) [source](repo://src/threading/traditional_ast.cpp#L42-L109) [source](repo://src/threading/slicers/planar_slicer.cpp#L967-L1050)
 
 ```text
 global settings
@@ -90,9 +90,11 @@ part settings ──> range overrides ──> per-layer adjustments
 
 `Preprocessor::processAll()` divides session parts into build, clipping, and settings groups and runs callbacks in a fixed order: initial processing, per-part processing, per-mesh processing, step building for each slice, cross-section completion, progress, and final processing. Each build part receives a copy of global settings populated with that part's overrides, and each mesh is copied before slicer-specific preprocessing so clipping does not mutate the loaded mesh. [source](repo://include/slicing/preprocessor.h#L16-L34) [source](repo://src/slicing/preprocessor.cpp#L17-L65)
 
-The planar configuration applies global adjustments first and rejects overlapping settings parts. It currently clears every build part's previous steps because the layer cache is disabled, then clips each copied build mesh with all clipping meshes. After the part's cross-sections are built, it derives skin context, support, raft, brim, skirt, laser-scan, and thermal-scan additions before constructing global layers. [source](repo://src/threading/slicers/planar_slicer.cpp#L43-L74) [source](repo://src/threading/slicers/planar_slicer.cpp#L152-L189)
+The planar configuration applies global adjustments first, clears old build steps because the cache is disabled, and clips each copied build mesh with enabled root clippers plus its enabled direct child clippers. Buffered settings masks use the same target-part scope. Other build objects, including nested build objects, do not inherit a parent's child modifier. After cross-sectioning it derives skin, support, raft, brim, skirt and scan additions, then global layers. [source](repo://src/threading/slicers/planar_slicer.cpp#L47-L74) [source](repo://src/slicing/preprocessor.cpp#L49-L66) [source](repo://src/slicing/slicing_utilities.cpp#L164-L174) [source](repo://src/threading/slicers/planar_slicer.cpp#L171-L212)
 
-The step builder stores a complete slice snapshot: effective settings, settings polygons, cross-section geometry, average normal, slicing plane, and the flattening shifts. New geometry is split into disconnected `PolygonList` parts, with one `PolymerIsland` created for each part. When an existing step is reused within preprocessing, changed settings or settings polygons mark it dirty and cause replacement. [source](repo://include/slicing/buffered_slicer.h#L30-L42) [source](repo://src/threading/slicers/planar_slicer.cpp#L76-L150)
+Settings conflicts are checked between actual settings polygons inside each build cross-section, including disconnected islands and transformed planes. Overlap outside build geometry is harmless. A conflict reports both modifiers, the target object and slice; preprocessing calls `failPreProcess`, clears steps/global layers/output, and emits `sliceFailed` before worker dispatch. [source](repo://src/threading/slicers/planar_slicer.cpp#L77-L94) [source](repo://src/threading/slicers/planar_slicer.cpp#L208-L212) [source](repo://src/threading/traditional_ast.cpp#L40-L45) [source](repo://src/threading/traditional_ast.cpp#L116-L124)
+
+The step builder stores a complete slice snapshot: effective settings, settings polygons, cross-section geometry, average normal, slicing plane, and the flattening shifts. New geometry is split into disconnected `PolygonList` parts, with one `PolymerIsland` created for each part. When an existing step is reused within preprocessing, changed settings or settings polygons mark it dirty and cause replacement. [source](repo://include/slicing/buffered_slicer.h#L30-L42) [source](repo://src/threading/slicers/planar_slicer.cpp#L97-L164)
 
 ## Slicing planes and cross-sections
 
@@ -114,9 +116,9 @@ The effective layer settings are assembled in this order:
 4. Apply index-based local adjustments such as layer-varying angles.
 5. Cross-section settings parts into `SettingsPolygon` masks for region- or segment-local behavior.
 
-The first four stages create the `SliceMeta::settings` snapshot. The fifth is intentionally not a blanket `SettingsBase::populate()`: each region decides which local values affect its geometry or segment metadata. [source](repo://src/threading/slicers/planar_slicer.cpp#L46-L57) [source](repo://src/slicing/preprocessor.cpp#L29-L48) [source](repo://src/slicing/buffered_slicer.cpp#L43-L59) [source](repo://src/slicing/buffered_slicer.cpp#L326-L345)
+The first four stages create the `SliceMeta::settings` snapshot. The fifth is intentionally not a blanket `SettingsBase::populate()`: each region decides which local values affect its geometry or segment metadata. [source](repo://src/threading/slicers/planar_slicer.cpp#L51-L56) [source](repo://src/slicing/preprocessor.cpp#L29-L48) [source](repo://src/slicing/buffered_slicer.cpp#L43-L59) [source](repo://src/slicing/buffered_slicer.cpp#L326-L345)
 
-For example, infill removes masks whose relevant infill settings differ from the base, fills the remaining geometry with base settings, then fills intersections with enabled local masks using their line spacing and angle. Perimeters instead split contour segments at settings-polygon boundaries and populate each subsegment from the first containing mask, so speed, material, width policy, and modifier inputs can change along one contour. The initial overlap check makes overlapping settings-part precedence an error rather than relying on iteration order. [source](repo://src/step/layer/regions/infill.cpp#L43-L80) [source](repo://src/step/layer/regions/perimeter.cpp#L1582-L1627) [source](repo://src/step/layer/regions/perimeter.cpp#L1641-L1680) [source](repo://src/slicing/slicing_utilities.cpp#L226-L255)
+For example, infill removes masks whose relevant infill settings differ from the base, fills the remaining geometry with base settings, then fills intersections with enabled local masks using their line spacing and angle. Perimeters instead split contour segments at settings-polygon boundaries and populate each subsegment from the first containing mask, so speed, material, width policy, and modifier inputs can change along one contour. The per-slice overlap check makes conflicting masks inside build geometry an error rather than relying on iteration order. [source](repo://src/step/layer/regions/infill.cpp#L43-L80) [source](repo://src/step/layer/regions/perimeter.cpp#L1582-L1627) [source](repo://src/step/layer/regions/perimeter.cpp#L1641-L1680) [source](repo://src/threading/slicers/planar_slicer.cpp#L77-L94)
 
 ## Variable layer height
 
@@ -132,15 +134,25 @@ Representative region behavior:
 
 - Perimeters and insets iteratively offset closed boundaries, reject undersized paths and segments, and can adapt bead width within configured bounds while subtracting each deposited footprint from the remaining geometry. [source](repo://src/step/layer/regions/perimeter.cpp#L324-L430) [source](repo://src/step/layer/regions/inset.cpp#L299-L367)
 - Infill offsets the remainder for overlap, derives line spacing from density unless manual spacing is enabled, and delegates line, grid, concentric, triangle, or honeycomb geometry to `PatternGenerator`. Grid directions stay in separate optimizer groups to avoid unnecessary cross-direction travel. [source](repo://src/step/layer/regions/infill.cpp#L43-L143)
-- Skin preprocessing supplies upper, lower, and gradual neighbor geometry only to dirty layers, giving the skin region the context needed to classify top, bottom, and gradual-fill areas. [source](repo://src/threading/slicers/planar_slicer.cpp#L192-L235)
+- Skin preprocessing supplies upper, lower, and gradual neighbor geometry only to dirty layers, giving the skin region the context needed to classify top, bottom, and gradual-fill areas. [source](repo://src/threading/slicers/planar_slicer.cpp#L215-L258)
 
-Layer additions are separate island or step types built around the model layers. Rafts prepend new shifted layers and shift the original steps upward; brims and skirts add islands; thermal scans add a bounding scan island; and laser scans create or update paired `ScanLayer` steps with copied build-layer settings and orientation. [source](repo://src/threading/slicers/planar_slicer.cpp#L238-L339) [source](repo://src/slicing/layer_additions.cpp#L33-L68) [source](repo://src/slicing/layer_additions.cpp#L181-L221)
+Layer additions are separate island or step types built around the model layers. Rafts prepend new shifted layers and shift the original steps upward; brims and skirts add islands; thermal scans add a bounding scan island; and laser scans create or update paired `ScanLayer` steps with copied build-layer settings and orientation. [source](repo://src/threading/slicers/planar_slicer.cpp#L261-L362) [source](repo://src/slicing/layer_additions.cpp#L33-L68) [source](repo://src/slicing/layer_additions.cpp#L181-L221)
 
-Support is a larger preprocessing pass rather than a normal polymer region. It derives overhang demand across adjacent layer geometry, applies settings-part blockers and enforcers, propagates collision-cleared support toward a foundation, optionally builds organic branches or hollow tapered walls, validates connectivity, and finally replaces each layer's support islands. [source](repo://src/threading/slicers/planar_slicer.cpp#L457-L584) [source](repo://src/threading/slicers/planar_slicer.cpp#L586-L713) [source](repo://src/threading/slicers/planar_slicer.cpp#L800-L867)
+### Support demand, restored contacts and bridges
+
+Support is a preprocessing pass, separate from normal polymer regions. It derives demand from adjacent cross-sections, applies settings-part blockers/enforcers, propagates collision-cleared support toward a foundation, optionally builds organic branches or hollow tapered walls, validates connectivity and replaces each layer's support islands. [source](repo://src/threading/slicers/planar_slicer.cpp#L384-L405) [source](repo://src/threading/slicers/planar_slicer.cpp#L500-L520) [source](repo://src/threading/slicers/planar_slicer.cpp#L662-L810) [source](repo://src/threading/slicers/planar_slicer.cpp#L895-L964)
+
+The angle threshold expands the lower model by vertical spacing times the tangent of the threshold to classify unsupported contact. That classification can leave only the tip of an arched/sloped footprint. Restoration grows classified contact within each unsupported component's convex trapezoid cells, using horizontal and vertical partitions, and clips growth to both cell and component. It preserves contact coverage without jumping empty gaps or reaching another arm merely because the arms join elsewhere. Minimum-area filtering follows restoration. [source](repo://src/threading/slicers/planar_slicer.cpp#L524-L581)
+
+Bridge suppression tests each restored component against the model below. It requires full exterior anchor bands on opposing ends, within the configured span length, in candidate directions from world axes and polygon edges. The test uses the span's projected frame with a two-micron clipping tolerance, so rotated spans are supported; partial transverse anchors and attached cantilevers remain support demand. Enforcers are added afterward and blockers are subtracted at the target layer. [source](repo://src/threading/slicers/planar_slicer.cpp#L429-L498) [source](repo://src/threading/slicers/planar_slicer.cpp#L583-L605)
+
+Organic branch seeds start from the original angle-classified contact rather than the enlarged interface footprint. Forced contact joins the seeds, blockers clip them to surviving demand, and a surviving restored component with no seed falls back to its own footprint. This retains branch roots and XY clearance while preserving printable contact interfaces. [source](repo://src/threading/slicers/planar_slicer.cpp#L539-L540) [source](repo://src/threading/slicers/planar_slicer.cpp#L622-L659)
+
+`support_generation_tests` covers sloped interfaces, separate/joined contact components, open/enclosed gaps under rotation, taper footprints, organic clearance and blockers, opposing versus partial bridge anchors, rotated bridges and attached cantilevers, and build-plate/model landings. [source](repo://tests/support_generation_tests.cpp#L375-L407)
 
 ## Compute boundary
 
-After preprocessing, `TraditionalAST` queues every dirty non-clipping step and creates up to the smaller of the step count and ideal thread count. Each `StepThread` invokes exactly that step's `compute()`. Postprocessing does not begin until the queue is empty and all worker objects have finished; if no step is dirty, the slicer goes directly to postprocessing. [source](repo://src/threading/traditional_ast.cpp#L46-L109) [source](repo://src/threading/traditional_ast.cpp#L116-L175) [source](repo://src/threading/step_thread.cpp#L12-L40)
+After preprocessing, `TraditionalAST` queues every dirty non-clipping step and creates up to the smaller of the step count and ideal thread count. Each `StepThread` invokes exactly that step's `compute()`. Postprocessing does not begin until the queue is empty and all worker objects have finished; if no step is dirty, the slicer goes directly to postprocessing. [source](repo://src/threading/traditional_ast.cpp#L48-L109) [source](repo://src/threading/traditional_ast.cpp#L127-L183) [source](repo://src/threading/step_thread.cpp#L12-L40)
 
 This is the extension seam between polygon construction and motion planning: a new island or region must be installed during preprocessing, implement computation from input geometry to paths, and leave enough segment settings for the later optimizer and writer. It should not depend on worker completion order because dirty steps compute independently.
 
@@ -177,13 +189,13 @@ For every dirty global layer, planar postprocessing performs this exact sequence
 3. `calculateModifiers()` adds global-layer lead-in or spiral lift and fits eligible line runs to arcs.
 4. `reorient()` restores each layer to its slicing plane and printer frame.
 
-[source](repo://src/threading/slicers/planar_slicer.cpp#L870-L920) [source](repo://src/step/global_layer.cpp#L110-L181)
+[source](repo://src/threading/slicers/planar_slicer.cpp#L967-L1023) [source](repo://src/step/global_layer.cpp#L110-L181)
 
 Region-level modifiers include sharp-corner extension, trajectory slowdown, startup, tip wipe, and optional spiral lift. Modifier code reads segment-local settings before its fallback settings where supported; the sharp-corner regression proves that local settings can enable an extension even when the fallback is disabled, and also guards continuity and the close-connector threshold. [source](repo://src/geometry/path_modifier.cpp#L77-L116) [source](repo://src/step/layer/regions/perimeter.cpp#L1409-L1508) [source](repo://tests/path_modifier_tests.cpp#L30-L95)
 
 Arc fitting is deliberately narrow: it requires G3 support, an emitting syntax whose writer implements arcs, planar mode, and the exact +Z slicing normal. After reorientation, the layer also raises ordinary material paths to a printable minimum Z and redirects clearance modifiers that would cross the build plate; wire-arc surface-referenced and spiralized paths use separate height conventions. [source](repo://src/step/layer/regions/region_base.cpp#L29-L55) [source](repo://src/step/layer/regions/region_base.cpp#L258-L262) [source](repo://src/step/layer/layer.cpp#L410-L465) [source](repo://src/step/layer/layer.cpp#L486-L522)
 
-Finally, `PlanarSlicer::writeGCode()` wraps each global layer with writer layer hooks, emits scan and ordered island paths through `GlobalLayer`, marks every contained step clean, and finishes with `writeAfterPart()`. A global layer with neither a scan nor a valid path emits the writer's empty-step representation. [source](repo://src/threading/slicers/planar_slicer.cpp#L929-L950) [source](repo://src/step/global_layer.cpp#L440-L504)
+Finally, `PlanarSlicer::writeGCode()` wraps each global layer with writer layer hooks, emits scan and ordered island paths through `GlobalLayer`, marks every contained step clean, and finishes with `writeAfterPart()`. A global layer with neither a scan nor a valid path emits the writer's empty-step representation. [source](repo://src/threading/slicers/planar_slicer.cpp#L1026-L1050) [source](repo://src/step/global_layer.cpp#L440-L504)
 
 ## Change checklist
 

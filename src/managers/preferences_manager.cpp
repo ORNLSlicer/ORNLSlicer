@@ -124,6 +124,7 @@ PreferencesManager::PreferencesManager()
       m_gcode_preview_mode_preference(GCodePreviewMode::kAuto),
       m_gcode_preview_vertex_threshold_preference(5000000),
       m_disabled_setting_visibility_preference(DisabledSettingVisibility::kGrey),
+      m_prompt_settings_for_all_categories_preference(false),
       m_warn_unsaved_project_on_close_preference(true),
       m_themeName(ThemeName::kLightMode),
       m_theme(static_cast<int>(m_themeName)),
@@ -312,6 +313,9 @@ void PreferencesManager::importPreferences(QString filepath) {
             if (hasDisabledSettingVisibility)
                 setDisabledSettingVisibilityPreference(j["disabled_setting_visibility"].get<int>());
 
+            if (j.contains("prompt_settings_for_all_categories"))
+                setPromptSettingsForAllCategoriesPreference(j["prompt_settings_for_all_categories"]);
+
             if (j.contains("warn_unsaved_project_on_close"))
                 setWarnUnsavedProjectOnClosePreference(j["warn_unsaved_project_on_close"]);
 
@@ -383,6 +387,7 @@ fifojson PreferencesManager::json() {
     j["gcode_preview_mode"]                     = static_cast<int>(m_gcode_preview_mode_preference);
     j["gcode_preview_vertex_threshold"]         = m_gcode_preview_vertex_threshold_preference;
     j["disabled_setting_visibility"]            = static_cast<int>(m_disabled_setting_visibility_preference);
+    j["prompt_settings_for_all_categories"]     = m_prompt_settings_for_all_categories_preference;
     j["warn_unsaved_project_on_close"]          = m_warn_unsaved_project_on_close_preference;
     j["hidden_settings"]                        = m_hidden_settings;
     j["rotation"]                               = m_rotation_unit;
@@ -532,6 +537,10 @@ DisabledSettingVisibility PreferencesManager::getDisabledSettingVisibilityPrefer
 
 bool PreferencesManager::getWarnUnsavedProjectOnClosePreference() {
     return m_warn_unsaved_project_on_close_preference;
+}
+
+bool PreferencesManager::getPromptSettingsForAllCategoriesPreference() {
+    return m_prompt_settings_for_all_categories_preference;
 }
 
 bool PreferencesManager::getWindowMaximizedPreference() {
@@ -833,6 +842,11 @@ void PreferencesManager::setDisabledSettingVisibilityPreference(int visibility) 
 void PreferencesManager::setWarnUnsavedProjectOnClosePreference(bool warn) {
     m_warn_unsaved_project_on_close_preference = warn;
     m_dirty                                    = true;
+}
+
+void PreferencesManager::setPromptSettingsForAllCategoriesPreference(bool prompt) {
+    m_prompt_settings_for_all_categories_preference = prompt;
+    m_dirty                                         = true;
 }
 
 void PreferencesManager::setRotationUnit(QString unit) {

@@ -72,10 +72,30 @@ Cache write credentials are available in two trusted cases:
 - A published GitHub release builds the release tag, synchronously pushes the
   four release outputs, and pins them as described below.
 
-Other branch pushes remain read-only cache consumers. The workflow does not
-provide `CACHIX_AUTH_TOKEN` to those jobs, and it does not run untrusted pull
-request code with the token. Preserve those conditions when adding triggers or
-reorganizing jobs.
+Other branch pushes and fork pull requests remain read-only cache consumers.
+The workflow does not provide `CACHIX_AUTH_TOKEN` to those jobs, and it does not
+run untrusted pull request code with the token. Preserve those conditions when
+adding triggers or reorganizing jobs.
+
+Fork pull requests run the regular version validation, Linux and macOS flake
+checks, Linux AppImage build and smoke test, and Windows package and installer
+builds. These runs also upload build artifacts. The `pull_request` trigger tests
+GitHub's merge commit, so it checks the proposed changes together with the target
+branch. Same-repository PRs continue to use their existing push builds; their
+additional PR-triggered Nix CI jobs are skipped to avoid duplicate builds.
+
+GitHub may require a maintainer to approve a fork workflow run, depending on the
+repository's **Settings > Actions > General** approval policy. Review the PR's
+changes, including workflow changes, then select **Approve workflows to run**
+on the PR if approval is requested. See GitHub's
+[approval instructions](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/approve-runs-from-forks).
+
+Adding a trigger does not retroactively create runs for already-open PRs. After
+the workflow change reaches the target branch, close and reopen an existing fork
+PR, or ask its contributor to push a new commit. Either action generates a new
+PR event. Resolve merge conflicts first if GitHub cannot create the merge commit.
+Check that **Nix CI** appears on the PR and approve the run if requested; rerunning
+an existing **Version validation** run does not start Nix CI.
 
 Consequently:
 
@@ -277,16 +297,41 @@ replaces the locally configured token.
 
 ### Nix ignores the substituter as untrusted
 
-The repository's Nix installation instructions configure the developer as a
-trusted Nix user. On an existing multi-user Nix installation, configure the
-cache using:
+`--accept-flake-config` accepts the repository's requested settings, but does
+not grant an unprivileged user permission to change the daemon's cache trust.
+These warnings are separate from TLS certificate errors: an ignored cache can
+fall back to other sources, while a certificate error can block downloads.
+Resolve [macOS certificate errors](development-setup.md#macos-nix-downloads-fail-with-a-certificate-error)
+before troubleshooting cache access.
 
-```bash
-cachix use ornl-slicer
+An administrator can allow the project cache when requested by the flake. Edit
+the existing `/etc/nix/nix.conf` with `sudoedit`, preserving other settings and
+merging with any existing entries for these keys:
+
+```ini
+extra-trusted-substituters = https://ornl-slicer.cachix.org
+extra-trusted-public-keys = ornl-slicer.cachix.org-1:VIvBeaBy4B47CzxtF7VxZWsK0wXJt4Dm7VNuAb65Nzg=
 ```
 
-Follow the command's instructions if system-level Nix configuration requires
-administrator access. Do not disable signature verification.
+On macOS, reload the daemon configuration with:
+
+```bash
+sudo launchctl kickstart -k system/org.nixos.nix-daemon
+```
+
+On systemd Linux, use `sudo systemctl restart nix-daemon.service`. Retry
+`nix develop .#ornlslicerDev -L --accept-flake-config` after the restart. The
+`trusted-public-keys` client warning may still appear because the flake also
+requests that restricted setting; with the key configured in the daemon, it
+already trusts the project signatures. See the
+[Nix cache trust settings](https://nix.dev/manual/nix/2.35/command-ref/conf-file.html#conf-trusted-substituters).
+This setup permits the specific cache without adding the developer to
+`trusted-users`. Keep signature verification enabled.
+
+Alternatively, if you already have the Cachix CLI, `cachix use ornl-slicer`
+can configure cache access; follow its instructions for system-level changes.
+See the [Cachix installation guide](https://docs.cachix.org/installation) if the
+CLI is not installed.
 
 ### `watch-exec` uploads nothing
 

@@ -26,12 +26,12 @@ SettingSpinBox::SettingSpinBox(SettingTab* parent, QSharedPointer<SettingsBase> 
     : SettingRowBase(parent, sb, key, json, layout, index), QSpinBox() {
     this->setFocusPolicy(Qt::StrongFocus);
 
-    float cur;
+    double cur;
     m_warn = false;
     if (m_sb->contains(key))
-        cur = m_sb->setting<float>(key);
+        cur = m_sb->setting<double>(key);
     else {
-        cur = json.operator[](Constants::Settings::Master::kDefault).get<float>();
+        cur = json.operator[](Constants::Settings::Master::kDefault).get<double>();
         m_sb->setSetting(key, cur);
     }
 

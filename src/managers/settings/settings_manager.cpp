@@ -138,8 +138,6 @@ bool SettingsManager::loadGlobalJson(QString path) {
     // Get file details to later use name as key into map
     QFileInfo fileInfo(conf_file);
 
-    // TODO: if same name, clear settings for name, load master defaults, then populate
-
     // Load the data and parse it.
     QString settings_data = conf_file.readAll();
     conf_file.close();
@@ -171,6 +169,9 @@ bool SettingsManager::loadGlobalJson(QString path) {
     else if (result == -1) {
         // break;
     }
+
+    // Replace the file's cached settings so removed keys and categories do not survive a reload.
+    for (auto& globals : m_allGlobals) globals.remove(fileInfo.completeBaseName());
 
     // if key found in master
     for (auto& array : j[Constants::SettingFileStrings::kSettings].items()) {
@@ -259,7 +260,13 @@ void SettingsManager::constructActiveGlobal(QString settingTab, QString settingF
         CSM->setMostRecentSettingHistory(settingTab, "LFAM_03in");
     }
 
-    if (!setting.value().isNull()) m_global->populate(setting.value()->json());
+    if (!setting.value().isNull()) {
+        m_global->populate(setting.value()->json());
+        auto& active = m_active_globals[settingTab];
+        if (active.first != setting.key() || active.second.isNull())
+            active = {setting.key(), QSharedPointer<SettingsBase>::create()};
+        active.second->populate(setting.value());
+    }
 }
 
 void SettingsManager::constructLayerBarTemplate(QString settingTab, QString settingFile) {
@@ -274,7 +281,13 @@ void SettingsManager::constructLayerBarTemplate(QString settingTab, QString sett
         CSM->setMostRecentSettingHistory(settingTab, "LFAM_03in");
     }
 
-    if (!setting.value().isNull()) m_global->populate(setting.value()->json());
+    if (!setting.value().isNull()) {
+        m_global->populate(setting.value()->json());
+        auto& active = m_active_globals[settingTab];
+        if (active.first != setting.key() || active.second.isNull())
+            active = {setting.key(), QSharedPointer<SettingsBase>::create()};
+        active.second->populate(setting.value());
+    }
 }
 
 void SettingsManager::constructActiveGlobal(QHash<QString, QString> settingTabAndFile) {
@@ -365,6 +378,7 @@ int SettingsManager::checkVersion(QString filename, fifojson& settings_data, Set
 }
 
 void SettingsManager::consoleConstructActiveGlobal(QString path) {
+    m_active_globals.clear();
     for (auto& el : m_master->json().items())
         m_global->json()[0][el.key()] = el.value()[Constants::Settings::Master::kDefault];
 
@@ -388,12 +402,16 @@ void SettingsManager::consoleConstructActiveGlobal(QString path) {
 }
 
 void SettingsManager::removeCurrentSettings(QString settingTab, QString settingFile) {
-    fifojson j_array = fifojson::array({});
-    j_array          = m_allGlobals[settingTab][settingFile]->json();
-    for (auto& array : j_array.items()) {
-        for (auto& el : array.value().items()) {
-            // reset current settings to default
-            m_global->json()[0][el.key()] = m_master->json()[el.key()][Constants::Settings::Master::kDefault];
+    QList<QSharedPointer<SettingsBase>> settings {m_allGlobals.value(settingTab).value(settingFile)};
+    const auto active = m_active_globals.take(settingTab);
+    if (active.first == settingFile) settings.append(active.second);
+    for (const auto& setting : settings) {
+        if (setting.isNull()) continue;
+        for (auto& array : setting->json().items()) {
+            for (auto& el : array.value().items()) {
+                // Reset both current cached keys and keys removed since this template was applied.
+                m_global->json()[0][el.key()] = m_master->json()[el.key()][Constants::Settings::Master::kDefault];
+            }
         }
     }
 }
@@ -458,6 +476,7 @@ bool SettingsManager::loadGlobalJson(const fifojson& j) {
     }
 
     // set default values to newly active global then overlay with loaded values
+    m_active_globals.clear();
     m_global->reset();
     for (auto& el : m_master->json().items()) {
         m_global->json()[0][el.key()] = el.value()[Constants::Settings::Master::kDefault];
@@ -536,6 +555,7 @@ fifojson SettingsManager::globalJson() const {
 }
 
 void SettingsManager::clearGlobal() {
+    m_active_globals.clear();
     m_global.reset(new SettingsBase());
 }
 

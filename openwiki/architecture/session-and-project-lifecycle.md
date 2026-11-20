@@ -3,9 +3,6 @@ type: architecture
 title: Session, Model, and Project Lifecycle
 description: Ownership and persistence guide for loaded parts, raw model bytes, `.s2p` projects, application history, unsaved-change tracking, and active slicers.
 tags: [session, project, model-import, persistence, threading]
-verified:
-  - by: openwiki/0.7.0
-    at: 2026-10-06T20:25:27.555Z
 sources:
   - id: openwiki-source-6ac6f343f5f17fc1351db9c2
     resource: repo://include/managers/session_manager.h
@@ -15,15 +12,22 @@ sources:
     resource: repo://include/threading/session_loader.h
   - id: openwiki-source-1c931b6d3c850e1860fde20c
     resource: repo://src/managers/session_manager.cpp
+  - id: openwiki-source-b441330c759fe652a2df3d75
+    resource: repo://src/part/part.cpp
   - id: openwiki-source-c97c50d7ad4d8d89717ac6d3
     resource: repo://src/threading/mesh_loader.cpp
   - id: openwiki-source-c9b49d4d1b98e2ebff97fee2
     resource: repo://src/threading/session_loader.cpp
+  - id: openwiki-source-559cf8ac0c8cdec97ab8a80c
+    resource: repo://src/widgets/part_widget/model/part_meta_model.cpp
   - id: openwiki-source-403d1cb683b233c4f42460d0
     resource: repo://src/windows/main_window.cpp
   - id: openwiki-source-af6398eb7d1bc9a42afbe5af
     resource: repo://tests/session_manager_tests.cpp
-generated: { by: "codex", at: "2026-10-06T20:25:27.555Z" }
+generated: { by: "codex", at: "2026-11-10T17:47:51.624Z" }
+verified:
+  - by: openwiki/0.7.2
+    at: 2026-11-10T17:47:51.624Z
 ---
 
 # Session, Model, and Project Lifecycle
@@ -63,6 +67,8 @@ For Assimp inputs, import first attempts a CGAL polyhedron. If model repair is e
 
 STEP import tessellates in millimeters using the preference-controlled linear deflection and a fixed angular deflection. Archive-backed STEP bytes are written to a temporary file because OpenCASCADE's reader requires a path.
 
+STEP tessellation welds coincident vertices within each shell, not across the whole compound. This retains closed shells without merging touching assembly solids or inner void shells into non-manifold vertices. Faces outside shells are appended separately. [source](repo://src/threading/mesh_loader.cpp#L145-L159)
+
 ### GUI versus CLI
 
 `SessionManager::loadModel()` defaults to asynchronous import. The GUI constructs `MeshLoader : QThread`; `newMesh` adds each result and stores the first raw buffer, while `error` becomes a session status message. Reload and replace operations use the same worker pattern and update the existing part only after a new mesh arrives.
@@ -78,7 +84,7 @@ An empty loader result emits an asynchronous error, but `SessionManager::loadMod
 | Entry | Source | Role |
 | --- | --- | --- |
 | `model/...` | Active entries in `SessionManager::models()` | Original model bytes for self-contained reload |
-| Session JSON | `SessionManager::partsJson()` | Part name, source filename, mesh role, generated-shape type, original dimensions, and one or more transforms |
+| Session JSON | `SessionManager::partsJson()` | Part name, source filename, mesh role, modifier enabled flag, parent name, generated-shape type, source/original dimensions, aligned/current transforms and transform history |
 | Global JSON | `SettingsManager::globalJson()` | Active project-wide settings and version header |
 | Local JSON | Each part's settings plus serialized settings ranges | Per-part and per-layer overrides |
 | `Version.txt` | Runtime build version | Human-readable producer/version marker |
@@ -86,6 +92,16 @@ An empty loader result emits an asynchronous error, but `SessionManager::loadMod
 Only raw models still referenced by an active root mesh or submesh are embedded. Generated primitives do not require model bytes: `partsJson()` records generator type and original dimensions, and `loadPartsJson()` reconstructs the corresponding box, pyramid, prism, cylinder, cone, open box, or default settings region through `MeshFactory`.
 
 Before starting a save worker, `SessionManager` emits `requestTransformationUpdate` so GUI edits are reflected in the serialized transforms. The worker emits `saveSucceeded` only after closing a fully written archive. `SessionManager` can translate that to `sessionSaved`, but only when the caller requests a notification.
+
+### Parent-child objects and reversible edits
+
+Project reconstruction creates all objects before resolving parent names within that import. It rejects cycles, defaults a missing modifier-enabled field to true, restores the aligned/current transform representation when present, and falls back to legacy transform history otherwise. Only after rebuilding links does it report the root count and emit `partAdded` for roots, allowing descendants to enter the UI with their hierarchy intact. [source](repo://src/managers/session_manager.cpp#L471-L511) [source](repo://src/managers/session_manager.cpp#L560-L579)
+
+`Part::adoptChild` prevents self-parenting, duplicate children and cycles and detaches a child from its former parent. `PartMetaItem::setParent` keeps the UI and domain links synchronized. Hierarchy commands snapshot parents, enabled flags, presence and selection; undo/redo rebuild links before restoring selection. Deletion can remove a hierarchy or retain its children. Retained settings/clipping children are disabled so they cannot silently become active modifiers outside their former scope. [source](repo://src/part/part.cpp#L289-L318) [source](repo://src/widgets/part_widget/model/part_meta_item.cpp#L228-L247) [source](repo://src/widgets/part_widget/model/part_meta_model.cpp#L99-L128) [source](repo://src/widgets/part_widget/model/part_meta_model.cpp#L259-L377)
+
+Copying a hierarchy duplicates descendants once and reconnects their copied parents; copying a child alone retains its existing parent. `Part` copies mesh and settings/range data, retaining sharing between grouped ranges inside the copy while separating them from the original. The hierarchy copy/edit/transform/UI tests cover these contracts. [source](repo://src/widgets/part_widget/model/part_meta_model.cpp#L384-L435) [source](repo://src/part/part.cpp#L35-L69)
+
+Parenting also controls settings/clipping scope during slicing; see [Planar Path Generation](../slicing/planar-path-generation.md) and [Cylindrical and Helical Slicing](../slicing/cylindrical-and-helical.md). Display visibility and modifier enablement serve different purposes; the latter is persisted in the project.
 
 ## Project load and settings preflight
 

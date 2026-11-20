@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:973761223ae9eee25f79e0a65dab906bb5795e21aacf0e52c76d79d1fab89b05",
+    "pageVersion": "sha256:420143421f7bdbd6c9f2500bf7ba6f0cad3ba39a6dff44c9f7fb22dd9a640587",
     "claims": [
         {
             "id": "claim_aa9d931e1e3b414fb4bd70a35e8b73ea",
@@ -13,14 +13,14 @@
                         "repo-lines-v1:sha256:60ae963a5f8799afd0f45ae1af94d63b485e4c4444ac8f64104e26661c188f4f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIzYWJmYmEyOGI2MmUzNjNmMGIxOGY2MDU3MzdiYjgxY2UzOGI3MDZjNGYzNjY0MWE3NTkxZWU1ZDg1ZWRhZDMyIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJhOTY3ODY1Y2Q3NDg0NzM2OWQzNzM4NWY4YWRiNjU3MDA4NTA2NTJjYzcxYTBkNzEyZTAyMGUzMzQ4Y2E4MWU2IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI2NTE0ZDAzMzhmYmIyMGVmNmM0ODE4OWY1Y2QxOWQ4M2ZhZjRlMGVmYWRjZjFhYjc3NGY1NGMyMmU5ZjRiMDJhIn0"
                 },
                 {
-                    "resource": "repo://src/threading/abs_slicing_thread.cpp#L211-L285",
+                    "resource": "repo://src/threading/abs_slicing_thread.cpp#L210-L282",
                     "version":
-                        "repo-lines-v1:sha256:9d57fb5b77a27e6b07ed347255a4ceadad5e3aff5bbe490212d33aa445f5f1d4:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmMDRkOTljMGY1ZDM1MjFmNjdmN2M1ODdkMjBkZDM1OTJhNTAyNGI5MDM1MjllMWU0Njg4NDRmN2ZhZTgxMzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYwOTVhOTQ0N2ZhYThhOGM5OTk5Zjc2N2Y5YjUwYjA0OTljYzc2YTU0ZDU1Njg1Nzk3MzM4MTNiZDI1MjYyMWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI5YjRkNDU3NTBlNGE3MzZkOWMwMGY4OTYyYTg0ZTFkYWQ4NGYyZWUyYjRhNzgyOTZhYTM1YmVjYTc3YTNlZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZiZDFmODVjMzkyMDQyOGM0ZWI2YmQwNDBmZTlhYmEzOWY5YjAwNzcyMjNkOTk5N2FjMTBhODBlYWY3ZDFjMTAifQ"
+                        "repo-lines-v1:sha256:533e05a7bbc404df29ddc13ab54b3cd714fdd999a4cf36b495594f11885e73c1:eyJzZWxlY3RlZExpbmVDb3VudCI6NzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3YmZlMmYzZGUxMzNkNzhhMmJjOGJiMWM0YTA4NDUwNTYzOTg2ZWU4MjU0ZmFjZWU2OThlMWRjYzU3ZTgxNjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljNzc4NzIxNzVhZDhjYzk2ZmE1MGNiN2M4MWVkNjFjZGUzZTZiMjYwNDAyMDE0NWI2OTZhMWExNWQ4MWEwZGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhMDViMzM4NDY1Mzk1ZDFkODY5NWM4NTdjMmZiNzA4YmNkNGYyODhiNGMzYmY5Yzk0YTFiNmY5ZTIyZDUyOGQifQ"
                 },
                 {
                     "resource": "repo://src/threading/abs_slicing_thread.cpp#L71-L171",
                     "version":
-                        "repo-lines-v1:sha256:d6f5cd9fdb8041b196f530fde414550987b098a14b8c4a4d35dc7924188ae8fe:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJjOTQ4NGVlMmI1NmIwYjI4MTdlYmMwMTIzYjhmMzg5NWQ0NmJhYWZmMWFmMzcyOTAxMjQ0NGZjNDIzNThjZTNiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIyZGI0OTBkNjNkNWM1MDQ1M2RiYmJjZDBlY2IxZDRlYzQxZmRmOWIyMzAwNjRkZjI5MjdmYTc2NzkzZjMwYThmIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIyMTgyYWYyM2FiZThlY2EyYTNmNDc5OTg0YTVmYjMxMmM2MmZmY2YyMjQwMjU2YjUxM2E5OGYzNzkxNDk0NGEwIn0"
+                        "repo-lines-v1:sha256:7b86cb980eb37a8006aa4d5ff480edea4dac3e2136bb0fbfc0bf56a661906c85:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJjZjA0ZDk5YzBmNWQzNTIxZjY3ZjdjNTg3ZDIwZGQzNTkyYTUwMjRiOTAzNTI5ZTFlNDY4ODQ0ZjdmYWU4MTM1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIyYTQxYmU3NjAxMWYwMDUzMjZmY2QzZmE2ZGM1YWUxOGU0YjNhMDFkMmY1YTk2ZjAzM2YzNzM5YjgyNzQxZGZjIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI3ZmZmOThiODgwYzM5N2IxM2IxZDIxNDRmNDg4NGQ2MDYwYTU3NWJjNjM0YzkyZmFiMDNlYjAyMTQzOWQwOTc3In0"
                 },
                 {
                     "resource": "repo://src/threading/gcode_loader.cpp#L573-L721",
@@ -81,12 +81,12 @@
                 {
                     "resource": "repo://include/gcode/writers/writer_base.h#L24-L143",
                     "version":
-                        "repo-lines-v1:sha256:7c0394b84f6c5352f21a919038de6bdefec86fb7a6ef7c8c34caa252ec325993:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiZWMyNzg2NThlZDQyN2YzZjI0YjQ2NDcwNWQ2YWE0OTQwYmNiOTI2MjY5NzI1NTQwMWNlNzllYTE1MjNlYjk1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIzZWQ3NDYyY2Q3Yzk1MDA2OTZlNGMzMzE5ZmIwYzk2OGMzZjk1YzIzY2I2ZDM2NTRlYTk1Mzc3NmU1YTM3YzQ3IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJjYjJkNTczZTMxZGZkZWFlNWEzNmNkOTIxYTI4ZGY4MmZmZmE2NWRjY2YwMWMzZmNmM2ZkNjllNDA3M2IwNDcwIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIwNjA4MzMwYjliZGRhYTdhMzY5ZDkwNjRkNmNjMzZjNTJiYmUzNmVkYjdjYTc3MzAzNDJhODhjMzU5OTVkZWRlIn0"
+                        "repo-lines-v1:sha256:ed62f06bd8a95f2d30896b11a4029710278f8e3d55d76e1130527f92110657b8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiZWMyNzg2NThlZDQyN2YzZjI0YjQ2NDcwNWQ2YWE0OTQwYmNiOTI2MjY5NzI1NTQwMWNlNzllYTE1MjNlYjk1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJjYjJkNTczZTMxZGZkZWFlNWEzNmNkOTIxYTI4ZGY4MmZmZmE2NWRjY2YwMWMzZmNmM2ZkNjllNDA3M2IwNDcwIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4MThjOWZjZTMyOThhZTE0NWNiNTgyNjlhYzg3YTBhOGMyYjEyMzY0MTRjMzgyNTgwY2U2ZTdiNGM5ZGViNDcyIn0"
                 },
                 {
-                    "resource": "repo://src/threading/abs_slicing_thread.cpp#L211-L290",
+                    "resource": "repo://src/threading/abs_slicing_thread.cpp#L210-L293",
                     "version":
-                        "repo-lines-v1:sha256:f0fe1a2c600d840ed951774b4129f8b857f9a18d1f5bf37b0c57666abc41dd2e:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmMDRkOTljMGY1ZDM1MjFmNjdmN2M1ODdkMjBkZDM1OTJhNTAyNGI5MDM1MjllMWU0Njg4NDRmN2ZhZTgxMzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI5YjRkNDU3NTBlNGE3MzZkOWMwMGY4OTYyYTg0ZTFkYWQ4NGYyZWUyYjRhNzgyOTZhYTM1YmVjYTc3YTNlZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYzNGVlZjYzMWY0NTdjM2Q2NDg1ZWM2OTUwMzExY2EyOWQ3MzdkNDg4MzE0MGMxMWJjMDhlNjBlYTZmNmQzNWYifQ"
+                        "repo-lines-v1:sha256:248142416fd78838cd95e7e3b15a82c446327a2a103e0944e963c4f669c8d34c:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljNzc4NzIxNzVhZDhjYzk2ZmE1MGNiN2M4MWVkNjFjZGUzZTZiMjYwNDAyMDE0NWI2OTZhMWExNWQ4MWEwZGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYzNGVlZjYzMWY0NTdjM2Q2NDg1ZWM2OTUwMzExY2EyOWQ3MzdkNDg4MzE0MGMxMWJjMDhlNjBlYTZmNmQzNWYifQ"
                 }
             ]
         },
@@ -96,19 +96,14 @@
                 "Cylindrical slicing is restricted to Arc Specialties by session dispatch, and CylindricalSlicer directly constructs ArcSpecialtiesWriter with Arc Specialties metadata.",
             "evidence": [
                 {
-                    "resource": "repo://src/managers/session_manager.cpp#L47-L49",
+                    "resource": "repo://src/managers/session_manager.cpp#L601-L607",
                     "version":
-                        "repo-lines-v1:sha256:27e99a002a9eecf087184d8e794deb434cf75f20d8065f2352af700ac0c2a95d:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjZhMGUxZTVmNTlmNDJmMjk1ODA5ZGQ3Yjk2N2U2NGQ5NmQxMWZhY2E1MWM5NTI3MWNmN2Q2MDMyMjAyZGJmZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODdlMmIzMGNmYmY2MTEyZTE4MGQzMzE2MzY4ODk3ODFkOGYxYTEzNmI4NGZlNGU5YmI3NTljN2VlODA2NmIyYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWI0NzkzYTE0ZjVjOTAyOGEyYmY5NzkxNjhiNzNhOWJkN2ViN2Y2NzY1MzI5NzdlMTZiN2ZhNmU4OGM4YTAxZCJ9"
+                        "repo-lines-v1:sha256:6965dc91a2d6b30a7f08dbe8f57255c4c05dc039c0d731ddc7cb2edaee45ea8b:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTE1MjI3MTBiM2UwMGJmYjdjM2VkYjI1MzA3ZDYyNDAzNDcxYjExMmU0MGQxMDgzM2Y4NjNjNDQyNjNkZWU5NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODY4OWIxYWQyMTEzNTczNGM3MjA0YWJhNTBhZGExODhmZmYxYTFlZGU4YzA0OTkyZjRjY2Q1ZWM5NzliYjUzMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzcwMTExNGE5NDRjNWVlZTg3YjM5NzRjNjNiYzYwNjA4ZDdhODJhYjllYzJkZmI3ZDIyOTRiMjBhMDM5ZTczNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDk3Y2VlODIyZTc0NjUxM2Q5MjE5NmU5OTNhZDdiMDA2N2IyZWU2MGMzZGQxOTMwMTI4MWIyZDlkMjE1ZWJjNiJ9"
                 },
                 {
-                    "resource": "repo://src/managers/session_manager.cpp#L575-L583",
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L419-L421",
                     "version":
-                        "repo-lines-v1:sha256:c913d335cf54ad190af859e7157e0cc17e81ca3621d3b66a4f0abda47ce30ed0:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2EzNzljNTFiYThiNDNjNmJiYmI2ZWM5NGM1NjZhMjg0NTQ5YjYyMzhiM2I1OGRhZDRkZDIyNmEzNmE4MDIxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGQ2YjhhYTY0NGEzNDA0MmYzMmUyM2Y4MWI2ZWE1ZTMyOWNkZTk5ZTIwNGM4YzFhNTM4ZDFjNGM5Y2IxNjJmZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzIxZmYzYzBmY2UzYzc0ODNlM2FkN2U0YmJkMTMyNzQ5Njg3MzBlYTZmNWE0ZTZhNjMxMTAxMmYxNWU5MWQzZiJ9"
-                },
-                {
-                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L418-L421",
-                    "version":
-                        "repo-lines-v1:sha256:9d520c565cc3079e3012dd83100424e6a6a25dc17e59a09e6c661076ccaf6673:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWQ4MDk0NGY3MzUwMDVhOWI1Y2QzNWYzMDY1MGI1ZjA4N2FkYzY1ZDg2NTU4ZjdiMTk3MTc3OTBhZmVjOWZmNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDlhYmEyOTJkYTkwZmU1ZTM2NjljOWExMDY4NTY4NzQ2ODZlMzE2OWNjMWI0ZDYzNzYyOWE2NDE1MGU3MWJkYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTY1YTQwM2Q4MTk4ZDVkNWEzYTlmNzM4MzhkZjhlYzY1NTBkMDA2MjZhY2Q1OTZiYzQ2NGM5NWQ1NGYwZThmYiJ9"
+                        "repo-lines-v1:sha256:ad0f25e0b77a9ea75b72c06750bf58b108ddc9cde95b0fb5eda16d1a9a52b2f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWQ4MDk0NGY3MzUwMDVhOWI1Y2QzNWYzMDY1MGI1ZjA4N2FkYzY1ZDg2NTU4ZjdiMTk3MTc3OTBhZmVjOWZmNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjEzOGI1YjRhNmM3NTIwYzc4NGM1NDc4MjBiNmU2N2NlY2Y5YzhkNzk0ZjI4ZTMzYTUwNWRlNmFkNDhmYzFiOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDlhYmEyOTJkYTkwZmU1ZTM2NjljOWExMDY4NTY4NzQ2ODZlMzE2OWNjMWI0ZDYzNzYyOWE2NDE1MGU3MWJkYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDBmOWFhNDM0ZWIyMGJhY2VlOTA2OGZhMzAyYmJlYWMzMmMxMjQzZWE4NzEzODI3ZWI2OGZhMTMwOTgxYmU4YSJ9"
                 }
             ]
         },
@@ -162,12 +157,12 @@
                 "Generated G-code uses a separate parser factory to calculate adjusted layer times and insert comments using dialect-specific delimiters, so parser integrations may require both loader and layer-time factory wiring.",
             "evidence": [
                 {
-                    "resource": "repo://src/threading/abs_slicing_thread.cpp#L135-L176",
+                    "resource": "repo://src/threading/abs_slicing_thread.cpp#L136-L177",
                     "version":
                         "repo-lines-v1:sha256:dd16e4c4fabb01f623a09694f53ef1ae238e8bdf8354b72887998f996661a50c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5OTY5MmU3NGM1NjZiZmQ1NWU2Njk5YWM4ZGFkZGUwNmY3YzMzMWNmZDc5NTliMGQxYzY5NTUzYTZiYjFjYTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZiNDMyMjYwYzZlOWU1YWVkMDVjMTQ4YjYwMGY4MzYwNDk3ZDFjNjA2NDIxYzcyMmIxMGIwMjIyOTEzOThiMjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEifQ"
                 },
                 {
-                    "resource": "repo://src/threading/abs_slicing_thread.cpp#L381-L399",
+                    "resource": "repo://src/threading/abs_slicing_thread.cpp#L430-L448",
                     "version":
                         "repo-lines-v1:sha256:0dd945bce1ff77d5501a9632660e8ec5c720496926c0437b7694d4efef3e120d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmN2E5MDQ1OGQxMTNlZTBlMDBhZmFlMTc5ODhmNmY5MzM2ZWNjMWRhNTcyNDJkYmM4MDg5NTM2MTEyY2ZmZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2YjJhYzBjZThlZDYxMTE5NmViODMwNzQ3NWJmODk5ZWZkYTc2OWYyNTg4ZDQ2OTZhYmZiMmQ2NmJiMGI4NzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0NzM1ZjFmNjRlYzE5ZWMzM2ZmMjVlZTNiZDI3NGIxMzM0Mjc0MTYxNWJjODUzYmNiMmY4ZTU5MmQ4Y2EwOWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmZWFhYjcxNDdkNDhhNTQ3MTVmNDgxNWMxNTViMDU3NTJiNDlmMjA2NGFhY2RmZDFkZGRjZjM5ZjA4N2FhMzAifQ"
                 }
@@ -201,31 +196,26 @@
                 "Focused Arc Specialties tests cover both parsing and generation, including optional stops, weld schedules, cylindrical CP, block numbers, handedness, tool frames, path finalization, startup clearance, clip rounding, and travel arc density.",
             "evidence": [
                 {
-                    "resource": "repo://tests/arc_specialties_parser_tests.cpp#L838-L909",
+                    "resource": "repo://tests/arc_specialties_parser_tests.cpp#L948-L1048",
                     "version":
-                        "repo-lines-v1:sha256:b33bae0e172dcf639404015628810c226ba16deb67b18093506a653849655d03:eyJzZWxlY3RlZExpbmVDb3VudCI6NzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0MGQyNmFiYzhmMzIyNDAxNjgyMTBmMmIxMjM3YWI0MWM0YjU1MjA4ZGNiZDQxYTE5YmM4MTZjMzM0MDU1MjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkYWU1NTkzY2MxNzkwYmY4YmUyYzdiMzQ1YzMwMGIzM2JiMTcxMmMwYTEyOTViOWZjMDg5YjAyZTEzYjhkODYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmOTRjMjA5YzE3NWMyZTY0MTA0Yzg1YTBlYzc1ZmNlZWYwYzE5NTAzYWZlNTNiZmM3NmRlOWE2M2EzYWRlYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0M2RjOTQ0YWJiZWI5MzkzZWZjMTQwMGViZWE1OGE1ZDRiODVlYzRiZmEwNjBlZDVkMWQwMmQ4YTQ3YmMzMDYifQ"
+                        "repo-lines-v1:sha256:588186784f980fbcedafe1d562567e3775023f0bbcbdfbc6ed4dfef5f5ba0123:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI5MmRkNDEwNmFkMTNkMzliMzZlY2JhM2RlZjU2N2M4MjlkNjNkMjZlNzg4ZTMxODQzODdkZDg1OTU3OTk1MTk5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJkOWFiYTI5MmRhOTBmZTVlMzY2OWM5YTEwNjg1Njg3NDY4NmUzMTY5Y2MxYjRkNjM3NjI5YTY0MTUwZTcxYmRhIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
                 }
             ]
         },
         {
             "id": "claim_72b441f5330f4b459d775e6b561afa56",
             "statement":
-                "Companion machine outputs are selected downstream in GcodeExport from detected metadata plus settings and run in dedicated saver workers, separate from the primary WriterBase implementation.",
+                "Companion machine outputs are selected downstream in GcodeExport using detected metadata and options, with the ARC generation requirement captured from the slice, and use dedicated saver workers.",
             "evidence": [
                 {
                     "resource": "repo://src/threading/gcode_aml3d_saver.cpp#L24-L145",
                     "version":
-                        "repo-lines-v1:sha256:8ed13ace522e057f37e235007d5ee78c0fe0a4339deba4dedae1feac7faeb76b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJiNmVjOWJjZTM1YmFmZjk4MDdlODNjZTU1ZDdkYjE5ZTZjYTJjMTdkZDc1YTA2Yjk5ZmRkNmM1YTdhMWFmMDgxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJjZjFjNmFjNzU1Mjc1ODVkZDQwMGEyZTk1Y2FiNjFmOTk1MGRmOTY1MGJhYzUwNGFlZjMyM2U1MTQwZWMxZWUzIn0"
+                        "repo-lines-v1:sha256:0b4338026ff199d9a74d55837c53a473ed483a30aad13cfb555cbd19f54be482:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI1NTIyYzQyY2QxOWM2ZDAzZDgwOGM0NTI3MjA1NTI4MjViN2VhMWM1YjQ5MWIyMTg1MTFjYWM3NDE1Y2Y5ZDliIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJiNmVjOWJjZTM1YmFmZjk4MDdlODNjZTU1ZDdkYjE5ZTZjYTJjMTdkZDc1YTA2Yjk5ZmRkNmM1YTdhMWFmMDgxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJmMjY2MjVkYWZlOTExNzg0YWUzOWI2ZmQ3YWJlMGYyNGFiYzk2MTg4YTJhZGNkZTBmYzlkM2U4NjMwZWY5ZGE2In0"
                 },
                 {
-                    "resource": "repo://src/threading/gcode_marlin_saver.cpp#L24-L140",
+                    "resource": "repo://src/windows/gcode_export.cpp#L407-L489",
                     "version":
-                        "repo-lines-v1:sha256:d72c83f37763c3f13a2a257e5599592358158909a76c88db045f0a4d42f65e59:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4NTE5MmU5NDEzNGYyNWU4ZDBhY2EzNTM3N2NiZjIzYzI0YTYyMGFkODQ5NjkxNjlmN2QzN2FiYjhlZGUzNDE1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI1ZDE5MGE5MjVkMTAxNDNjOTJkNTkxY2NkMTQyMzdhYjQyMDY1Y2Y0ZWFhMDk1YTBkN2MxNThmZjliNWM2NjBiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI5NTFjNGZmYjA3NjY0MTFmNmU5NTljOTc4MDViOGQ5NjE3YzE5OGNmZmQ2NDI4YmIxYzQ5ZGM0NDllYjFkNjU4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJjZjFjNmFjNzU1Mjc1ODVkZDQwMGEyZTk1Y2FiNjFmOTk1MGRmOTY1MGJhYzUwNGFlZjMyM2U1MTQwZWMxZWUzIn0"
-                },
-                {
-                    "resource": "repo://src/windows/gcode_export.cpp#L378-L456",
-                    "version":
-                        "repo-lines-v1:sha256:9fb617af949b655cf32b3689e4eb265572e7587800a208f36eef4a2a58568c6e:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5MjIxODU3ODY2MDU1NzMxZWY0YmMyZDQ4Y2Q5ODRmYjM0YjRhMmM3NmI3NDI3OTMwNzIzOTZlYmQ1MmYzNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MjJjNDJjZDE5YzZkMDNkODA4YzQ1MjcyMDU1MjgyNWI3ZWExYzViNDkxYjIxODUxMWNhYzc0MTVjZjlkOWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRhOWY4NmQyOGU3ODRmOWZkMzFmYjcyZDE1ZjYwY2JjZWFhZmRkNjY5Y2JkNWI2ZGE3ODg4YTAyMzMyMWViYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI0YTM2NWE5MGVjMTFlOTA0MzI3NTJjZjkzNzZlYzVlZDM2YjgwYmE1ZThlNjg1NGZjZjk4OTcwZDMwNDQ0NjkifQ"
+                        "repo-lines-v1:sha256:deb8e0de2b53156ca5a7f303a5272458315818e5e566393f80fa34ce4c130d61:eyJzZWxlY3RlZExpbmVDb3VudCI6ODMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjZDJiYjBjOTE1ZjY2YWQ4MGRmYmU5YmFkZGU1OTc1OGI1MDk2NTU3OGUxNWZmZWY0MDAwMmFhYmUxMzI0MjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzMzhmZDI4MWYxMDY0NzIxODQzZDM0ZjA3OGNjYzJjNGNjNjk4M2U1YzgyYmQ4MmJlZjk5MjYxZWQwNmNmMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJjMTFlOGQ5ZmNjYzA0NDM4M2NhN2ZlOTNlZDAzY2U5MzAyYmRiNTAxZGY5ODlkZmI1NTczMzkzMDRkYWQyMTAifQ"
                 }
             ]
         },
@@ -245,26 +235,26 @@
             "id": "claim_e3c8e551dea84a139a170360ca084bad",
             "statement":
                 "CMake discovers source and header implementation files through recursive CONFIGURE_DEPENDS globs, but focused test executables and CTest entries are declared explicitly.",
-            "evidence":
-                [
-                    {
-                        "resource": "repo://CMakeLists.txt#L139-L158",
-                        "version": "repo-lines-v1:sha256:8eb3f07682370d93f10cd5dab242f67c47a2555cbfc99eceb06a97873404e4bc:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4N2M1OWU5Y2M3ODMwZGY4YTlmODk2ODk3OTNjZTQxZmQ1NGJhMmU3NzkyMjNlMWJiZDc3OTkyMWZhMzAzNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2MTYzMDAxZjIyMTk3ODhjNjVmNjM5MTllOTQ4YjRmNjI3MTNkYzU1MWU0N2QwMTdjM2E5OWU0ZmEyOTg2YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1MzgyYmNmODQyZWEyNmViZmUxM2IwMzJmZjhlOTk2ZDI2MDU4NGVmYWQwNjczM2RlZWM0YjhlMzhkOTE0NjIifQ"
-                    },
-                    {
-                        "resource": "repo://CMakeLists.txt#L387-L418",
-                        "version":
-                            "repo-lines-v1:sha256:c4d86e50706b65eed46cbaf3d37c6c11206ba39b275d4b3106ff0e3338b5bb0b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3NWJjN2JjOTVmOTM0ZTM4YTRkOWUwNWViMTUyZGNlZDk2YzM0NjI4OTk0NWJiYjcwMTk0OTY0ODQ4NTY0MjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhZGViNjAzMjFkYzQ4MWIwNmU0M2I4OGYxYWJjZTk1ZDY2YTc1MTYwZjI0NjIwYTA3ZTFiNzcyM2ZlNWIwNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVjY2I2ODFlYjA1ZWRhZDhjMGU0M2Y1ZDFlNjVhZGNiMDRiYzBhMTM1YzQ3ZDgyOTUyNTQ5Zjg4YWVjY2UxYTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmMjE3NGE1MjFlOTAzNjk0ZGY0NzIwZmE1OGE0YzIyNDllNDhlZGUzNzA2Y2U2NWM2OThmYjA0MDE2MzA5MzMifQ"
-                    }
-                ]
+            "evidence": [
+                {
+                    "resource": "repo://CMakeLists.txt#L140-L154",
+                    "version":
+                        "repo-lines-v1:sha256:9b0a172fae86b9065fdfa649493a0f01fe19b6872c8a39842499e051ecea61a9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1NzljYjFiNTkxMWM0MTk0NDg3ZjZiMmE1N2YyZTU5Njg0MGQ1MDczMDgyZDk2OGYzZjU3NWI0NmVmYzMxMDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFhZGRiMWQ4NmNiNTQ4NTM4OWJhMmNiNzIyNjM2OTFkMjk0ZjM2NzJhZmRjMjVlMDQwYTRmMjUyY2EyMjUxNTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk3NmY3ZTY4MTkwODM4NzBmNmY0Nzc0NGE2Yjc5MDVlNjgyN2U1YjYyYzNmMmFkOTE1MzJhNmFhZjkzYTY5NTgifQ"
+                },
+                {
+                    "resource": "repo://CMakeLists.txt#L571-L591",
+                    "version":
+                        "repo-lines-v1:sha256:73c13dafeabb6257b122e5f010f174b5ea35207979c2fc4b3371018de019f742:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhNTkxOTk3NWFhYzFkZjAyYTA1ZjBlZmY1NzFiN2Q2OGVlZWU2YmI4YmJhY2M4YTEwOTVlZjlmZTk1NDYzNmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyOTQxM2M2N2FkZjc4ZGI3ZmI4NDU2ZTI5OTk1MjM4MmFkMWU4MTg1NmM1OTc5YWZhZjI4ODAxOGQzYTM2MjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjYTViOWEwYzIyNmVkMDkyZDgzN2U2YzI4ZTkxYWRhZjNhMzQ3Yzk2ZDJlZWVlYWQ2NDZhNWI5YjkyNjk4YmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA1Y2JmM2ZkM2EzOTk5YTMzMTM0ZTI3MDA3OWUwMjE0MTk5MWRmODkzZjkxMzA4ZmMzMjVjNWJjMWE5MzcxNWMifQ"
+                }
+            ]
         },
         {
             "id": "claim_884e71e72e04453eac6f40ea3d5d6240",
             "statement":
-                "WriterBase standalone-layer output uses a pending-entry flag and emits after-layer, after-part and shutdown hooks; finalPositionBlock wraps positioning commands without suppressing them, and connected-path region transitions update controller state without repeating physical path startup.",
+                "WriterBase standalone-layer output uses a pending-entry flag and emits after-layer, after-part and shutdown hooks; connected-path region transitions update controller state without repeating physical path startup.",
             "evidence": [
                 {
-                    "resource": "repo://src/gcode/writers/arc_specialties_writer.cpp#L557-L560",
+                    "resource": "repo://src/gcode/writers/arc_specialties_writer.cpp#L560-L563",
                     "version":
                         "repo-lines-v1:sha256:0c9eb5ee7d8789c52a41cc23674f687d15fb86634f16b3e38775ebfa3056730d:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWI4NzljZDAwODQ2NDM4YzVkMzQ1ZjZhOGViYTFiODNmMmJiZjdjMWYyZjM0NWJlMDYzYmY1Yjc3NmM3NzA0NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDZiZTc1NTJmMGYxOGQxNmNlM2RkOGEwNTAyOTc0ZDliYjJhZWYzMzlmZDk5YjllMzU5ZGM1YWEzMGQyNjI4NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTllZDAxMTI1OWI2OWYxNjc4OWRkYTQ5YzA1ZTE0ZTczYjgyYjQ3ZjVlZDRjYjIzYzJjYmM3Nzg4YzE5NzMwMCJ9"
                 },
@@ -274,14 +264,9 @@
                         "repo-lines-v1:sha256:5b902901d7ce39e90b4162bfa882ce1bca72c00f047f2ac42d8206bdf6b01cac:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxYTQ3MDM4ZDk3YjAxZjE5MTVmMDJmNDJlYzNkNGYzMjAyODgxOTkzZGU2MTYzOWYxYTAxMzQzMjQ5M2UzNTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1YmQ1YWU5ZTI1Yjc2M2I0NmE5NGZjZjc2YTYzZDZhMGRkMTg4NTdlNTFiZmE4NDVhNjYyMTY5YjdhZGIzNWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhNmExYzE4ZmI3NWY3YjUyYzI5MTgxZTk4MGE5ZWIxZTg2NzZhMTdmMmJhOWFlMWFhZmRiMWIyNzA5MDQxNzIifQ"
                 },
                 {
-                    "resource": "repo://src/gcode/writers/writer_base.cpp#L73-L143",
+                    "resource": "repo://src/gcode/writers/writer_base.cpp#L75-L103",
                     "version":
-                        "repo-lines-v1:sha256:101109f8b2a42003524391966c5aab83c827696b76ec490585679028bced4455:eyJzZWxlY3RlZExpbmVDb3VudCI6NzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1YTlkY2I2NzlkZTVjMmZjMGY4ZWQ2MmIxOGFlMjYzNDRiZWMzNDFlMmJjMjRmNmZiZmI4YzVmYzUxZjc4NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjYTE0ZWRkYWJiMTNkNGYyODczYTRhOTczZGRjMjE0MGVlZjIxYmE5NjFmNDM0YjAyYzhhYzcyOTZkYTU5NzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk0ODI4ZDUyODQ2NjBlMjQwODgyYjAzZjk5ZjQ0MDczMzk3MGQ2N2Y5M2VjOWMyNmM4MjliNmYyNTk1NWRiYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUxZDBiNDU0YTRlM2VjNWIyNTVmY2U4NDgwMTA4Y2UwYWEwY2I2N2VlZThiYzcwNGRlMDdlNmFlMmMxNjc5YTkifQ"
-                },
-                {
-                    "resource": "repo://tests/gcode_layer_export_tests.cpp#L134-L171",
-                    "version":
-                        "repo-lines-v1:sha256:2307e74d87c83ecd8e7571ee4856321e44efa8d38801b3f939a09baa005e86db:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiZmNlY2I2OGJhYWI2YTczN2JmMTk5ZDE3NWZmZTRkMWQ5MjE0OTU1MjJmMzJjMzI3MDAzYmJhZmY5YWI1YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3Y2YzY2Q0NDgxNmMxOTk0MTc5MGRmZjNhMjViYmYzNjNhODBkYWQxMjBkMTY4YzNlNzZhMmIxYzk5YmMyYzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRiOGRkOGJkNzAxZjk5YWM0M2UxYmZlODQyNzVmZTdmZjNlN2JiYTQ0ZWIxNmIwZjkzM2M2ZmQ0OThjNDUyOGUifQ"
+                        "repo-lines-v1:sha256:c8fd22c2e89906217d1cf3ed3d85bc1d531a3fe3067c106296fa44668d8bb402:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1YTlkY2I2NzlkZTVjMmZjMGY4ZWQ2MmIxOGFlMjYzNDRiZWMzNDFlMmJjMjRmNmZiZmI4YzVmYzUxZjc4NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk0ODI4ZDUyODQ2NjBlMjQwODgyYjAzZjk5ZjQ0MDczMzk3MGQ2N2Y5M2VjOWMyNmM4MjliNmYyNTk1NWRiYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExNDMyMmFmMzE0NGIwZmJhOWNjNWUwNTMxNDk0Y2ZmNGI4YjFmMmY5OGNmODIwYmNhYmViNGVkY2UxNjczNzAifQ"
                 }
             ]
         },
@@ -301,10 +286,73 @@
                         "repo-lines-v1:sha256:8c0f464ce79ae57cd1e437f945ccfcf1601c3ef5bc3a261587913409e8a1b3d8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkYTZmOWM3MzE4MGFhZTU3ZGU0MzdhODU2ZTZlMWJlZDZkNmNkNzQxNzY4NDhjM2MzMzI0OTdhYmQ3YjE4MTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ODhjYTA5MDY4MWFlMjQyMTRmZmVkMGM0MzlhYzAwNzA3YzFjOWM5M2I5MTUwZTEwMTUxODEyY2Q2NjFiMTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzZDlkN2E1MmM3MjNhYWJjMDcwNWU3Mjk2ZTJjOTAwN2JlY2NkMjMyODE3MTMzZjg4M2Y0YWFiMmFiYmNhNzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIyNWQyZDgzN2ZkMzRiMjFjOWQyNjBmYzYwMDlhNDM2OWU5ZDU3YjZlYzNjYTAxYWY2YWZjMmRiZTc2ZWIwOGMifQ"
                 }
             ]
+        },
+        {
+            "id": "claim_dfd9461e2ac64ff6986dccead2c43a66",
+            "statement":
+                "External layer labels add the zero-based index to a validated Starting Layer Number, default 1, with integer and overflow checks.",
+            "evidence": [
+                {
+                    "resource": "repo://src/gcode/writers/writer_base.cpp#L349-L369",
+                    "version":
+                        "repo-lines-v1:sha256:99f9982ea4fc74474b47e83ed3b4f7cc29f82258b2a5926109c0badf92ba45a7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWIxMmZmMDMwZjY5Mjk5YTRkZDc2Njg5ZWNhZGZkNjUxM2Y5MGVlNDE5N2EzMjBiZjAxYmVjYjFmMWU5ZDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxNmU4ODExMzFhZmFjMzA2NWM4ZWIyMzQxNDU3MDU2ZjQ5MjI2MGQ2ZjlkZDI2MTk5N2QyNzZhZTliMTFiMzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5YTk2MzhjYzU0MGYzOGQwODRiYzZjMDNjODZkZGJmYjliZTg2OTViNDI3M2ZiMjI1MTZiMWY0MDJmNTgyYmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5ZTAxMzg5NDdiYzViMzA1N2M1YjZmODE2MGJlMjZkMzZhZWUwNWU2NDJjODM1NWNkZWIyMDE4ZWI0NWYxN2QifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_19a7d1d959ab4f1db921bef3ca1bcb8f",
+            "statement":
+                "ARC weld schedules export wire-feed speeds in in/min, startup travel override and regional V.S.SPEED in mm/min, and time/voltage in captured UI units.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/gcode_arc_specialties_saver.cpp#L367-L375",
+                    "version":
+                        "repo-lines-v1:sha256:08c14b6508ad47b2d52b12634eca437093492a820804f6db98c645f5788fa749:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjAxOTYyN2NjNzRkYjQ0YjAyODI4MmE5OGZmMjM4YmY0YmFjNjQ5Yjg5ZDg3YTgzZDE2MmI1MWNiZDNjMTk2NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODgzYmZiM2Q0M2NhNDg3NTgwMjgyYmQ4MTk2YjE4YmVjZDhkNzliOGM5YjdjM2UwMDAxYTg2MDc4YTllYzRmZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWM4YzA0NzYyZGZkNDAxNDRhZTg2MGI5OGJkZGRiYmI3ODllZGI4ODQyMGYxZDBmY2Y5YTc5ZmIxMGFjZDVlOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzM5NThmOWZlMjdhODNkYTdmYzNlYzg4OGEyMmQ1OTUxZGIxMDhiZWQ2YTRhNGNhZWM3M2Q0ZGU4NDUzMjZlNiJ9"
+                },
+                {
+                    "resource": "repo://src/threading/gcode_arc_specialties_saver.cpp#L46-L64",
+                    "version":
+                        "repo-lines-v1:sha256:8086c70416b6a8f19af464f7ed82aa59dd8f7a56318356ad6d63f732e810f85c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzMTU4YjBhZTU0ZmY4YzAyOWRkOWM2ZDYyMDNkZjY4ZDEyODBhZmM5OGExZGQzODhjM2UxZTRkMjQyOTc3NzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5YTk2MzhjYzU0MGYzOGQwODRiYzZjMDNjODZkZGJmYjliZTg2OTViNDI3M2ZiMjI1MTZiMWY0MDJmNTgyYmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkxYWYyNDU5MjgwOTBkNWE4ZDdhOTQwNzk3NTZlYWI4ZDUzNmIxOTQyNDI5ODczZDM4NjFjMTdkNzc4M2M3ZWUifQ"
+                },
+                {
+                    "resource": "repo://src/threading/gcode_arc_specialties_saver.cpp#L97-L117",
+                    "version":
+                        "repo-lines-v1:sha256:929217744fad680580d1369a1786c5de3b5f6569607744858736c7626dba3de4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZjRiNGI1MDQ3N2VjMTVkMzllODhjYWU2Mjk3NjUwMGJlM2UxOTJhNjRjMWRlNTQ1NDg5NTMzZGQ0NjY5ZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQwNzQ0NTczZjEyMDFlYjcwZDU2Yjg4NTJiMjk2NzkzMTM3ZWMzYjAyOGQ0MTc3NGZhOGEzMjBkNmEzYzM3NGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhOWIxOGJiMjc0OWExMWQ5ZWVkZDdlNTk1MmM0MzBiYjczN2M4ODliYjE5M2ViY2FkYmQ5YmQ0MjljOWYxOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_00b6c51d163b4c20a93e2b3cf56f8a51",
+            "statement":
+                "Generated ARC schedules use V.S.SPEED for a move only when its effective speed matches the corresponding global regional speed; overridden or modified speeds remain numeric.",
+            "evidence": [
+                {
+                    "resource": "repo://src/gcode/writers/arc_specialties_writer.cpp#L877-L904",
+                    "version":
+                        "repo-lines-v1:sha256:8bf95b00ceebdc67fe61e217a6726387046a2da5dfe638ad97fc5001ddc2146e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1YjM5M2JkZGQzYTRkNTIxZGFmZjE3Y2U4NWMxYWEyOGQxNDA0YTI3ODI1NGZlNDViYTIxZTVhZWRhYzEwOGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM0ZmM5OWEwZTY3N2ZlNzEwMzA5ZThiNjQyYjhiMmIyZDIwMWFkZjAyMjRlNDMxNDI5MjVkMTAxOGM3NWY1MDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiN2E1MTk5MGE2M2FkMWYwNDZiMWMzZThkM2UzYmU1ZmJhMWNmN2RiZDRiMWY2ZDAwMTI5MTM4NDQ5MmI2MzEifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_10d47c2248bf4eb696d3eca230df62a7",
+            "statement":
+                "Helical schedule export excludes skeleton and perimeter/inset blocks with no revolutions, while regional motion and schedule speeds share regionPrintSpeed.",
+            "evidence": [
+                {
+                    "resource": "repo://include/slicing/region_speed.h#L9-L30",
+                    "version":
+                        "repo-lines-v1:sha256:15f8456a8a308d6e4fab8c3ddeaaa6ac1f1bc9df0c8b5291bb99dabd229a9a28:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyYzdiMWYzZDNiZjMxYjg2ZjdlYzBlODJkYzQ3Y2YyZTZiYTJhM2M1NTIxOGRhYzNjNzlkNDE4ZTg2NGMwMzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhNDFiZTc2MDExZjAwNTMyNmZjZDNmYTZkYzVhZTE4ZTRiM2EwMWQyZjVhOTZmMDMzZjM3MzliODI3NDFkZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5YTc1M2U0MmUyNGU1ZGE4OTcwODA3N2ZlZGM1YmE1ZDllNmI3ZmFkZDFmN2E2NDlhM2JlM2ExYjAyZmIwNDYifQ"
+                },
+                {
+                    "resource": "repo://src/threading/gcode_arc_specialties_saver.cpp#L362-L375",
+                    "version":
+                        "repo-lines-v1:sha256:11b4d59c0d3eec2a7bd5d9fffb56f77b93e99247d11559581682bc70d10979bd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZDU0Zjg2MDBjY2Y2MmM0ZjIyYWM5MzM3ZWE0ODljYWE1ODBmYmU4MTMxZTA1YWU0YTA1NTllZDVkYjFlMDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4M2JmYjNkNDNjYTQ4NzU4MDI4MmJkODE5NmIxOGJlY2Q4ZDc5YjhjOWI3YzNlMDAwMWE4NjA3OGE5ZWM0ZmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiMmIzNDIzN2I3MmEwMTk4ODZmMjgwYzA3NjA5ZGExOTg3NTRhY2QyNWVkYjc2MGY1OTI5ZDc1Zjg5ZjhlNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzOTU4ZjlmZTI3YTgzZGE3ZmMzZWM4ODhhMjJkNTk1MWRiMTA4YmVkNmE0YTRjYWVjNzNkNGRlODQ1MzI2ZTYifQ"
+                }
+            ]
         }
     ],
     "verification": {
         "by": "openwiki/0.7.2",
-        "at": "2026-10-20T18:29:15.258Z"
+        "at": "2026-11-10T18:02:46.284Z"
     }
 }

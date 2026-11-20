@@ -6,6 +6,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, perimeters will be generated"
     depends: {"slicing_mode":0}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Perimeter"
@@ -18,6 +19,7 @@ settings:
     type: "positive_int"
     tooltip: "Total number of perimeters per layer"
     depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Perimeter"
@@ -30,6 +32,7 @@ settings:
     type: "enumeration"
     tooltip: "Selects which polygon boundaries are used to generate perimeter paths."
     depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    visible_if: {"slicing_mode":0}
     options:
       - "All Boundaries"
       - "Internal Boundaries"
@@ -45,6 +48,7 @@ settings:
     type: "distance"
     tooltip: "Bead width for perimeter paths"
     depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Perimeter"
@@ -57,6 +61,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, perimeter bead widths are adjusted within the configured limits to better fill narrow regions whose remaining contour space is not an exact multiple of the nominal bead width."
     depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Perimeter"
@@ -69,6 +74,7 @@ settings:
     type: "distance"
     tooltip: "Minimum bead width allowed when adaptive perimeter bead widths are enabled."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_adapt":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Perimeter"
@@ -81,6 +87,7 @@ settings:
     type: "distance"
     tooltip: "Maximum bead width allowed when adaptive perimeter bead widths are enabled."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_adapt":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 10000
     minor: "Perimeter"
@@ -91,8 +98,9 @@ settings:
   - name: "perimeter_speed"
     display: "Perimeter Speed"
     type: "speed"
-    tooltip: "Speed for perimeter paths"
-    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    tooltip: "Speed for perimeter paths. Helical slicing requires a positive value for this region when it is enabled."
+    depends: {"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}
+    visible_if: {"OR":[{"slicing_mode":0},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -105,6 +113,7 @@ settings:
     type: "rpm"
     tooltip: "Extruder speed for perimeter paths"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Perimeter"
@@ -117,6 +126,7 @@ settings:
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for perimeter paths for systems without RPM control"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"OR":[{"machine_type":1},{"OR":[{"syntax":26},{"AND":[{"syntax":11},{"AND":[{"machine_type":0},{"enable_width_height":true}]}]}]}]}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 1
     minor: "Perimeter"
@@ -129,6 +139,7 @@ settings:
     type: "distance"
     tooltip: "Perimeter extrusion paths less than this value are deleted"
     depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Perimeter"
@@ -141,6 +152,7 @@ settings:
     type: "distance"
     tooltip: "Perimeter path segments shorter than this value are collapsed before extrusion paths are created"
     depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Perimeter"
@@ -153,6 +165,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, a lead-in path segment is added to the first perimeter path that can be used to prime the extruder"
     depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Perimeter"
@@ -165,6 +178,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, lead-in is only applied to layer 1."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: true
     minor: "Perimeter"
@@ -177,6 +191,7 @@ settings:
     type: "distance"
     tooltip: "X Position for the start of the perimeter lead-in segment"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Perimeter"
@@ -189,6 +204,7 @@ settings:
     type: "distance"
     tooltip: "Y Position for the start of the perimeter lead-in segment"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Perimeter"
@@ -201,6 +217,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, motions are created prior to the first extrusion move such that the end effector is in motion at the start of the path."
     depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Perimeter"
@@ -213,6 +230,7 @@ settings:
     type: "distance"
     tooltip: "Distance away from the start of the extrusion path to begin the flying start motion."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_flying_start":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Perimeter"
@@ -225,6 +243,7 @@ settings:
     type: "speed"
     tooltip: "Speed for the flying start motion."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_flying_start":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Perimeter"
@@ -237,6 +256,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, adjacent perimeter loops will be joined with extrusion connections.<br><br><img src=':/tooltips/profile/connected_perimeters.png' width='260' height='146'>"
     depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Perimeter"
@@ -249,6 +269,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, connected perimeters will complete the current loop before connecting to the next loop."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"connect_perimeters":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Perimeter"
@@ -261,6 +282,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, connected perimeters will apply their forward tip wipe before connecting to the next loop."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"connect_perimeters":true},{"AND":[{"perimeter_wipe":true},{"perimeter_wipe_direction":1}]}]}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Perimeter"
@@ -273,6 +295,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, perimeter loops will connect directly to inset loops. Connect after forward tip wipe in the Perimeter settings controls when connections occur for the entire chain."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"inset":true},{"AND":[{"connect_perimeters":true},{"connect_insets":true}]}]}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Perimeter"
@@ -280,3 +303,84 @@ settings:
     namespace: "Profile::Perimeter"
     symbol: "kConnectToInsets"
     local: false
+  - name: "helical_perimeter_revolutions"
+    display: "Perimeter Revolutions"
+    type: "non_negative_int"
+    tooltip: "Number of revolutions for perimeter region"
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalPerimeterRevolutions"
+    local: false
+  - name: "helical_perimeter_stepover"
+    display: "Perimeter Stepover"
+    type: "distance"
+    tooltip: "Step over distance for perimeter region"
+    depends: {"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalPerimeterStepover"
+    local: false
+  - name: "helical_perimeter_tool_frame_x_rotation"
+    display: "Perimeter Tool Frame - X Rotation"
+    type: "angle"
+    tooltip: "X rotation of the tool frame for perimeter region"
+    depends: {"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalPerimeterToolFrameXRotation"
+    local: false
+  - name: "helical_perimeter_tool_frame_y_rotation"
+    display: "Perimeter Tool Frame - Y Rotation"
+    type: "angle"
+    tooltip: "Y rotation of the tool frame for perimeter region"
+    depends: {"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalPerimeterToolFrameYRotation"
+    local: false
+  - name: "helical_perimeter_tool_frame_z_rotation"
+    display: "Perimeter Tool Frame - Z Rotation"
+    type: "angle"
+    tooltip: "Z rotation of the tool frame for perimeter region"
+    depends: {"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalPerimeterToolFrameZRotation"
+    local: false
+inputs:
+  - name: "helical_perimeter_tool_frame_rotation"
+    display: "Perimeter Tool Frame Rotation"
+    widget: "vector3"
+    tooltip: "Rotation of the tool frame for perimeter region"
+    depends: {"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    minor: "Perimeter"
+    major: "Profile"
+    components:
+      - setting: "helical_perimeter_tool_frame_x_rotation"
+        label: "X"
+      - setting: "helical_perimeter_tool_frame_y_rotation"
+        label: "Y"
+      - setting: "helical_perimeter_tool_frame_z_rotation"
+        label: "Z"

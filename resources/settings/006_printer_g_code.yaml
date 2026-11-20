@@ -1,6 +1,18 @@
 # Canonical settings metadata for ORNLSlicer.
 # Edit this file instead of resources/configs/master.conf.
 settings:
+  - name: "starting_layer_number"
+    display: "Starting Layer Number"
+    type: "positive_int"
+    tooltip: "Number assigned to the first generated G-Code layer. Must be a whole number from 1 to 2147483647; the final layer must also fit in this range. Changes layer labels and references without changing slicing or first-layer behavior."
+    depends: {}
+    options: []
+    default: 1
+    minor: "G-Code"
+    major: "Printer"
+    namespace: "Printer::GCode"
+    symbol: "kStartingLayerNumber"
+    local: false
   - name: "enable_default_startup_code"
     display: "Use Default Startup G-Code"
     type: "boolean"

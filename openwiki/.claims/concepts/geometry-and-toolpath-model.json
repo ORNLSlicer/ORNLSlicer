@@ -1,6 +1,6 @@
     {
         "schemaVersion": 1,
-        "pageVersion": "sha256:d0975b302518a02de37000de809c77ff03c9985d3d656b37b03ba95eed1e2eaa",
+        "pageVersion": "sha256:f2e62803d94d284798ad264e13045f8c6787651dd67e92f668992280d9807e69",
         "claims":
             [
                 {
@@ -14,7 +14,7 @@
                                 "repo-lines-v1:sha256:5305ecb9f45fb2f2c16a2cd2e75cbb6538d5d8c66e20d18b435bf79686c1bdd0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4M2Y3NzQ2YTRjOTE0NGQ1NWM0NjllYzM1YzYyYjAxYTY1ODcwM2JlMGY5YzFmNTcxNmI0MjA2ODE0NTc0YWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIzNTY0YjBmYTRkYzMyZWY2NTQ5MWE2ODk2ZWRhMGU1MTMyY2E5OWI0MTcwYTRiYTExMjIyYTU5MWJmYTEwY2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVlNTQxNjA3MTk3YTc5YmFhZDMzYzAzNTg4ZjhiYTFjMDE1ZjNkNzA4ZTI5NGI5YjZkMDQ3ZGQ2MWVmNGEwMzcifQ"
                         },
                         {
-                            "resource": "repo://include/part/part.h#L205-L269",
+                            "resource": "repo://include/part/part.h#L209-L273",
                             "version":
                                 "repo-lines-v1:sha256:171dca68adcc9ffb9106df3b772af98dfb53c51a668e3d5b40018f204258a580:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4M2Y3NzQ2YTRjOTE0NGQ1NWM0NjllYzM1YzYyYjAxYTY1ODcwM2JlMGY5YzFmNTcxNmI0MjA2ODE0NTc0YWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjNTY5MzEzY2E0NjgxNTdhZDc2NDMxZmMyNTkwMWRlOGVkMTE3MDI5NWQwY2ZmZmMxMDEyZWJiMzEyZmQ2NDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNhMmQ4NWYxODNlMTAzNzI2NTM5OWIwZjQ4YTI0ODFlZjRjZTgzMDJkZDU3ODkwZTI5ZWFiNDIzMjkzZDk4NzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2MTg4ODgyMzgxYTBjMjQzYzhiNmU4M2VmYzQxZjM1NTE5ZTg3MWM2M2ZjYjM2YmFjMzI1ZTdmZWZkYzVjYWIifQ"
                         },
@@ -31,12 +31,12 @@
                         "Appending or prepending a Step creates a typed StepPair, while steps(kAll) flattens each pair with printing before scan; pair count is the primary layer index.",
                     "evidence": [
                         {
-                            "resource": "repo://src/part/part.cpp#L295-L364",
+                            "resource": "repo://src/part/part.cpp#L321-L390",
                             "version":
                                 "repo-lines-v1:sha256:7415b253f5f03d6c5e9da7432ecbe317bcb83bef49d0e3dcafb816e17f47da3a:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmZjRjNzQ1YjdiMTkxYjk4YTczOTY4NDQxZjQ0Zjc1Y2NjNTlkZjVjMDQ3OWVjOTMwZWRmYzI2YjFjNjUyYzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwMDA0MmU4ZDZiYTc1MDdlMTNmNmQzYWEyMTcwMTZiZjMxYzE3YTczYjVhNzQ4YTY3N2Y0MjNiZmRlNTk5OGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNiZGRhNTQwNTQyMDk4NTY1MmY3MGYyNmMwNWI0NzFlOWZjOGIwNTBlODk4MDlmZTVhMzY5ZjFhY2RlODAzMWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxNmE5Yjc3ZTg4MDcyZmExNjIzMjY4NDI2YzlhZTRiMDg3NzA4NzI3NjRjMmZhOWM2Mzc2Y2YyMzVjMjQxMjAifQ"
                         },
                         {
-                            "resource": "repo://src/part/part.cpp#L460-L493",
+                            "resource": "repo://src/part/part.cpp#L486-L519",
                             "version":
                                 "repo-lines-v1:sha256:21d85faa75b51fd8d8d5452e1c55c61db13f640ed9930b40d8b3d66354974281:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhNjM1MjU2MTA5MzZkMjYxYmQxZDIxMjJmOTIyN2IwYWJiMDYwYzkyNDY1OTBiYjY1ODgwNzMwYTgwOTgwNjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlYmRiMzY1YmMwYjU3OWE3NzI2OGE2YTY3YjYwZTQwYzAwYWYxMDM3ODBlYzFlNzU2MjNhMTRlZGYzN2ZmYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJhN2M5Mzk5NmU2MTUyYzE5MTNhMWEwNDU1NjNhNTU5ODJhZmIzYjEwODJhODc5NzM3OGFmMDlhZGM2YmFjM2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBhMzdkMTE1MjA3ZTMwZjNkMzNkZTIzNzYyNTQzODNjNjIxOGFlZDRmNzg1ZGM2YjYwYjNiMTBiZTRlMDg2ODcifQ"
                         }
@@ -65,14 +65,14 @@
                         "MeshBase retains original, aligned, and current representations; setTransformation rebuilds current geometry from aligned data, updates concrete geometry and bounds, and saved transformation replay restores history without duplicate rotations.",
                     "evidence": [
                         {
-                            "resource": "repo://include/geometry/mesh/mesh_base.h#L222-L289",
+                            "resource": "repo://include/geometry/mesh/mesh_base.h#L263-L287",
                             "version":
-                                "repo-lines-v1:sha256:bff72171419ec1c1394cd0127e73357caf7d0fe076716ffeb7732d75a9dcf127:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkYjM4YTc2NTY3YjdiYTJmYTYzOTBlMmZmODI0YTc1NDAyZGQwYzZjYWNmYzc0YzI0MGI4Nzk1NjkxNTI3ODQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5Yjg4OGFkY2E4Nzk5OWIxNjFmNDBhZjZlZjA4M2E2NzFjNTJkMGM1ODU3NDMzZDA4ZmQ4ODJhYTJkOWI4NzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ4ZDAxZDVlZDJlYjYzNjhmODkyZWU0OGY3YjBlNWQ3ZTI2ZGQzMDBiN2RjODBkOTg2ODk1ZjhmM2ZjYzVkYmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ1NmNkMWM2N2E2YjEzMzAxMzI1ZmM4OGUxZmRjOWM2NGEyNDZmNGYyYmNjYjViMjgxYmFjOTQ4MjA1OTgxNjcifQ"
+                                "repo-lines-v1:sha256:e53f733a277f72413887d222883977bd939f28def19606a0d239e66d494411bb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlYmYwZjRlZTIyMDY4NmRiOGU5YmIyZDZiMmE4MzFmMWVlYTk0MzdiN2RjMDA5NmRkYTAzZmNmODM5MzRkMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3MzIyMzhkNDNmMzc1OGVhNmExMWZiZGFmYTAyOWE2ZjNkM2IwYzc3NjI1Mjg2NjU2MzY3NzU4MTIyNTNiYmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkY2NkZTkyMTlkZWIyYWFkMTY2MzVlYTk2NTU0MzYzNTRiMzVhYTUxYTgwOWQ0M2Y1ZTY5MjY1MThjMmYwZDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2OGRkZTE2MWNhMzVhYTZlNGFkMzYzODBiMDZlNWE4NzQ1OGNhYTJkOGRmYmY0MjY3YzMyZTk0OWM4ZjUwMmEifQ"
                         },
                         {
-                            "resource": "repo://src/geometry/mesh/mesh_base.cpp#L74-L129",
+                            "resource": "repo://src/geometry/mesh/mesh_base.cpp#L75-L129",
                             "version":
-                                "repo-lines-v1:sha256:af806ad26fffd0e8b4aaf778f65dceca518583c0e3df21b6139fc12e21c554d3:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0NzVlNTc2NjIxYWYxY2NmYmFjYjQ1MmYzZDYxMmQyYzQyYzkxZWRjMzRkYmJmMWJhNzAxYWM3MzNkOTg1YjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjMWM4ZGJiNjBhMjAzMTM2YzZhZDJiNGM5NjBkZTExYjA0N2FmZDA2ODk1ZTNjMDZjMWVjMGRiYzY2NWQxZTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4MzU5ZTkzM2ExMWIzNjM1M2MyOTQ3NzZmMjAwMWY4ZjZiMzg3NjZjOTM3ZDczZDBhNjg0YTRkZTM4YjQ0MTMifQ"
+                                "repo-lines-v1:sha256:6ec4b2b96ef3031381832ff82431b5da653656c9f1076f32343961038dcd9b67:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0NzVlNTc2NjIxYWYxY2NmYmFjYjQ1MmYzZDYxMmQyYzQyYzkxZWRjMzRkYmJmMWJhNzAxYWM3MzNkOTg1YjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhN2MxNzg3YjU3NDYwZjA1ZjIwNTcwYjRmYzU5MzU4OGQ4NGVkZjVjZTgyNjRmYjJlOTIzNzQ0N2IyM2VhNmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjMWM4ZGJiNjBhMjAzMTM2YzZhZDJiNGM5NjBkZTExYjA0N2FmZDA2ODk1ZTNjMDZjMWVjMGRiYzY2NWQxZTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2MTc1YjdiODEzZGRjMWMxNjUxMzVhNjcyYmEzODYwZTRhMmQyZjExNTdhMGIzYzA4NmRkYWUyMzg1NTA3ZDkifQ"
                         }
                     ]
                 },
@@ -82,9 +82,9 @@
                         "Part transforms propagate to root and submeshes and dirty that part's steps; moving a settings mesh dirties every session part.",
                     "evidence": [
                         {
-                            "resource": "repo://src/part/part.cpp#L255-L275",
+                            "resource": "repo://src/part/part.cpp#L274-L285",
                             "version":
-                                "repo-lines-v1:sha256:837b21afefaa5348b8c529312e2488bace0827cb308ad7acd03b00ee2b1ad0e9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5NzUwODY5OGUwMTIyODEzMGIxMGFmMjUyMWY5MmUzZDI5ZjMwZThlODRkZDYzOTlhNzAxMjM0NGI4MmQ1YzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkNmI4YWE2NDRhMzQwNDJmMzJlMjNmODFiNmVhNWUzMjljZGU5OWUyMDRjOGMxYTUzOGQxYzRjOWNiMTYyZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI3ZDhjMjBiZjM0MzQ3YzhhYTFiMzc2NTVjNDUzMmE2YTU0NGNiMjczYWY2ZDMyODhjMzViOTM4ZmIzMjliMjQifQ"
+                                "repo-lines-v1:sha256:167d4276c3ba6453a4fc7b871191364adc7f331fc936d0eb014a40bf825f6c64:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwM2ViZDU3MTBhMmM3Mzk1ZDJlZjVlNDhmZGRiMmFiM2Y4MThkMTkyMDllMDU1OWY5MzliN2FjODQxMWY2MjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkYWFhNjhmY2ExNGRiYmNmMWIxMmJiOTI3ZjI1OGJjNTQzNTc4MzhlYTc4MGZkODgwN2QzMWFmMjk4NjQ4ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUifQ"
                         }
                     ]
                 },
@@ -270,10 +270,73 @@
                                 "repo-lines-v1:sha256:1ad40433bc630942407e745a554292ab351439b3cb7956c642521529b203a384:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExNDJkYWNiZGRiNDg4ZmVmYzIyOWIzODRjOGYxODVmYjU4ZTczYjljYWQzMzMyMDUyMWJmMmE1NzBkZjczZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2NjEyYTIzM2I2NDA4YmYxMzNlM2E5NTgxNjI4MTU3ZWMxOWNmY2IyYWEzMDUxZGVlZGQ5NDkzYzE0NTRkOTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxYzM0NjNmZWZjYWU1ZDU4ODE4OTY0MDhmNzk2MTY0OGFkMzliNzdiOTNjMzNhOTQxZmRlMTkzYzU5OTg4NmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjNTNmNmYxY2QwNjNiOGFmM2UxMDc4OWFiYzc3Yzc0MGYzMTliMGQ1MGJiZmMzZjgwZGJjYjVlNjA4YzkwNWMifQ"
                         }
                     ]
+                },
+                {
+                    "id": "claim_23056cc191d4457b8fa9ace27ad67135",
+                    "statement":
+                        "Project transform persistence separates aligned/current matrices and history, and restoration reconstructs aligned geometry from original geometry with a legacy history-only fallback.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/geometry/mesh/mesh_base.cpp#L170-L195",
+                            "version":
+                                "repo-lines-v1:sha256:c9c0e088969d66873dcd2077f4a27fbece9c580a80ec7e48ecbcaab1f3f3ed38:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlOGZhYTQ4OTJiMmUxZTA2Mjk5NGRkNzBhM2E0MzcwZTg4MmRkYjk4MjliYTg2NWRhY2FhYjhkMDU3N2VkOTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlNjIxN2I1OGY4YmNmY2NhZjc4NDM2MTIxY2YwYmE1MmM5NDM3N2M0OTg4ZGJkZDkxOTdjNjQyNWQxZTYxMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhMDc0ZWUzNjI0MGEwMzVjZjJiMjk5ODNiOWQ3N2Q4NjEzODhiYjYwYmRiMDcyMjE0YmI0Mzk2YmVmNWJhZDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwZDY5OTcxNmMyOWQ2NWI5ZTcxZGRkNzI2OGY0NWUyNDJiYmM0Mjc2YTk4NGQwYWY0MDUzNjM0NzcwMjU4Y2IifQ"
+                        },
+                        {
+                            "resource": "repo://src/managers/session_manager.cpp#L479-L507",
+                            "version":
+                                "repo-lines-v1:sha256:b3eee04056fc06187919803384031da5b13af6b4ac1a3b9649980502e7cf9fc6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkNmIyOGQyYjJkNDFjMDI4MDEwZTQ1NzdhNWI0MzU3ZTdhMTA1ZmIwYzAxOWVhMWM0MDg3ZGNjMDkwZTFmNTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmZDlmYWQyMTVlNzdiNGU2YWNmZTY4M2YwMTRmZDhjZWI4ZDFjNTVmYzY1MTJlODQwMTZlYjJiMTQ3MDQ3MzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE3MTIxYWRmYmE3NjdhMjM1ZmU5OWVkNWRjZGFkYTg5OTRjZTNmYzUxNDQwZGIzNGQ2MTBmNDY2YzM3Y2VjNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE1YTM0ZmE2YWU5MTQ1YmY4NTk3OTRiZmVkZjhjZTIyNzdlYzVmMzY2YWEzNDI4N2JmYzA4ZTcwOWQyMWY3MjMifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_a6d81fd9539f46d6928f7926bfd9eedc",
+                    "statement":
+                        "Parented objects keep rotation in live transforms, and PartView recursively synchronizes graphics transforms back into metadata.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/graphics/view/part_view.cpp#L1666-L1673",
+                            "version":
+                                "repo-lines-v1:sha256:e3cb80ae4c7b5fea5621d8830f1cf05f7540fd447697cef01ae037ee4ed87405:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmY1ODRjODA4YWQ2Zjg4YzkzMTQzMWM2MDJmM2Q2ZmYyOGYxM2U5NmY1Y2UzNTMzOTBlYWRlNWE4OWQzNzk3OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTFiZDA4MDQ0OGUzNTg0YTk4MzY5ZDZjMTkzYmViNTEzZWQ1OGQxYzgxNmRiYTg5Y2RmZWIyZDk2YWNiZGZjNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTk0MGI3MDJiNDE4NTNmNDJiZDc5YTEyNDlkMzA1ODU4M2NhYThkOWYzZTJjMzM3N2JiNjE4OTcxNmE4NDQ4ZCJ9"
+                        },
+                        {
+                            "resource": "repo://src/widgets/part_widget/model/part_meta_item.cpp#L144-L160",
+                            "version":
+                                "repo-lines-v1:sha256:0e9803d6e344ad05ed6501f3b4f0d5ae4e607f6df346fee2d27ac8a2963ab32d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxNmU2YThkM2ZkMzZhY2IxNzdlMDM2YzI5N2Q4ODQ2NjZiYmYyNmJmNmI0MTIzYTBlZGJlODNkZDFkZTA4NjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0N2Y4NGU5YmUxN2IxMzk0NTM4ODNkNjdjNGJlOTcwZTY4ZmQwMzBjMGM2YjYyOWEwMWM5ZjY3ZTkxYjg3M2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4NzIyYTRmNGE2NjU5Nzk1NmZlOGE3MGM1MDAyMjkyZjQ2MzBhYzQxYWFkOTY2MTVjMGQ0NzgxNDk3MzM0NGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwMDVlNjk0OTM2MDVkOWNjNTg4NTcyNDAyMDI5YzM2N2Y0MTFhZDQyNDU2ZGEwMDQ0YThkYTVkMTI5ZDhmOGUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_bb97af534c9b48249eb462791edf1b57",
+                    "statement":
+                        "CGAL intersection aliases derive from tree return types and extraction selects std or Boost variants by CGAL version.",
+                    "evidence": [
+                        {
+                            "resource": "repo://include/geometry/mesh/advanced/mesh_types.h#L78-L110",
+                            "version":
+                                "repo-lines-v1:sha256:78571ad7ee3d68ce9f08682d3c7ab2d9892c9ef8910208b96b93065f574251ed:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkYzRlOTMzNmZhMjNiZWY1NWZlNGNhMjI1OTI1ZjQzYjNjMGE1ZjEwM2UyMmI3MWZiNDVjMzc2Yjk0YzE1NTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlOTg5NzI0NjVjZmZhMzJlZDZmZDJiYjViMDJkMTc5MmQ0ZjNlNzFjNDY5OGJjODEzM2I5YWVkMDMxYjVhYzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5YTZhOWNjZDg2MmYwYjZmMDFhNGRkZGIwNzRjYmM1YmIxNmJiMDAxNTE2N2Y4MGZkMmIwNGI0ZDU2OGE4NjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE0NmRhZTZmMzRhMzkxNGI0MmI5ODFmNDBlZDk3YjRjMjkyYzI1MWYxMDk0NGFmYTlkNjU3YzcwOTYwMDRmNjgifQ"
+                        },
+                        {
+                            "resource": "repo://src/geometry/mesh/closed_mesh.cpp#L250-L267",
+                            "version":
+                                "repo-lines-v1:sha256:a951ad08e89b3a9eb75dd736e51c16684bdd123bb2881b0b663fdb7196c33c24:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1OWRhZGQyNzIyNDQwYTYyM2VlNmQxYjdlY2FlMDNlOTI4NjcxYjE4NmIwZjYyOTFiNGExZjQwZTczYWYwYzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwNWY3YjM2NDVmYTMzYWJkODkyYWRlODBlMjI1YTYwMWQ2YzcwYWI2ZjNmYThjMDFiNTY5M2FjMjM4ZjRkMzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIyYzQ2ODlhMzY5ZDMzMjc4MDU1NWQxMzVjODUxYzViOWE4ZTQ2N2JmYzFkNzFiNjQ2YWJkMGM0YWYzNGViMDEifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_5bc8d3cd7ebb4aec8da33017dcf7931e",
+                    "statement":
+                        "STEP import welds vertices within shells to retain separate topology for touching solids and inner shells.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/threading/mesh_loader.cpp#L152-L159",
+                            "version":
+                                "repo-lines-v1:sha256:d896929476af9dc95da1b74e0a69502fa88b3e261b99d6a8ba0831d4853acb14:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2I1ZTg2NWEyNmYzNDMwMzk5OThiZTI0YjBhMzg5MzcwMTE1MDJjZjJjNDg2MjFjOWRjN2I0YzhkNzliYTNkMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGY2ZTAxYTZiNzU3YjU3Y2U1Y2M1Mzc3YWJmZjljNjdlN2YwZWZkNWY3ZmI1NjdkM2Y5OGRlMWVhYjg5YjI1ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzQwMzM5YjUwYzgxZWI5OGIzZDQxYjA4M2ZmNmRhZGNiYjdhZmY4Yzk5MzM3OGQwOWFiYjNmODViOTgzMmM2NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGEzZGQ1ZWE5MmU2ZWY5YTViNzY3ZWE2MTlkODdkODJhOGM4YTgxNGUwYzY3NWU4YjliYjhiNWFhYzMwOGExYiJ9"
+                        }
+                    ]
                 }
             ],
         "verification": {
             "by": "openwiki/0.7.2",
-            "at": "2026-10-20T18:20:49.849Z"
+            "at": "2026-11-10T17:47:51.624Z"
         }
     }

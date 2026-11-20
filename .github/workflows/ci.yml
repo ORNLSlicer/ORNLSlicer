@@ -2,6 +2,7 @@
 name: Nix CI
 on:
   push:
+  pull_request:
   workflow_dispatch:
   release:
     types:
@@ -15,6 +16,8 @@ concurrency:
   cancel-in-progress: ${{ github.event_name != 'release' }}
 jobs:
   version:
+    # Same-repository PR branches already run CI on push.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     uses: ./.github/workflows/versioning.yml
     with:
       base: ${{ github.event.before || '' }}
@@ -33,7 +36,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
-      - uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31.11.2
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
       - run: nix flake check --all-systems --accept-flake-config
 
   linux:
@@ -51,7 +54,7 @@ jobs:
         with:
           lfs: 'true'
           persist-credentials: false
-      - uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31.11.2
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
       - name: Publish Nix build results to Cachix
         if: >-
           (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||
@@ -120,7 +123,7 @@ jobs:
         with:
           lfs: 'true'
           persist-credentials: false
-      - uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31.11.2
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
       - name: Publish Nix build results to Cachix
         if: >-
           (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||

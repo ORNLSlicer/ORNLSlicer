@@ -26,7 +26,7 @@ GCodeTormachSaver::GCodeTormachSaver(QString tempLocation, QString path, QString
 void GCodeTormachSaver::run() {
     // First, get necessary parameters from settings to rotate all pathing
     QChar comma(','), newline('\n'), space(' '), x('X'), y('Y'), z('Z'), f('F'), s('S'), zero('0');
-    qint16 layerNum   = 0;
+    const QRegularExpression layer_marker("BEGINNING LAYER:\\s*(\\d+)");
     QStringList lines = m_text.split(newline);
     QString G0("G0"), G1("G1"), M3("M3"), M5("M5"), M64("M64"), M65("M65"), commaSpace(", ");
     QString xval, yval, zval, velocity, feedrate;
@@ -171,8 +171,7 @@ void GCodeTormachSaver::run() {
             out << "$$ ( -------------------- )" % newline;
         }
         else if (line.startsWith("(BEGINNING LAYER:") || line.startsWith(";BEGINNING LAYER:")) {
-            layerNum++;
-            out << "$$ Layer: " << layerNum << "\n";
+            out << "$$ Layer: " << layer_marker.match(line).captured(1) << "\n";
         }
         else if (line.startsWith("(UPDATE VOLTAGE FOR TIP WIPE)")) { out << "$$ Set New Welder Voltage\n"; }
     }

@@ -38,9 +38,11 @@ void TraditionalAST::doSlice() {
     }
 
     this->setMaxSteps(0);
+    m_preprocess_failed = false;
 
     Diagnostics::logLine(QStringLiteral("Slicing preprocess starting"));
     this->preProcess();
+    if (m_preprocess_failed) return;
     Diagnostics::logLine(QStringLiteral("Slicing preprocess complete"));
 
     int total_steps = 0;
@@ -95,9 +97,7 @@ void TraditionalAST::doSlice() {
         if (!m_skip_gcode) {
             // Gcode output
             Diagnostics::logLine(QStringLiteral("Slicing G-code generation starting"));
-            this->writeGCodeSetup();
-            this->writeGCode();
-            this->writeGCodeShutdown();
+            if (!this->writeGCodeFile()) { return; }
             Diagnostics::logLine(QStringLiteral("Slicing G-code generation complete"));
         }
         if (this->shouldCancel()) return;
@@ -111,6 +111,17 @@ void TraditionalAST::doSlice() {
     // After starting steps, ensure that all threads are disconnected. Otherwise, the compute function will be recalled
     // in cleanThread().
     QObject::disconnect(this, &TraditionalAST::stepStart, nullptr, nullptr);
+}
+
+void TraditionalAST::failPreProcess(const QString& message) {
+    m_preprocess_failed = true;
+    for (const auto& part : CSM->parts()) { part->clearSteps(); }
+    setMaxSteps(0);
+    m_temp_gcode_output_file.resize(0);
+    m_temp_gcode_output_file.close();
+    m_layer_programs.clear();
+    Diagnostics::logLine(message);
+    emit sliceFailed(message);
 }
 
 void TraditionalAST::cleanThread() {
@@ -150,9 +161,7 @@ void TraditionalAST::cleanThread() {
                 if (!m_skip_gcode) {
                     // Gcode output
                     Diagnostics::logLine(QStringLiteral("Slicing G-code generation starting"));
-                    this->writeGCodeSetup();
-                    this->writeGCode();
-                    this->writeGCodeShutdown();
+                    if (!this->writeGCodeFile()) { return; }
                     Diagnostics::logLine(QStringLiteral("Slicing G-code generation complete"));
                 }
                 if (this->shouldCancel()) return;

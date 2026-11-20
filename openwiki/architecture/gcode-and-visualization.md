@@ -14,14 +14,16 @@ sources:
     resource: repo://resources/shaders/shader.frag
   - id: openwiki-source-a68e0b041dc4b591977503bd
     resource: repo://src/gcode/as_printed_model_exporter.cpp
-  - id: openwiki-source-14795f95a626721fa6aeb014
-    resource: repo://src/gcode/gcode_layer_export.cpp
   - id: openwiki-source-94d7720f109e6629e985b28d
     resource: repo://src/gcode/parsers/common_parser.cpp
   - id: openwiki-source-ceebec80a0c2f9b8339a0fb0
     resource: repo://src/graphics/objects/gcode_object.cpp
   - id: openwiki-source-1c931b6d3c850e1860fde20c
     resource: repo://src/managers/session_manager.cpp
+  - id: openwiki-source-b1134fc13dd24912e260b947
+    resource: repo://src/threading/abs_slicing_thread.cpp
+  - id: openwiki-source-b8c650ace3deba7ffb95f2c5
+    resource: repo://src/threading/gcode_arc_specialties_saver.cpp
   - id: openwiki-source-44e8b8b6f42cc6b6b15f2996
     resource: repo://src/threading/gcode_layer_saver.cpp
   - id: openwiki-source-4c1d7b6308a78ba9c493ce8a
@@ -30,10 +32,10 @@ sources:
     resource: repo://src/windows/gcode_export.cpp
   - id: openwiki-source-403d1cb683b233c4f42460d0
     resource: repo://src/windows/main_window.cpp
-generated: { by: "codex", at: "2026-10-20T18:20:49.849Z" }
+generated: { by: "codex", at: "2026-11-10T17:47:51.624Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-20T18:20:49.849Z
+    at: 2026-11-10T17:47:51.624Z
 ---
 
 # G-Code, Parsing, Visualization, and Export
@@ -120,7 +122,7 @@ Connection comments take color priority and use the dedicated Connection prefere
 | `gcodeLoadedVisualization` | `GcodeExport` | Optional as-printed STL generation from the same parsed geometry |
 | `gcodeLoadedText` | `GcodeBar` | Source display, syntax color, and layer-to-line navigation |
 | Layer timing signal | `LayerTimesWindow` | Original/adjusted per-layer durations and feed-rate modifiers |
-| Export information | `GcodeExport` | Temporary source path plus detected `GcodeMeta` |
+| Export information | `GcodeExport` | Temporary source path and detected `GcodeMeta`, paired with captured standalone programs and the slice-time ARC companion requirement |
 | Summary/status signals | `MainWindow` and slice dialog | File, time, distance, volume, mass, progress, warnings, and errors |
 
 This separation allows headless `MainControl` to connect only the export metadata and completion signals it needs.
@@ -137,7 +139,7 @@ G-code drawing enables the shader's `preserveColorHue` uniform, fits the configu
 
 ## Export contracts
 
-`GcodeExport` receives two pieces of state at different times: the temporary G-code path/dialect metadata and the parsed visualization graph. As-printed export stays disabled until at least one visualization segment has arrived, preventing an empty or stale STL.
+`GcodeExport` receives output metadata and the parsed visualization graph independently. Output metadata includes the temporary path, dialect, captured standalone programs and ARC companion requirement. As-printed export stays disabled until at least one visualization segment has arrived, preventing an empty or stale STL. Starting a slice or G-code load clears visualization and standalone-program availability; output-information delivery clears again before installing the new programs. [source](repo://src/windows/gcode_export.cpp#L127-L152) [source](repo://src/windows/main_window.cpp#L1391-L1397) [source](repo://src/windows/main_window.cpp#L1473-L1501)
 
 An export can produce:
 
@@ -151,9 +153,15 @@ The ordinary path reads the temporary file, prepends operator notes using the di
 
 ### Individual-layer programs
 
-The export checkbox dispatches `GCodeLayerSaver` on a worker thread. Adamantine is rejected; existing matching layer filenames require confirmation. Each result uses `<part>_layer_<number><suffix>`. The slicer embeds compressed standalone programs created with fresh writers rather than relying on modal state from earlier layers. `splitGcodeIntoLayers` validates program metadata and marker ordering before writes, requires correspondence with source layer numbers, prepends the common header, and appends trailing footer content only to the last layer. A genuinely single-layer program without embedded programs is accepted as-is. Missing or invalid multi-layer metadata requires re-slicing. [source](repo://src/windows/gcode_export.cpp#L342-L376) [source](repo://src/threading/abs_slicing_thread.cpp#L349-L358) [source](repo://src/gcode/gcode_layer_export.cpp#L22-L137)
+Enable **Individual Layer Export** before slicing. Generation is opt-in and disabled for Adamantine. The slicer creates each standalone program with a fresh writer, a common header and independent setup/shutdown; these programs remain in memory as `QVector<GcodeLayer>`, outside the continuous G-code. The export dialog reports their availability and automatically saves separate files when that snapshot exists. Imported files have no standalone snapshot; enabling the setting afterward requires re-slicing. [source](repo://src/threading/abs_slicing_thread.cpp#L346-L403) [source](repo://src/windows/main_window.cpp#L1494-L1499) [source](repo://src/windows/gcode_export.cpp#L127-L137)
 
-The saver reports open, flush, and obsolete-file removal errors through `completed(error)`. It removes obsolete matching layer files only after all new layer writes succeed. Writes are sequential rather than transactional, so a later write failure can leave earlier output files replaced. [source](repo://src/threading/gcode_layer_saver.cpp#L19-L64)
+Each result uses `<part>_layer_<number><suffix>` with the configured starting layer number. Existing matching filenames require confirmation. The GUI dispatches `GCodeLayerSaver`, or the ARC saver when a shared schedule companion is required, and returns from that branch without also writing a continuous program. There is no compressed embedded-program splitting or imported-file fallback. [source](repo://src/threading/abs_slicing_thread.cpp#L396-L403) [source](repo://src/windows/gcode_export.cpp#L359-L405)
+
+The saver reports empty-input, open, flush, and obsolete-file removal errors through `completed(error)`. It removes obsolete matching layer files only after all new layer writes succeed. Writes are sequential rather than transactional, so a later write failure can leave earlier output files replaced. [source](repo://src/threading/gcode_layer_saver.cpp#L14-L57)
+
+### ARC schedule companion
+
+The completed slice owns the decision to generate `<part>_sch.nc`; GUI and CLI capture it together with the program, so later checkbox edits cannot add or omit a required companion. The saver writes the schedule first and then patches the `G80` filename reference in the continuous program or every standalone layer. A continuous program uses `QSaveFile`; companion failure preserves the previous main program, although the pair is not a single atomic transaction. Errors are returned by `save()` or emitted by `completed(error)` and surfaced in the export dialog or CLI exit status. [source](repo://src/threading/abs_slicing_thread.cpp#L327-L342) [source](repo://src/windows/main_window.cpp#L1494-L1499) [source](repo://src/windows/gcode_export.cpp#L218-L221) [source](repo://src/threading/gcode_arc_specialties_saver.cpp#L130-L172) [source](repo://src/console/main_control.cpp#L129-L189)
 
 ### As-printed STL
 

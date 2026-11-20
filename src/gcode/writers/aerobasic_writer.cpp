@@ -120,11 +120,7 @@ QString AeroBasicWriter::writeBeforePath(RegionType type) {
 }
 
 QString AeroBasicWriter::writeLayerChange(uint layer_number) {
-    QString rv;
-
-    rv += commentLine(QString("BEGINNING LAYER: ") % QString::number(layer_number + 1));
-
-    return rv;
+    return WriterBase::writeLayerChange(layer_number);
 }
 
 QString AeroBasicWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,

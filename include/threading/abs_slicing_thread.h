@@ -13,6 +13,7 @@
 #include <qtmetamacros.h>
 #include <qtypes.h>
 
+#include "gcode/gcode_layer_export.h"
 #include "gcode/writers/writer_base.h"
 #include "utilities/enums.h"
 
@@ -33,6 +34,16 @@ class AbstractSlicingThread : public QObject {
 
     //! \brief Destructor
     virtual ~AbstractSlicingThread();
+
+    //! \brief Standalone programs prepared by the most recent slice, when enabled.
+    QVector<GcodeLayer> layerPrograms() const {
+        return m_layer_programs;
+    }
+
+    //! \brief Whether the completed program requires a generated ARC weld schedule companion.
+    bool requiresWeldScheduleFile() const {
+        return m_requires_weld_schedule_file;
+    }
 
     //! \brief Sets bounds for min/max layers to slice
     //! \param min: Starting layer
@@ -71,6 +82,9 @@ class AbstractSlicingThread : public QObject {
     //! \param status Status text to show to the user.
     void statusMessage(QString status);
 
+    //! \brief Reports a G-Code generation failure without importing or exporting a partial file.
+    void sliceFailed(QString message);
+
     //! \brief Signal to session manager that slicing is complete
     void sliceComplete();
 
@@ -82,6 +96,9 @@ class AbstractSlicingThread : public QObject {
     //! \brief Pure virtual for postprocess step. This is always run just before gcode generation.
     //! \param opt_data optional sensor data
     virtual void postProcess(nlohmann::json opt_data = nlohmann::json()) = 0;
+
+    //! \brief Generates a complete G-Code file, reporting invalid layer numbering as a slice failure.
+    bool writeGCodeFile();
 
     //! \brief Function that writes setup block of gcode.  For now, all formats have
     //! the same block style.
@@ -99,6 +116,10 @@ class AbstractSlicingThread : public QObject {
     //! \param file: File pointer to write gcode to
     //! \param base: WriterBase to do the appropriate gcode writing
     void writeGCodeShutdown();
+
+    //! \brief Prepares a standalone program only when individual-layer output was enabled before slicing.
+    void prepareLayerExport(uint layer_number, float min_z, const QSharedPointer<SettingsBase>& settings,
+                            const std::function<QString(const QSharedPointer<WriterBase>&)>& emit_layer);
 
     //! \brief Adds estimated layer-time comments to the generated G-Code when enabled.
     void writeLayerTimeComments();
@@ -133,6 +154,10 @@ class AbstractSlicingThread : public QObject {
 
     //! \brief Creates a writer with the same startup state as the shared G-code header.
     std::function<QSharedPointer<WriterBase>()> m_layer_export_setup;
+    bool m_generate_individual_layers = false;
+    QString m_layer_export_header;
+    QVector<GcodeLayer> m_layer_programs;
+    bool m_requires_weld_schedule_file = false;
 
     //! \brief Range of steps to compute
     int m_min, m_max;

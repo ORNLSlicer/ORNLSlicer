@@ -15,6 +15,7 @@
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "threading/gcode_arc_specialties_saver.h"
 #include "threading/gcode_loader.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -36,6 +37,10 @@ void MainControl::continueStartup() {
 
     connect(CSM.get(), &SessionManager::partAdded, this, &MainControl::loadComplete);
     connect(CSM.get(), &SessionManager::forwardSliceComplete, this, &MainControl::sliceComplete);
+    connect(CSM.get(), &SessionManager::sliceFailed, this, [this](const QString& message) {
+        std::cerr << message.toStdString() << std::endl;
+        emit finished();
+    });
     connect(CSM.get(), &SessionManager::updateDialog, this, &MainControl::displayProgress);
 }
 
@@ -110,9 +115,13 @@ void MainControl::loadComplete() {
 
 void MainControl::sliceComplete(QString filepath, bool alterFile) {
     if (static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode)) != SlicingMode::kImage) {
-        GCodeLoader* loader = new GCodeLoader(filepath, alterFile);
+        GCodeLoader* loader              = new GCodeLoader(filepath, alterFile);
+        const bool generate_arc_schedule = alterFile && CSM->requiresWeldScheduleFile();
         connect(loader, &GCodeLoader::finished, loader, &GCodeLoader::deleteLater);
-        connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, this, &MainControl::updateOutputInformation);
+        connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, this,
+                [this, generate_arc_schedule](QString filename, GcodeMeta meta) {
+                    updateOutputInformation(filename, meta, generate_arc_schedule);
+                });
         connect(loader, &GCodeLoader::finished, this, &MainControl::gcodeParseComplete);
         connect(loader, &GCodeLoader::updateDialog, this, &MainControl::displayProgress);
         loader->start();
@@ -120,9 +129,10 @@ void MainControl::sliceComplete(QString filepath, bool alterFile) {
     else { emit finished(); }
 }
 
-void MainControl::updateOutputInformation(QString tempLocation, GcodeMeta meta) {
-    m_temp_location = tempLocation;
-    m_selected_meta = meta;
+void MainControl::updateOutputInformation(QString tempLocation, GcodeMeta meta, bool generateArcSchedule) {
+    m_temp_location         = tempLocation;
+    m_selected_meta         = meta;
+    m_generate_arc_schedule = generateArcSchedule;
 }
 
 void MainControl::gcodeParseComplete() {
@@ -130,8 +140,9 @@ void MainControl::gcodeParseComplete() {
     QString partName = info.baseName();
     QString filepath = info.absolutePath();
 
-    QString gcodeFileName = filepath % '/' % partName % m_selected_meta.m_file_suffix;
-    if (QFile::exists(gcodeFileName)) QFile::remove(gcodeFileName);
+    QString gcodeFileName            = filepath % '/' % partName % m_selected_meta.m_file_suffix;
+    const bool generate_arc_schedule = m_selected_meta == GcodeMetaList::ArcSpecialtiesMeta && m_generate_arc_schedule;
+    if (!generate_arc_schedule && QFile::exists(gcodeFileName)) QFile::remove(gcodeFileName);
 
     QString projectFileName = filepath % '/' % partName % ".s2p";
 
@@ -141,6 +152,19 @@ void MainControl::gcodeParseComplete() {
         QTextStream in(&inputFile);
         text = in.readAll();
         inputFile.close();
+    }
+    else if (generate_arc_schedule) {
+        std::cerr << "Could not read G-Code file: " << m_temp_location.toStdString() << std::endl;
+        emit finished(1);
+        return;
+    }
+
+    if (generate_arc_schedule) {
+        GCodeArcSpecialtiesSaver saver(gcodeFileName, text);
+        const QString error = saver.save();
+        if (!error.isEmpty()) { std::cerr << error.toStdString() << std::endl; }
+        emit finished(error.isEmpty() ? 0 : 1);
+        return;
     }
 
     QFile tempFile(m_temp_location % "temp");

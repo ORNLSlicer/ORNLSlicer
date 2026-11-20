@@ -1,4 +1,5 @@
 #include <QCoreApplication>
+#include <QFile>
 #include <QTemporaryDir>
 #include <cstdlib>
 
@@ -18,6 +19,26 @@ int main(int argc, char* argv[]) {
 
     QSharedPointer<ORNL::PreferencesManager> preferences = ORNL::PreferencesManager::getInstance();
 
+    const QString theme_path = temp_dir.path() + "/theme.preferences";
+    for (int value : {0, 1}) {
+        const QString theme_name = value == 0 ? "Light Mode" : "Dark Mode";
+        preferences->setTheme(theme_name);
+        if (!ORNL::Testing::expect(preferences->getThemeText() == theme_name && preferences->json()["theme"] == value,
+                                   "Light and dark theme selections should preserve the existing saved values."))
+            return EXIT_FAILURE;
+        preferences->exportPreferences(theme_path);
+        preferences->setTheme(value == 0 ? "Dark Mode" : "Light Mode");
+        preferences->importPreferences(theme_path);
+        if (!ORNL::Testing::expect(preferences->getThemeText() == theme_name && preferences->json()["theme"] == value,
+                                   "Both themes should round-trip through preferences files."))
+            return EXIT_FAILURE;
+    }
+
+    if (!ORNL::Testing::expect(!preferences->getPromptSettingsForAllCategoriesPreference(),
+                               "Applying settings files across categories should be opt-in."))
+        return EXIT_FAILURE;
+    preferences->setPromptSettingsForAllCategoriesPreference(true);
+
     preferences->setStepStlLinearDeflection(0.025);
     if (!ORNL::Testing::expect(
             ORNL::Testing::near(preferences->getStepStlLinearDeflection().to(ORNL::mm), 0.025, kTolerance),
@@ -25,6 +46,9 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
 
     const fifojson preferences_json = preferences->json();
+    if (!ORNL::Testing::expect(preferences_json.at("prompt_settings_for_all_categories") == true,
+                               "The all-category prompt preference should be exported."))
+        return EXIT_FAILURE;
     if (!ORNL::Testing::expect(preferences_json.contains("step_stl_linear_deflection"),
                                "STEP STL linear deflection should be exported with preferences JSON."))
         return EXIT_FAILURE;
@@ -35,8 +59,12 @@ int main(int argc, char* argv[]) {
 
     const QString preferences_path = temp_dir.path() + "/custom.preferences";
     preferences->exportPreferences(preferences_path);
+    preferences->setPromptSettingsForAllCategoriesPreference(false);
     preferences->setStepStlLinearDeflection(1.5);
     preferences->importPreferences(preferences_path);
+    if (!ORNL::Testing::expect(preferences->getPromptSettingsForAllCategoriesPreference(),
+                               "The all-category prompt preference should round-trip through preferences files."))
+        return EXIT_FAILURE;
     if (!ORNL::Testing::expect(
             ORNL::Testing::near(preferences->getStepStlLinearDeflection().to(ORNL::mm), 0.025, kTolerance),
             "STEP STL linear deflection should round-trip through preferences files."))
@@ -46,6 +74,19 @@ int main(int argc, char* argv[]) {
     if (!ORNL::Testing::expect(
             ORNL::Testing::near(preferences->getStepStlLinearDeflection().to(ORNL::mm), 0.001, kTolerance),
             "STEP STL linear deflection should be clamped to a positive minimum."))
+        return EXIT_FAILURE;
+
+    fifojson legacy_preferences = preferences->json();
+    legacy_preferences.erase("prompt_settings_for_all_categories");
+    QFile legacy_file(temp_dir.filePath("legacy.preferences"));
+    if (!ORNL::Testing::expect(legacy_file.open(QIODevice::WriteOnly), "Could not write legacy preferences."))
+        return EXIT_FAILURE;
+    legacy_file.write(legacy_preferences.dump().c_str());
+    legacy_file.close();
+    preferences->setPromptSettingsForAllCategoriesPreference(false);
+    preferences->importPreferences(legacy_file.fileName());
+    if (!ORNL::Testing::expect(!preferences->getPromptSettingsForAllCategoriesPreference(),
+                               "Importing old preferences should preserve the disabled prompt default."))
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;

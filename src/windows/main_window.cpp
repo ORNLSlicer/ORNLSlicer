@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QScopeGuard>
 #include <QSettings>
 #include <QStatusBar>
 #include <QTimer>
@@ -57,6 +58,7 @@
 #include "threading/gcode_loader.h"
 #include "threading/session_loader.h"
 #include "utilities/constants.h"
+#include "utilities/dialog_utils.h"
 #include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
 #include "widgets/cmd_widget.h"
@@ -287,6 +289,7 @@ bool MainWindow::setStyleFromFile() {
         return false;
     }
 
+    QApplication::setPalette(PreferencesManager::getInstance()->getTheme().getPalette());
     this->setStyleSheet(m_style_file->readAll());
     m_style_file->close();
     return true;
@@ -333,6 +336,7 @@ void MainWindow::setupWindows() {
     m_flowrate_calc_window         = new FlowrateCalcWindow(this);
     m_xtrude_calc_window           = new XtrudeCalcWindow(this);
     m_settings_file_compare_window = new SettingsFileCompareDialog(this);
+    m_settings_overrides_window    = new SettingsOverridesDialog(this);
     m_export_window                = new GcodeExport(this);
     m_layertimebar                 = new LayerTimesWindow(this);
     // m_ingersollPostProcessor = new IngersollPostProcessor(this);
@@ -536,7 +540,8 @@ void MainWindow::setupActions() {
     m_actions["copy"]   = {"Copy", ":/icons/copy_black.png", false, QKeySequence(tr("Ctrl+c")), nullptr};
     m_actions["paste"]  = {"Paste", ":/icons/paste_black.png", false, QKeySequence(tr("Ctrl+v")), nullptr};
     m_actions["reload"] = {"Reload", ":/icons/file_refresh_black.png", false, QKeySequence(tr("Ctrl+r")), nullptr};
-    m_actions["delete"] = {"Delete", ":/icons/delete_black.png", false, QKeySequence(tr("Ctrl+Delete")), nullptr};
+    m_actions["delete"] = {"Delete Hierarchy", ":/icons/delete_black.png", false, QKeySequence(tr("Ctrl+Delete")),
+                           nullptr};
 
     // Menu Zoom
     m_actions["zoom_in"]  = {"Zoom In", ":/icons/magnify_plus_black.png", false, QKeySequence(tr("Ctrl+=")), nullptr};
@@ -567,8 +572,10 @@ void MainWindow::setupActions() {
     m_actions["gcode_to_s2c"]  = {"G-Code to S2C", ":/icons/settings_save_black.png", false, QKeySequence(), nullptr};
     m_actions["settings_compare"] = {"Compare Settings Files", ":/icons/settings_file_black.png", false, QKeySequence(),
                                      nullptr};
-    m_actions["setting_folder"]   = {"Additional Setting Location", ":/icons/settings_folder_black.png", false,
-                                     QKeySequence(), nullptr};
+    m_actions["settings_overrides"] = {"Settings Overrides", ":/icons/settings_file_black.png", false, QKeySequence(),
+                                       nullptr};
+    m_actions["setting_folder"]     = {"Additional Setting Location", ":/icons/settings_folder_black.png", false,
+                                       QKeySequence(), nullptr};
     m_actions["layer_bar_setting_folder"] = {"Additional Layer Bar Setting Location",
                                              ":/icons/settings_folder_black.png", false, QKeySequence(), nullptr};
     m_actions["pref"] = {"Application Preferences", ":/icons/settings_black.png", false, QKeySequence(tr("Ctrl+p")),
@@ -697,6 +704,7 @@ void MainWindow::setupActions() {
     m_menu_settings->addAction(m_actions["template_save"].action);
     m_menu_settings->addAction(m_actions["gcode_to_s2c"].action);
     m_menu_settings->addAction(m_actions["settings_compare"].action);
+    m_menu_settings->addAction(m_actions["settings_overrides"].action);
     m_menu_settings->addSeparator();
     m_menu_settings->addAction(m_actions["setting_folder"].action);
     m_menu_settings->addAction(m_actions["layer_bar_setting_folder"].action);
@@ -891,6 +899,28 @@ void MainWindow::setupEvents() {
         m_settings_file_compare_window->raise();
         m_settings_file_compare_window->activateWindow();
     });
+    connect(m_actions["settings_overrides"].action, &QAction::triggered, m_settings_overrides_window, [this] {
+        if (m_settings_overrides_window->isVisible()) m_settings_overrides_window->refresh();
+        m_settings_overrides_window->showNormal();
+        m_settings_overrides_window->raise();
+        m_settings_overrides_window->activateWindow();
+    });
+    connect(m_settings_overrides_window, &SettingsOverridesDialog::showSettingRequested, this,
+            [this](const QUuid& part_id, int low, int high, const QString& key) {
+                if (!m_layerbar->selectSettingsTarget(part_id, low, high)) {
+                    updateStatus("The selected override no longer exists in the current project.");
+                    m_settings_overrides_window->scheduleRefresh();
+                    return;
+                }
+                if (m_tab_widget->currentWidget() != m_part_widget) switchViews(0);
+                m_main_toolbar->setView(0);
+                m_settingdock->show();
+                m_settingdock->raise();
+                raise();
+                activateWindow();
+                if (!m_settingbar->focusSetting(key))
+                    updateStatus("This setting is unavailable in the local settings editor.");
+            });
     connect(m_actions["setting_folder"].action, &QAction::triggered, this, &MainWindow::setSettingFolder);
     connect(m_actions["layer_bar_setting_folder"].action, &QAction::triggered, this,
             &MainWindow::setLayerBarSettingFolder);
@@ -956,6 +986,7 @@ void MainWindow::setupEvents() {
         switchViews(1);
     });
     connect(CSM.get(), &SessionManager::forwardStatusUpdate, this, &MainWindow::updateStatus);
+    connect(CSM.get(), &SessionManager::sliceFailed, this, [this]() { m_slice_dialog.reset(); });
     connect(CSM.get(), &SessionManager::sessionSaved, this, [this](QString path) {
         QMessageBox::information(this, "Save Project", "Project has been successfully saved to " + path);
     });
@@ -985,6 +1016,10 @@ void MainWindow::setupEvents() {
             &PartWidget::setLayerSettingsRanges);
     connect(m_layerbar, &LayerBar::layerSettingsRangeAvailabilityChanged, m_main_toolbar,
             &MainToolbar::setLayerSettingsRangeAbility);
+    connect(m_layerbar, &LayerBar::layerSettingsRangeAvailabilityChanged, m_settingbar,
+            &SettingBar::refreshOverrideIndicators);
+    connect(m_layerbar, &LayerBar::layerSettingsRangeAvailabilityChanged, m_settings_overrides_window,
+            &SettingsOverridesDialog::scheduleRefresh);
 
     // Part widget connection
     connect(m_part_widget, &PartWidget::selected, this,
@@ -1032,6 +1067,11 @@ void MainWindow::setupEvents() {
             [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
 
     QSharedPointer<PartMetaModel> part_meta = m_part_widget->getPartMeta();
+    part_meta->setUndoStack(m_undo_stack);
+    connect(part_meta.get(), &PartMetaModel::hierarchyChanged, this, [this, part_meta]() {
+        for (const auto& item : part_meta->items()) initializePartTransform(item);
+        markProjectModified();
+    });
     connect(part_meta.get(), &PartMetaModel::itemAddedUpdate, this, &MainWindow::initializePartTransform);
     connect(part_meta.get(), &PartMetaModel::itemRemovedUpdate, this, &MainWindow::removePartTransform);
     connect(part_meta.get(), &PartMetaModel::transformUpdate, this, &MainWindow::recordPartTransform);
@@ -1047,6 +1087,8 @@ void MainWindow::setupEvents() {
     connect(m_settingbar, &SettingBar::settingModified, m_layerbar, &LayerBar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, m_main_toolbar, &MainToolbar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, this, &MainWindow::handleModifiedSetting);
+    connect(m_settingbar, &SettingBar::settingModified, m_settings_overrides_window,
+            &SettingsOverridesDialog::scheduleRefresh);
     connect(m_settingbar, &SettingBar::selectedVisualizationSettingsChanged, m_part_widget->view(),
             &PartView::updateOptimizationSettings);
     connect(m_settingbar, &SettingBar::selectedVisualizationSettingsChanged, m_gcode_widget->view(),
@@ -1157,8 +1199,8 @@ void MainWindow::applyPartTransformSnapshot(QSharedPointer<PartMetaItem> item, c
     m_applying_undo_redo = true;
     item->setTransformation(snapshot.transformation);
     item->setScaleUnitIndex(snapshot.scale_unit_index);
-    m_part_transform_snapshots[item] = snapshot;
-    m_applying_undo_redo             = false;
+    initializePartTransform(item);
+    m_applying_undo_redo = false;
 }
 
 QVector<MainWindow::SettingValueSnapshot> MainWindow::settingValueSnapshots(
@@ -1254,7 +1296,10 @@ void MainWindow::recordSettingChange(QString key) {
 }
 
 void MainWindow::initializePartTransform(QSharedPointer<PartMetaItem> item) {
-    if (!item.isNull()) { m_part_transform_snapshots[item] = partTransformSnapshot(item); }
+    if (item.isNull()) return;
+
+    m_part_transform_snapshots[item] = partTransformSnapshot(item);
+    for (const auto& child : item->children()) { initializePartTransform(child); }
 }
 
 void MainWindow::removePartTransform(QSharedPointer<PartMetaItem> item) {
@@ -1262,19 +1307,19 @@ void MainWindow::removePartTransform(QSharedPointer<PartMetaItem> item) {
 }
 
 void MainWindow::recordPartTransform(QSharedPointer<PartMetaItem> item) {
-    if (m_applying_undo_redo || item.isNull()) { return; }
+    if (m_applying_undo_redo || item.isNull() || m_part_widget->getPartMeta()->hierarchyChangeInProgress()) { return; }
 
     const PartTransformSnapshot current = partTransformSnapshot(item);
     if (!m_part_transform_snapshots.contains(item)) {
-        m_part_transform_snapshots[item] = current;
+        initializePartTransform(item);
         return;
     }
 
     const PartTransformSnapshot before = m_part_transform_snapshots[item];
+    initializePartTransform(item);
     if (partTransformSnapshotsEqual(before, current)) { return; }
 
     m_undo_stack->push(new PartTransformUndoCommand(this, item, before, current));
-    m_part_transform_snapshots[item] = current;
 }
 
 void MainWindow::handleModifiedSetting(const QString key) {
@@ -1378,6 +1423,7 @@ void MainWindow::doSlice() {
     m_gcode_widget->clear();
     m_gcodebar->clear();
     m_layertimebar->clear();
+    m_export_window->clearVisualizationInformation();
 
     if (!CSM->isBuildMode()) return;
 
@@ -1401,7 +1447,7 @@ void MainWindow::doSlice() {
 
 void MainWindow::loadModel(MeshType mt) {
     QStringList filepaths;
-    const QString model_filter = QObject::tr("Model File (*.stl *.3mf *.obj *.amf *.step *.stp)");
+    const QString model_filter = DialogUtils::modelFileFilter();
     if (mt == MeshType::kClipping) {
         filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open model clipping file"),
                                                   CSM->getMostRecentModelLocation(), model_filter);
@@ -1476,8 +1522,12 @@ void MainWindow::importGCodeHelper(QString filepath, bool alterFile) {
 
     connect(loader, &GCodeLoader::forwardInfoToLayerTimeWindow, m_layertimebar,
             &LayerTimesWindow::updateTimeInformation);
+    const QVector<GcodeLayer> layer_programs = alterFile ? CSM->layerPrograms() : QVector<GcodeLayer>();
+    const bool generate_arc_schedule         = alterFile && CSM->requiresWeldScheduleFile();
     connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, m_export_window,
-            &GcodeExport::updateOutputInformation);
+            [this, layer_programs, generate_arc_schedule](QString filename, GcodeMeta meta) {
+                m_export_window->updateOutputInformation(filename, meta, layer_programs, generate_arc_schedule);
+            });
     connect(loader, &GCodeLoader::gcodeLoadedVisualization, m_export_window,
             &GcodeExport::updateVisualizationInformation);
 
@@ -1659,6 +1709,7 @@ void MainWindow::updateSavedProjectState() {
 
 void MainWindow::markProjectModified() {
     m_project_modified = true;
+    m_settings_overrides_window->scheduleRefresh();
 }
 
 bool MainWindow::hasUnsavedProjectChanges() {
@@ -1719,9 +1770,22 @@ void MainWindow::loadSession() {
 }
 
 SessionLoader* MainWindow::loadASession(const QString& filename) {
+    m_settingbar->setOverrideIndicatorsSuspended(true);
+    m_settings_overrides_window->setRefreshSuspended(true);
+    auto resume_indicators = qScopeGuard([this] {
+        m_settingbar->setOverrideIndicatorsSuspended(false);
+        m_settings_overrides_window->setRefreshSuspended(false);
+    });
     m_part_widget->clear();
     SessionLoader* loader = CSM->loadSession(true, filename);
-    if (loader != nullptr) connect(loader, &SessionLoader::loadSucceeded, this, &MainWindow::updateSavedProjectState);
+    if (loader != nullptr) {
+        connect(loader, &SessionLoader::loadSucceeded, this, &MainWindow::updateSavedProjectState);
+        connect(loader, &SessionLoader::finished, m_settingbar, [this] {
+            m_settingbar->setOverrideIndicatorsSuspended(false);
+            m_settings_overrides_window->setRefreshSuspended(false);
+        });
+        if (!loader->isFinished()) resume_indicators.dismiss();
+    }
     return loader;
 }
 

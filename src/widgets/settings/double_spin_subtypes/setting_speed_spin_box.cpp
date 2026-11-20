@@ -12,6 +12,7 @@
 #include "managers/preferences_manager.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
 #include "widgets/settings/setting_double_spin_box.h"
 #include "widgets/settings/setting_row_base.h"
@@ -32,6 +33,7 @@ bool isXYSpeedLimitKey(const QString& key) {
 
 bool isPrinterXYMotionSpeed(const QString& key, const fifojson& json) {
     if (isXYSpeedLimitKey(key)) return false;
+    if (key.startsWith("arc_specialties_") && key.endsWith("_wire_feed_speed")) return false;
 
     const QString major = masterString(json, Constants::Settings::Master::kMajor);
     const QString minor = masterString(json, Constants::Settings::Master::kMinor);
@@ -192,6 +194,14 @@ QString SettingSpeedSpinBox::speedLimitWarning(int settings_base_index) const {
 
     const Velocity current_speed = effectiveSpeed(settings_base_index);
     const QString display        = masterString(m_json, Constants::Settings::Master::kDisplay);
+
+    if ((m_key == PS::Perimeter::kSpeed || m_key == PS::Inset::kSpeed || m_key == PS::Infill::kSpeed) &&
+        effectiveDouble(PS::Slicing::kSlicingMode, settings_base_index) ==
+            static_cast<int>(SlicingMode::kCylindrical) &&
+        effectiveDouble(PS::Slicing::kCylindricalPathPattern, settings_base_index) ==
+            static_cast<int>(CylindricalPathPattern::kHelical) &&
+        !(current_speed > 0))
+        return display + " must be greater than zero for Helical slicing.";
 
     if (has_min && current_speed < min_xy_speed)
         return display + " (" + formatVelocity(current_speed) + ") is below Minimum XY Speed (" +

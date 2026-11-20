@@ -24,9 +24,8 @@ Core capabilities include:
 
 - Start here: [Documentation Index](docs/README.md)
 - User guide: [ORNLSlicer User Guide](docs/ornlslicer-user-guide.pdf)
-- Developer onboarding: [Getting Started](docs/wiki/Getting-Started.md)
+- Developer onboarding: [Getting Started](docs/contributing/development-setup.md)
 - Contributor workflow: [Contributing](CONTRIBUTING.md)
-- Migrated wiki content: [Legacy Wiki Content](docs/wiki/Home.md)
 
 ## Support
 
@@ -40,8 +39,8 @@ Before opening a new issue, please search existing issues to avoid duplicates.
 
 See `LICENSE.md` for core license terms. Additional licensing and citation guidance is available in:
 
-- [License and Library Licenses](docs/wiki/License-and-Library-Licenses.md)
-- [Citation and Copyright Information](docs/wiki/Citation-and-Copyright-Information.md)
+- [License and Library Licenses](docs/reference/licenses.md)
+- [Citation and Copyright Information](docs/reference/citation.md)
 
 ## Sponsors
 

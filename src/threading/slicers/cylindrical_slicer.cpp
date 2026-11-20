@@ -34,6 +34,7 @@
 #include "slicing/helical_path_rounding.h"
 #include "slicing/helical_region_profile.h"
 #include "slicing/helical_tool_start_angle.h"
+#include "slicing/region_speed.h"
 #include "slicing/slicing_utilities.h"
 #include "step/layer/cylindrical_layer.h"
 #include "threading/traditional_ast.h"
@@ -439,16 +440,7 @@ void CylindricalSlicer::doSlice() {
     if (this->shouldCancel()) { return; }
 
     if (!m_skip_gcode) {
-        this->writeGCodeSetup();
-        if (m_has_generated_path_max_z) {
-            Distance build_maximum_z = m_generated_path_max_z;
-            if (m_base->hasBuildMaximumZ() && m_base->getBuildMaximumZ() > build_maximum_z) {
-                build_maximum_z = m_base->getBuildMaximumZ();
-            }
-            m_base->setBuildMaximumZ(build_maximum_z);
-        }
-        this->writeGCode();
-        this->writeGCodeShutdown();
+        if (!this->writeGCodeFile()) { return; }
     }
 
     if (this->shouldCancel()) { return; }
@@ -468,8 +460,6 @@ void CylindricalSlicer::preProcess(nlohmann::json opt_data) {
         static_cast<CylindricalPathPattern>(global_sb->setting<int>(PS::Slicing::kCylindricalPathPattern));
 
     QVector<QSharedPointer<Part>> build_parts = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kBuild);
-    QVector<QSharedPointer<MeshBase>> clipping_meshes =
-        SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
     QVector<QPair<QString, HelicalPathZClipRounding>> effective_z_clip_rounding;
     QVector<QPair<QString, HelicalPathHandedness>> effective_handedness;
 
@@ -497,6 +487,7 @@ void CylindricalSlicer::preProcess(nlohmann::json opt_data) {
     int parts_processed = 0;
     emitPreProcessProgress(parts_processed, 0.0);
     for (const QSharedPointer<Part>& part : build_parts) {
+        auto clipping_meshes = SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping, part);
         QSharedPointer<SettingsBase> part_sb = QSharedPointer<SettingsBase>::create(*global_sb);
         part_sb->populate(part->getSb());
         part->clearSteps();
@@ -908,6 +899,15 @@ void CylindricalSlicer::postProcess(nlohmann::json opt_data) {
 }
 
 void CylindricalSlicer::writeGCode() {
+    if (m_has_generated_path_max_z) {
+        Distance build_maximum_z = m_generated_path_max_z;
+        if (m_base->hasBuildMaximumZ() && m_base->getBuildMaximumZ() > build_maximum_z) {
+            build_maximum_z = m_base->getBuildMaximumZ();
+        }
+        m_base->setBuildMaximumZ(build_maximum_z);
+    }
+    if (!m_cylindrical_layers.isEmpty()) { WriterBase::layerNumber(GSM->getGlobal(), m_cylindrical_layers.size() - 1); }
+
     QTextStream stream(&m_temp_gcode_output_file);
 
     const double num_layers = std::max(1.0, static_cast<double>(m_cylindrical_layers.size()));
@@ -919,12 +919,8 @@ void CylindricalSlicer::writeGCode() {
         layer->setDirtyBit(false);
         stream << m_base->writeAfterLayer();
 
-        if (m_syntax != GcodeSyntax::kAdamantine) {
-            auto layer_writer        = m_layer_export_setup();
-            const QString standalone = layer_writer->writeStandaloneLayer(
-                layer_number, layer->getMinZ(), layer->getSb(), [&]() { return layer->writeGCode(layer_writer); });
-            stream << m_base->writeLayerExportProgram(standalone);
-        }
+        prepareLayerExport(layer_number, layer->getMinZ(), layer->getSb(),
+                           [&](const QSharedPointer<WriterBase>& writer) { return layer->writeGCode(writer); });
 
         emit statusUpdate(StatusUpdateStepType::kGcodeGeneraton, (layer_number + 1) / num_layers * 100);
         ++layer_number;
@@ -999,7 +995,7 @@ QSharedPointer<SettingsBase> CylindricalSlicer::createSegmentSettings(
     QSharedPointer<SettingsBase> segment_settings = QSharedPointer<SettingsBase>::create(*layer_settings);
     segment_settings->setSetting(SS::kWidth, layer_settings->setting<Distance>(PS::Layer::kBeadWidth));
     segment_settings->setSetting(SS::kHeight, layer_settings->setting<Distance>(PS::Layer::kLayerHeight));
-    segment_settings->setSetting(SS::kSpeed, layer_settings->setting<Velocity>(PS::Layer::kSpeed));
+    segment_settings->setSetting(SS::kSpeed, regionPrintSpeed(*layer_settings, region_type));
     segment_settings->setSetting(SS::kRegionType, region_type);
     segment_settings->setSetting(SS::kPathModifiers, PathModifiers::kNone);
     segment_settings->setSetting(SS::kMaterialNumber, 0);
