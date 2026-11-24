@@ -9,6 +9,7 @@ Release versions follow the project's
 
 ### Added
 
+- Added a Layer list mode for custom layer groups, supporting individual layers and inclusive ranges such as `1, 2, 5-9, 12, 30-40` ([#398](https://github.com/ORNLSlicer/ORNLSlicer/issues/398)).
 - Added a live Settings Overrides window to inspect, filter, navigate, copy, and export project part and layer overrides, with inherited values and inactive-feature explanations.
 - Added optional Arc Specialties weld schedule generation with collapsible regional forms for gas timing, startup, welding, and crater fill ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Added an optional prompt under Preferences > Settings to apply a selected settings file to all categories it contains; the preference is disabled by default.

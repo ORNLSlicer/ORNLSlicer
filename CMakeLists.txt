@@ -557,6 +557,18 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_settings_override_navigation_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME settings_override_navigation_tests COMMAND ${PROJECT_NAME}_settings_override_navigation_tests)
 
+    add_executable(${PROJECT_NAME}_layer_group_tests tests/layer_group_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_layer_group_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_layer_group_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME layer_group_tests COMMAND ${PROJECT_NAME}_layer_group_tests)
+    set_tests_properties(layer_group_tests PROPERTIES TIMEOUT 60)
+
     add_executable(${PROJECT_NAME}_arc_specialties_settings_tests tests/arc_specialties_settings_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_arc_specialties_settings_tests

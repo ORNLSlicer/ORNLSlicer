@@ -87,7 +87,7 @@ For every task:
 
 1. State the success criteria before writing code.
 2. Write the verification (test, script, benchmark, screenshot diff) where practical.
-3. Run the verification. Read the output. Do not claim success without checking.
+3. Run the verification. Read the output. Reproduce review findings through their callers and guards before reporting them; do not claim success without checking.
 4. If the verification fails, fix the cause, not the test.
 
 ---
