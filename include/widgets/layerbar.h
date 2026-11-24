@@ -231,6 +231,9 @@ class LayerBar : public QWidget {
 
     // -- Helper Functions --
 
+    //! \brief Returns a validation error if a new group's name is blank or already in use.
+    QString groupNameError(const QString& name) const;
+
     //! \brief Paint the division lines seen in the background. Used by paintEvent().
     void paintDivisions(QPainter* painter);
 

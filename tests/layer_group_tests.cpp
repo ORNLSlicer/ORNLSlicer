@@ -3,7 +3,9 @@
 #include <QDir>
 #include <QDoubleSpinBox>
 #include <QFile>
+#include <QInputDialog>
 #include <QLineEdit>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QStandardPaths>
@@ -149,6 +151,106 @@ int main(int argc, char* argv[]) {
     expect(restored_group != nullptr && restored_group->grouped.size() == requested.size(),
            "Rebuilding the layer bar must restore the full visual group.");
 
+    const auto before_duplicate = part->SettingsRangesToJson();
+    for (auto theme : {ORNL::ThemeName::kLightMode, ORNL::ThemeName::kDarkMode}) {
+        preferences->setTheme(theme);
+        QApplication::setPalette(preferences->getTheme().getPalette());
+        QFile style(preferences->getTheme().getFolderPath() + "style.qss");
+        expect(style.open(QIODevice::ReadOnly), "Could not load the application stylesheet.");
+        root.setStyleSheet(style.readAll());
+        openGroup([&](QDialog& dialog) {
+            configureList(dialog, "1, 3", "Requested layers");
+            auto* ok = dialog.findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Ok);
+            expect(!ok->isEnabled(),
+                   "An existing group name must not create another visual group sharing its settings.");
+            auto* error = dialog.findChild<QLabel*>("layerGroupNameError");
+            expect(error && error->isVisible() && error->text().contains("Requested layers"),
+                   "Duplicate names must show a visible explanation identifying the existing group.");
+            if (argc > 1) {
+                app.processEvents();
+                const QString name = theme == ORNL::ThemeName::kLightMode ? "light" : "dark";
+                expect(dialog.grab().save(QString(argv[1]) + "/" + name + "-duplicate.png"),
+                       "Could not save the duplicate group name dialog.");
+            }
+            radioButton(dialog, "Start/end/interval")->click();
+            expect(!ok->isEnabled(), "Interval groups must also reject existing group names.");
+            auto* name = dialog.findChild<QLineEdit*>("layerGroupName");
+            for (const QString& blank : {"", "   "}) {
+                name->setText(blank);
+                expect(!ok->isEnabled(), "A blank group name must not lose shared settings and grouping on reload.");
+            }
+            name->setText("Separate layers");
+            expect(ok->isEnabled(), "Changing to an unused group name must enable interval group creation.");
+            radioButton(dialog, "Layer list")->click();
+            expect(ok->isEnabled(), "An unused group name with a valid list must enable group creation.");
+            dialog.findChild<QLineEdit*>("layerGroupLayers")->setText("invalid");
+            expect(!ok->isEnabled(), "A valid name must not bypass layer list validation.");
+            radioButton(dialog, "Select all odd layers.")->click();
+            expect(ok->isEnabled(), "Inactive custom name and list validation must not block an unused preset.");
+        });
+    }
+    expect(part->SettingsRangesToJson() == before_duplicate,
+           "Rejected duplicate names must preserve existing group membership and settings.");
+    openGroup([&](QDialog& dialog) {
+        configureList(dialog, "1, 3", "Separate layers");
+        dialog.findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Ok)->click();
+    });
+    auto separate = part->getSettingsRange(2, 2)->getSb();
+    expect(members("Requested layers") == requested && members("Separate layers") == QSet<int> {3},
+           "A distinctly named group must add only free layers without changing the original group.");
+    expect(separate != part->getSettingsRange(0, 0)->getSb(), "Distinct groups must have independent settings.");
+    separate->setSetting(ORNL::PS::Perimeter::kCount, 11);
+    expect(part->getSettingsRange(0, 0)->getSb()->setting<int>(ORNL::PS::Perimeter::kCount) == 7,
+           "Editing a distinct group must preserve the original group's settings.");
+
+    bar.addSingle(3);
+    const auto before_group_selected = part->SettingsRangesToJson();
+    const auto groupSelected         = [&](const QString& name, bool accept, bool invalid) {
+        bool opened = false;
+        bool warned = false;
+        QTimer::singleShot(0, &bar, [&]() {
+            auto* dialog = qobject_cast<QInputDialog*>(QApplication::activeModalWidget());
+            expect(dialog != nullptr, "Group Selected must prompt for a group name.");
+            if (!dialog) return;
+            opened = true;
+            dialog->setTextValue(name);
+            QTimer::singleShot(0, &bar, [&]() {
+                auto* warning = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+                warned        = warning != nullptr;
+                if (warning) warning->accept();
+            });
+            if (accept)
+                dialog->accept();
+            else
+                dialog->reject();
+        });
+        expect(QMetaObject::invokeMethod(&bar, "groupDots", Qt::DirectConnection), "Could not invoke Group Selected.");
+        app.processEvents();
+        expect(opened && warned == invalid, "Invalid group names must show a warning without changing the selection.");
+    };
+    groupSelected("Requested layers", true, true);
+    expect(part->SettingsRangesToJson() == before_group_selected, "Group Selected must reject duplicate names.");
+    groupSelected("   ", true, true);
+    expect(part->SettingsRangesToJson() == before_group_selected, "Group Selected must reject blank names.");
+    groupSelected("Cancelled", false, false);
+    expect(part->SettingsRangesToJson() == before_group_selected, "Cancelling Group Selected must preserve settings.");
+    groupSelected("Selected layers", true, false);
+    expect(members("Selected layers") == QSet<int> {4}, "Group Selected must still accept an unused name.");
+
+    const auto distinct_saved = part->SettingsRangesToJson();
+    part->loadRangesFromJson(distinct_saved);
+    expect(bar.selectSettingsTarget(part->getId(), 0, 0), "Distinct groups must remain selectable after reload.");
+    ORNL::LayerBar::dot_group* first_group  = nullptr;
+    ORNL::LayerBar::dot_group* second_group = nullptr;
+    for (auto* dot : bar.findChildren<ORNL::LayerDot*>()) {
+        if (dot->getLayer() == 0) first_group = dot->getGroup();
+        if (dot->getLayer() == 2) second_group = dot->getGroup();
+    }
+    expect(first_group && second_group && first_group != second_group &&
+               first_group->grouped.size() == requested.size() && second_group->grouped.size() == 1 &&
+               part->SettingsRangesToJson() == distinct_saved,
+           "Saving and rebuilding must preserve distinct visual groups, membership, and settings.");
+
     const auto reset = [&]() {
         part->clearSettingsRanges();
         item->setSelected(true);
@@ -212,6 +314,18 @@ int main(int argc, char* argv[]) {
         for (int i = even ? 2 : 1; i <= 40; i += 2) expected.insert(i);
         expect(members(even ? "Even Layers" : "Odd Layers") == expected,
                "Even selection and default odd selection must retain their behavior.");
+        openGroup([&](QDialog& dialog) {
+            auto* ok = dialog.findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Ok);
+            radioButton(dialog, even ? "Select all even layers." : "Select all odd layers.")->click();
+            expect(!ok->isEnabled(), "Preset groups must not reuse an existing group name.");
+            auto* error = dialog.findChild<QLabel*>("layerGroupNameError");
+            expect(error && error->isEnabled() && error->isVisible() && error->text().contains("Custom Group"),
+                   "Preset name collisions must show an enabled explanation outside the disabled custom inputs.");
+            radioButton(dialog, even ? "Select all odd layers." : "Select all even layers.")->click();
+            expect(ok->isEnabled(), "Switching between presets must revalidate their group names.");
+            configureList(dialog, "1", even ? "Even Layers" : "Odd Layers");
+            expect(!ok->isEnabled(), "Custom groups must not reuse preset group names.");
+        });
     }
     model->clearItems();
     ORNL::CSM->clearParts();

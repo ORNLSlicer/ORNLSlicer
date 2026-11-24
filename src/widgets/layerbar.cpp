@@ -708,6 +708,15 @@ void LayerBar::addPair() {
     }
 }
 
+QString LayerBar::groupNameError(const QString& name) const {
+    if (name.trimmed().isEmpty()) return tr("Enter a nonblank group name.");
+    for (const auto& range : m_part->getSettingsRanges()) {
+        if (range->groupName() == name)
+            return tr("A group named \"%1\" already exists. Choose a different name.").arg(name);
+    }
+    return QString();
+}
+
 void LayerBar::addGroup() {
     // Dialog prompt to get user input for adding a group of dots.
     QDialog dialog(this);
@@ -801,12 +810,16 @@ void LayerBar::addGroup() {
     form.addRow(selectEvens);
     form.addRow(selectCustom);
     form.addRow(groupBox);
+    QLabel* nameError = new QLabel(&dialog);
+    nameError->setObjectName("layerGroupNameError");
+    nameError->setWordWrap(true);
+    form.addRow(nameError);
 
     // Add some standard buttons (Cancel/Ok) at the bottom of the dialog
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &dialog);
     form.addRow(&buttonBox);
     auto* okButton          = buttonBox.button(QDialogButtonBox::Ok);
-    const auto updateInputs = [=]() {
+    const auto updateInputs = [=, this]() {
         const bool custom = selectCustom->isChecked();
         const bool list   = useList->isChecked();
         groupBox->setEnabled(custom);
@@ -815,11 +828,17 @@ void LayerBar::addGroup() {
         layers->setEnabled(list);
         const bool valid = !parseLayerList(layers->text()).isEmpty();
         listError->setVisible(custom && list && !valid);
-        okButton->setEnabled(!custom || !list || valid);
+        const QString groupName = custom ? name->text() : selectEvens->isChecked() ? "Even Layers" : "Odd Layers";
+        QString error           = groupNameError(groupName);
+        if (!custom && !error.isEmpty()) error += tr(" Select Custom Group to enter a new name.");
+        nameError->setText(error);
+        nameError->setVisible(!error.isEmpty());
+        okButton->setEnabled((!custom || !list || valid) && error.isEmpty());
     };
-    connect(selectCustom, &QRadioButton::toggled, &dialog, updateInputs);
+    connect(chooseSelection, &QButtonGroup::idToggled, &dialog, updateInputs);
     connect(useList, &QRadioButton::toggled, &dialog, updateInputs);
     connect(layers, &QLineEdit::textChanged, &dialog, updateInputs);
+    connect(name, &QLineEdit::textChanged, &dialog, updateInputs);
     updateInputs();
     QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
     QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
@@ -873,7 +892,14 @@ void LayerBar::addGroup() {
 // Group selected dots together
 void LayerBar::groupDots() {
     bool ok;
-    QString group_name = QInputDialog::getText(this, "Create Group", "Enter a name for the new group:");
+    QString group_name = QInputDialog::getText(this, "Create Group",
+                                               "Enter a name for the new group:", QLineEdit::Normal, QString(), &ok);
+    if (!ok) return;
+    const QString error = groupNameError(group_name);
+    if (!error.isEmpty()) {
+        QMessageBox::warning(this, tr("Could not create group"), error);
+        return;
+    }
 
     // Make a new group
     dot_group* group  = new dot_group;
