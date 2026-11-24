@@ -1,10 +1,11 @@
 #include "widgets/layerbar.h"
 
+#include <QPushButton>
+#include <QRegularExpression>
 #include <QScopedValueRollback>
 #include <algorithm>
 #include <tuple>
 
-#include <qabstractbutton.h>
 #include <qaction.h>
 #include <qalgorithms.h>
 #include <qbrush.h>
@@ -27,7 +28,6 @@
 #include <qnamespace.h>
 #include <qobject.h>
 #include <qobjectdefs.h>
-#include <qoverload.h>
 #include <qpainter.h>
 #include <qpair.h>
 #include <qpoint.h>
@@ -737,36 +737,64 @@ void LayerBar::addGroup() {
     interval->setRange(1, m_layers / 2);                     // minimum of 0, maximum of 1/2 total number of layers
     interval->setDecimals(0);                                // no decimals
     QLineEdit* name = new QLineEdit(&dialog);
+    name->setObjectName("layerGroupName");
     name->setText("New Group");
 
     // Groupbox to group the inputs together and enable/disable them based on radiobutton selection
-    QGroupBox* groupBox = new QGroupBox(tr("Custom Group"));
-    QGridLayout* grid   = new QGridLayout;
-    grid->addWidget(new QLabel("Start at layer"), 1, 1);
-    grid->addWidget(new QLabel("Stop at layer"), 2, 1);
-    grid->addWidget(new QLabel("Interval*"), 3, 1);
+    QGroupBox* groupBox       = new QGroupBox(tr("Custom Group"));
+    QRadioButton* useInterval = new QRadioButton(tr("Start/end/interval"), groupBox);
+    QRadioButton* useList     = new QRadioButton(tr("Layer list"), groupBox);
+    useInterval->setChecked(true);
+    QLineEdit* layers = new QLineEdit(groupBox);
+    layers->setObjectName("layerGroupLayers");
+    layers->setPlaceholderText("1, 2, 5-9, 12, 30-40");
+    layers->setToolTip(tr("Comma-separated layer numbers and inclusive ranges, from 1 to %1.").arg(m_layers));
+    QLabel* listError = new QLabel(
+        tr("Enter layers from 1 to %1 as numbers or ascending ranges, separated by commas.").arg(m_layers), groupBox);
+    listError->setWordWrap(true);
+    QGridLayout* grid     = new QGridLayout;
+    QLabel* startLabel    = new QLabel("Start at layer");
+    QLabel* endLabel      = new QLabel("Stop at layer");
+    QLabel* intervalLabel = new QLabel("Interval*");
+    grid->addWidget(useInterval, 0, 1, 1, 2);
+    grid->addWidget(startLabel, 1, 1);
+    grid->addWidget(endLabel, 2, 1);
+    grid->addWidget(intervalLabel, 3, 1);
     QLabel* intDef = new QLabel(
         "*Indicate how many layers to skip between affected layers; an interval of 1 selects every other layer.");
     intDef->setWordWrap(true);
     intDef->setIndent(1);
-    grid->addWidget(new QLabel("Group Name"), 5, 1);
+    grid->addWidget(useList, 5, 1, 1, 2);
+    grid->addWidget(layers, 6, 1, 1, 2);
+    grid->addWidget(listError, 7, 1, 1, 2);
+    grid->addWidget(new QLabel("Group Name"), 8, 1);
     grid->addWidget(grpStart, 1, 2);
     grid->addWidget(grpEnd, 2, 2);
     grid->addWidget(interval, 3, 2);
     grid->addWidget(intDef, 4, 1, 1, 2);
-    grid->addWidget(name, 5, 2);
+    grid->addWidget(name, 8, 2);
     grid->setColumnStretch(2, 2);
     groupBox->setLayout(grid);
     groupBox->setEnabled(false);
 
-    // Groupbox is only enabled if the user indicates they want to make a custom selection group
-    connect(chooseSelection, QOverload<QAbstractButton*>::of(&QButtonGroup::buttonClicked),
-            [=](QAbstractButton* button) {
-                if (chooseSelection->checkedId() == 3)
-                    groupBox->setEnabled(true);
-                else
-                    groupBox->setEnabled(false);
-            });
+    const auto parseLayerList = [this](const QString& text) {
+        static const QRegularExpression entryPattern(R"(^\s*([0-9]+)\s*(?:-\s*([0-9]+)\s*)?$)");
+        QSet<int> selected;
+        for (const QString& entry : text.split(',')) {
+            const auto match = entryPattern.match(entry);
+            if (!match.hasMatch()) return QVector<int>();
+            bool firstOk    = false;
+            bool lastOk     = false;
+            const int first = match.captured(1).toInt(&firstOk);
+            const int last  = match.captured(2).isEmpty() ? first : match.captured(2).toInt(&lastOk);
+            if (!firstOk || (!match.captured(2).isEmpty() && !lastOk) || first < 1 || first > last || last > m_layers)
+                return QVector<int>();
+            for (int layer = first - 1; layer < last; ++layer) selected.insert(layer);
+        }
+        QVector<int> result(selected.begin(), selected.end());
+        std::sort(result.begin(), result.end());
+        return result;
+    };
 
     // Populate the form
     form.addRow(selectOdds);
@@ -777,6 +805,22 @@ void LayerBar::addGroup() {
     // Add some standard buttons (Cancel/Ok) at the bottom of the dialog
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &dialog);
     form.addRow(&buttonBox);
+    auto* okButton          = buttonBox.button(QDialogButtonBox::Ok);
+    const auto updateInputs = [=]() {
+        const bool custom = selectCustom->isChecked();
+        const bool list   = useList->isChecked();
+        groupBox->setEnabled(custom);
+        for (auto* widget : QList<QWidget*> {startLabel, endLabel, intervalLabel, grpStart, grpEnd, interval, intDef})
+            widget->setEnabled(!list);
+        layers->setEnabled(list);
+        const bool valid = !parseLayerList(layers->text()).isEmpty();
+        listError->setVisible(custom && list && !valid);
+        okButton->setEnabled(!custom || !list || valid);
+    };
+    connect(selectCustom, &QRadioButton::toggled, &dialog, updateInputs);
+    connect(useList, &QRadioButton::toggled, &dialog, updateInputs);
+    connect(layers, &QLineEdit::textChanged, &dialog, updateInputs);
+    updateInputs();
     QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
     QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
 
@@ -805,7 +849,13 @@ void LayerBar::addGroup() {
         dot_group* group  = new dot_group;
         group->group_name = group_name;
 
-        for (int i = start; i < end; i = i + skip) {
+        QVector<int> selectedLayers;
+        if (selectCustom->isChecked() && useList->isChecked())
+            selectedLayers = parseLayerList(layers->text());
+        else
+            for (int i = start; i < end; i = i + skip) selectedLayers.append(i);
+
+        for (int i : selectedLayers) {
             // Add dots on the appropriate layers and add them to the dot group
             if (layerValid(i)) {
                 LayerDot* dot = addDot(i, false);
