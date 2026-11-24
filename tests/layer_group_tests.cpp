@@ -1,10 +1,13 @@
+#include <QAction>
 #include <QApplication>
+#include <QContextMenuEvent>
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QDoubleSpinBox>
 #include <QFile>
 #include <QInputDialog>
 #include <QLineEdit>
+#include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QRadioButton>
@@ -50,12 +53,61 @@ int main(int argc, char* argv[]) {
     QWidget root;
     ORNL::LayerBar bar(model, &root);
     bar.resize(80, 600);
+    const auto checkGroupAction = [&](bool enabled, const QString& screenshot = QString()) {
+        bool opened = false;
+        QTimer::singleShot(0, &bar, [&]() {
+            auto* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
+            expect(menu != nullptr, "The layer bar must open its context menu.");
+            if (!menu) return;
+            opened          = true;
+            QAction* action = nullptr;
+            for (auto* candidate : menu->actions())
+                if (candidate->text() == "Add a Group of Layer Settings") action = candidate;
+            expect(action && action->isEnabled() == enabled,
+                   "Add Group must be available only when a build part with layers is selected.");
+            if (argc > 1 && !screenshot.isEmpty()) {
+                expect(QDir().mkpath(argv[1]), "Could not create the screenshot directory.");
+                app.processEvents();
+                expect(menu->grab().save(QString(argv[1]) + "/" + screenshot), "Could not save the group action menu.");
+            }
+            menu->close();
+        });
+        QContextMenuEvent event(QContextMenuEvent::Mouse, QPoint(10, 10), bar.mapToGlobal(QPoint(10, 10)));
+        QApplication::sendEvent(&bar, &event);
+        expect(opened, "The group action must be checked through the context menu.");
+    };
+    const auto checkNoGroupDialog = [&]() {
+        bool opened = false;
+        QTimer cancelDialog;
+        cancelDialog.setSingleShot(true);
+        QObject::connect(&cancelDialog, &QTimer::timeout, &bar, [&]() {
+            auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+            opened       = dialog != nullptr;
+            if (dialog) dialog->reject();
+        });
+        cancelDialog.start(0);
+        expect(QMetaObject::invokeMethod(&bar, "addGroup", Qt::DirectConnection), "Could not invoke Add Group.");
+        cancelDialog.stop();
+        expect(!opened, "Add Group must return without opening a dialog when no build layers are selectable.");
+    };
+    checkGroupAction(false);
+    checkNoGroupDialog();
     auto mesh = QSharedPointer<ORNL::ClosedMesh>::create(ORNL::MeshFactory::CreateBoxMesh(10000, 10000, 40000));
     auto part = QSharedPointer<ORNL::Part>::create(mesh);
     part->setCurrentPartTemplate(ORNL::GSM->getCurrentTemplate());
     ORNL::CSM->addPart(part, false);
     auto item = model->newItem(part);
     item->setSelected(true);
+    item->setMeshType(ORNL::MeshType::kSettings);
+    checkGroupAction(false);
+    checkNoGroupDialog();
+    item->setMeshType(ORNL::MeshType::kBuild);
+    global->setSetting(ORNL::PS::Layer::kLayerHeight, 100000.0);
+    bar.updateLayers();
+    checkGroupAction(false);
+    checkNoGroupDialog();
+    global->setSetting(ORNL::PS::Layer::kLayerHeight, 1000.0);
+    bar.updateLayers();
 
     const auto openGroup = [&](const auto& edit) {
         bool opened = false;
@@ -79,6 +131,12 @@ int main(int argc, char* argv[]) {
         if (!ORNL::Testing::expect(style.open(QIODevice::ReadOnly), "Could not load the application stylesheet."))
             return EXIT_FAILURE;
         root.setStyleSheet(style.readAll());
+        const QString themeName = theme == ORNL::ThemeName::kLightMode ? "light" : "dark";
+        item->setSelected(false);
+        checkGroupAction(false, themeName + "-no-part-menu.png");
+        checkNoGroupDialog();
+        item->setSelected(true);
+        checkGroupAction(true, themeName + "-selected-part-menu.png");
         openGroup([&](QDialog& dialog) {
             const auto spins = dialog.findChildren<QDoubleSpinBox*>();
             expect(spins.size() == 3 && spins[1]->maximum() == 40, "The fixture must have forty selectable layers.");

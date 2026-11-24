@@ -718,6 +718,8 @@ QString LayerBar::groupNameError(const QString& name) const {
 }
 
 void LayerBar::addGroup() {
+    if (m_part == nullptr || m_layers <= 0) return;
+
     // Dialog prompt to get user input for adding a group of dots.
     QDialog dialog(this);
     QFormLayout form(&dialog);
@@ -1255,6 +1257,7 @@ void LayerBar::contextMenuEvent(QContextMenuEvent* event) {
     menu.addAction(m_select_all);
     menu.addAction(m_add_act);
     menu.addAction(m_add_pair);
+    m_add_group->setEnabled(m_part != nullptr && m_layers > 0);
     menu.addAction(m_add_group);
 
     menu.exec(event->globalPos());
