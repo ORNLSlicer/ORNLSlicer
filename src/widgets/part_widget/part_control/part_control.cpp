@@ -131,13 +131,15 @@ void PartControl::modelParentingUpdate(QSharedPointer<PartMetaItem> pm) {
             m_tree_widget->findItems(child->part()->name(), Qt::MatchExactly | Qt::MatchRecursive);
 
         if (!tlc.empty()) {
-            auto* child_item = tlc.at(0);
-            if (child_item->parent() == tree_item) continue;
-            if (child_item->parent())
-                child_item->parent()->takeChild(child_item->parent()->indexOfChild(child_item));
-            else
-                m_tree_widget->takeTopLevelItem(m_tree_widget->indexOfTopLevelItem(child_item));
-            tree_item->addChild(child_item);
+            auto* child_item = static_cast<PartControlTreeItem*>(tlc.at(0));
+            if (child_item->parent() != tree_item) {
+                if (child_item->parent())
+                    child_item->parent()->takeChild(child_item->parent()->indexOfChild(child_item));
+                else
+                    m_tree_widget->takeTopLevelItem(m_tree_widget->indexOfTopLevelItem(child_item));
+                tree_item->addChild(child_item);
+            }
+            child_item->addContainer(m_tree_widget, 0);
         }
     }
     tree_item->addContainer(m_tree_widget, 0);
@@ -221,6 +223,10 @@ void PartControl::setOutsideStatus(const QString& name, bool status) {
         auto tree_item = dynamic_cast<PartControlTreeItem*>(result);
         if (tree_item != nullptr) { tree_item->setOutsideVolume(status); }
     }
+}
+
+void PartControl::expandAll() {
+    m_tree_widget->expandAll();
 }
 
 void PartControl::setupSubWidgets() {

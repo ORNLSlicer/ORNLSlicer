@@ -40,7 +40,7 @@ settings:
   - name: "skin_pattern"
     display: "Skin Pattern"
     type: "enumeration"
-    tooltip: "Pattern for the skins"
+    tooltip: "Selects the geometry used to fill solid top and bottom skin areas. Pattern angle and layer-to-layer rotation orient non-concentric patterns."
     depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options:
       - "Lines"
@@ -190,7 +190,7 @@ settings:
   - name: "skin_gradual_infill_pattern"
     display: "Gradual Infill Pattern"
     type: "enumeration"
-    tooltip: "Pattern for the gradual infill steps"
+    tooltip: "Selects the fill geometry used in the transition steps between solid skin and sparse infill. Each step changes spacing while retaining this pattern."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_gradual_infill":true}]}]}
     options:
       - "Lines"

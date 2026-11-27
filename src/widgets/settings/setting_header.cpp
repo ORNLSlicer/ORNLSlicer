@@ -42,6 +42,8 @@ void SettingHeader::setIcon(QIcon new_icon) {
 
 void SettingHeader::setStatus(bool status) {
     m_status = status;
+    QPixmap arrow(m_status ? ":/icons/up_black.png" : ":/icons/down_black.png");
+    m_arrow->setPixmap(arrow);
     this->update();
 }
 
@@ -91,20 +93,10 @@ void SettingHeader::setupSubWidgets() {
 }
 
 void SettingHeader::mousePressEvent(QMouseEvent* event) {
-    m_status = !m_status;
+    setStatus(!m_status);
 
-    if (m_status) {
-        emit expand();
-        QPixmap arrow(":/icons/up_black.png");
-        m_arrow->setPixmap(arrow);
-    }
-    else {
-        QPixmap arrow(":/icons/down_black.png");
-        m_arrow->setPixmap(arrow);
-        emit shrink();
-    }
-
-    this->update();
+    if (m_status) { emit expand(); }
+    else { emit shrink(); }
 }
 
 void SettingHeader::showHeader() {

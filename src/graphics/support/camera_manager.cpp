@@ -70,26 +70,9 @@ void CameraManager::rotateFromPoint(QPointF ndc_pos) {
 }
 
 QVector3D CameraManager::translateFromPoint(QPointF ndc_pos) {
-    // Use view matrix to get camera's up and right vectors, so that we can
-    // translate in the direction of those vectors.
-    QVector3D right = QVector3D(m_view(0, 0), m_view(0, 1), m_view(0, 2));
-    QVector3D up    = QVector3D(m_view(1, 0), m_view(1, 1), m_view(1, 2));
-
-    // Project onto the XY plane and normalize.
-    right.setZ(0);
-    up.setZ(0);
-    right.normalize();
-    up.normalize();
-
-    float delta_x = ndc_pos.x() - m_drag_start.x();
-    float delta_y = ndc_pos.y() - m_drag_start.y();
-
-    float translation_speed = 20 * (m_zoom / m_default_zoom);
-
+    const QVector2D delta(ndc_pos - m_drag_start);
     this->setDragStart(ndc_pos);
-    QVector3D translation = (-translation_speed * delta_x * right) - (translation_speed * delta_y * up);
-
-    return translation;
+    return -this->panFromScreenDelta(delta);
 }
 
 void CameraManager::setViewMatrix(QMatrix4x4 mtrx) {
@@ -112,6 +95,19 @@ void CameraManager::pan(QVector3D dt) {
 void CameraManager::panAbsolute(QVector3D pos) {
     m_pan = pos;
     updateViewMatrix();
+}
+
+QVector3D CameraManager::panFromScreenDelta(const QVector2D delta) const {
+    QVector3D right = QVector3D(m_view(0, 0), m_view(0, 1), m_view(0, 2));
+    QVector3D up    = QVector3D(m_view(1, 0), m_view(1, 1), m_view(1, 2));
+
+    right.setZ(0);
+    up.setZ(0);
+    right.normalize();
+    up.normalize();
+
+    const float translation_speed = 20.0f * (m_zoom / m_default_zoom);
+    return (translation_speed * delta.x() * right) + (translation_speed * delta.y() * up);
 }
 
 QVector3D CameraManager::getPan() {

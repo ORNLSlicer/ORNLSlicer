@@ -76,7 +76,7 @@ settings:
   - name: "laser_scanner_width"
     display: "Laser Scanner Width"
     type: "distance"
-    tooltip: "Width of scanner at given height"
+    tooltip: "Sets the center-to-center spacing between adjacent serpentine scan passes. Supported scanner output also transmits this value as the scanner width."
     depends: {"laser_scanner":true}
     options: []
     default: 0
@@ -88,7 +88,7 @@ settings:
   - name: "laser_scanner_step_distance"
     display: "Laser Step Distance"
     type: "distance"
-    tooltip: "Step distance of scanner along layer (resolution)"
+    tooltip: "Sets the scanner step-axis sample spacing sent to height-map post-processing. It affects reported patch resolution, not the spacing of generated scan paths."
     depends: {"laser_scanner":true}
     options: []
     default: 0
@@ -100,7 +100,7 @@ settings:
   - name: "laser_scan_line_resolution"
     display: "Laser Scan Line Resolution"
     type: "distance"
-    tooltip: "Resolution of single scan line"
+    tooltip: "Sets the sample spacing along each scan line sent to height-map post-processing. It affects reported patch resolution, not G-code path subdivision."
     depends: {"laser_scanner":true}
     options: []
     default: 0
@@ -112,7 +112,7 @@ settings:
   - name: "laser_scanner_axis"
     display: "Scanner Axis"
     type: "enumeration"
-    tooltip: "Axis the scan line will travel"
+    tooltip: "Selects whether each serpentine scan pass travels along machine X or machine Y; adjacent passes are offset on the other axis."
     depends: {"laser_scanner":true}
     options:
       - "X"
@@ -150,7 +150,7 @@ settings:
   - name: "scan_layer_skip"
     display: "Scan Layer Skip"
     type: "number"
-    tooltip: "Multiple of layer to scan (1 = every layer, 2 = every other layer, etc.)"
+    tooltip: "Sets the inter-layer scan interval: 0 disables inter-layer scans, 1 scans every layer, 2 scans every other layer, and so on."
     depends: {"laser_scanner":true}
     options: []
     default: 0
@@ -210,7 +210,7 @@ settings:
   - name: "orientation_axis"
     display: "Orientation Axis"
     type: "enumeration"
-    tooltip: "Orientation axis of scan (default for vertical is z)"
+    tooltip: "Selects the machine X, Y, or Z axis identifier transmitted with scan metadata to describe the scan-plane orientation. It does not rotate generated scan paths."
     depends: {"laser_scanner":true}
     options:
       - "X"
@@ -225,7 +225,7 @@ settings:
   - name: "orientation_angle"
     display: "Orientation Angle"
     type: "angle"
-    tooltip: "Orientation angle of scan (default for vertical is 0)"
+    tooltip: "Sets the angle transmitted with Orientation Axis to describe the scan-plane orientation. The default vertical orientation is Z at 0 degrees; this value does not rotate generated scan paths."
     depends: {"laser_scanner":true}
     options: []
     default: 0

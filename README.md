@@ -23,7 +23,7 @@ Core capabilities include:
 ## Documentation
 
 - Start here: [Documentation Index](docs/README.md)
-- User guide: [ORNLSlicer User Guide](docs/ornlslicer-user-guide.pdf)
+- User guide: [ORNLSlicer User Guide](docs/ornlslicer-user-guide.md)
 - Developer onboarding: [Getting Started](docs/contributing/development-setup.md)
 - Contributor workflow: [Contributing](CONTRIBUTING.md)
 

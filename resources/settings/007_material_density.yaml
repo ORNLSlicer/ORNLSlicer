@@ -4,7 +4,7 @@ settings:
   - name: "printing_material"
     display: "Printing Material"
     type: "enumeration"
-    tooltip: "Material type used to calculate approximate weight\u00a0"
+    tooltip: "Selects the built-in material density used to convert estimated deposited volume to mass. Choose Other to enter a custom density."
     depends: {}
     options:
       - "ABS20CF"
@@ -27,7 +27,7 @@ settings:
   - name: "other_density"
     display: "Other Density"
     type: "density"
-    tooltip: "Density of material being used to print"
+    tooltip: "Sets the custom material density used for deposited-mass estimation when Printing Material is Other."
     depends: {"printing_material":10}
     options: []
     default: 0

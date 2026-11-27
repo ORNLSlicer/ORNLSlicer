@@ -52,7 +52,7 @@ settings:
   - name: "spiral_end_of_layer"
     display: "End of Layer"
     type: "boolean"
-    tooltip: "If selected, will perform a spiral list on the last path in a layer"
+    tooltip: "Reserved catalog setting for requesting a spiral lift on the last path in a layer. The current slicing and writer paths do not read this value, so it has no effect."
     depends: {"slicing_mode":0}
     options: []
     default: false

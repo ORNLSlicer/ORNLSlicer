@@ -95,6 +95,11 @@ void GCodeView::zoomOut() {
 }
 
 void GCodeView::resetZoom() {
+    if (m_state.ortho) {
+        m_state.zoom_factor = 1.0f;
+        this->resizeGL(this->width(), this->height());
+        return;
+    }
     this->BaseView::resetZoom();
     updateSegmentInfoViewMatrix();
 }
@@ -525,15 +530,7 @@ void GCodeView::handleWheelBackward(QPointF mouse_ndc_pos, float delta) {
 }
 
 void GCodeView::translateCamera(QVector3D v, bool absolute) {
-    if (absolute) {
-        m_camera->panAbsolute(v);
-        m_focus->translateAbsolute(m_camera->getPan());
-    }
-    else {
-        m_camera->pan(v);
-        m_focus->translateAbsolute(m_camera->getPan());
-    }
-
+    this->BaseView::translateCamera(v, absolute);
     updateSegmentInfoViewMatrix();
 }
 
@@ -662,7 +659,7 @@ void GCodeView::showSeams(bool show) {
 }
 
 void GCodeView::updateOptimizationSettings(QSharedPointer<SettingsBase> sb) {
-    m_printer->updateFromSettings(sb);
+    if (!m_printer.isNull()) { m_printer->updateFromSettings(sb); }
 
     this->update();
 }
@@ -779,6 +776,12 @@ void GCodeView::showGhosts(bool show) {
 void GCodeView::resetCamera() {
     // Reset rotation and zoom
     m_camera->reset();
+
+    if (m_state.ortho) {
+        m_state.zoom_factor = 1.0f;
+        m_camera->rotateAbsolute(QVector2D(0, 0));
+        this->resizeGL(this->width(), this->height());
+    }
 
     this->translateCamera(
         QVector3D(m_printer->printerCenter().x(), m_printer->printerCenter().y(), m_printer->minimum().z()), true);
